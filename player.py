@@ -3,8 +3,7 @@ from dataclasses import dataclass, field
 from cash import Cash
 from property_card import PropertyCard
 
-CONST_STARTING_CASH = 1500
-CONST_GOAL_MONEY = 200
+from constants import CONST_STARTING_CASH, CONST_GOAL_MONEY
 
 @dataclass
 class Player:
