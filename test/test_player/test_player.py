@@ -1,7 +1,7 @@
 import pytest
 
 from player import Player
-from constants import CONST_STARTING_CASH, CONST_GO_MONEY
+import constants as c
 
 
 @pytest.fixture
@@ -49,17 +49,17 @@ def test_move_player_from_nonzero(player_comp):
 def test_reset_player_position_from_zero(player_simple):
     player_simple.reset_position()
     assert player_simple.position == 0
-    assert player_simple.cash.balance == CONST_STARTING_CASH + CONST_GO_MONEY
+    assert player_simple.cash.balance == c.CONST_STARTING_CASH + c.CONST_GO_MONEY
 
 
 def test_reset_player_position_from_nonzero(player_comp):
     player_comp.reset_position()
     assert player_comp.position == 0
-    assert player_comp.cash.balance == 3000 + CONST_GO_MONEY
+    assert player_comp.cash.balance == 3000 + c.CONST_GO_MONEY
 
 
 def test_reset_player_position_and_move(player_comp):
     player_comp.reset_position()
     player_comp.move(10)
     assert player_comp.position == 10
-    assert player_comp.cash.balance == 3000 + CONST_GO_MONEY
+    assert player_comp.cash.balance == 3000 + c.CONST_GO_MONEY
