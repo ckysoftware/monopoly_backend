@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
-from card import Card
-
 import constants as c
+import actions as a
+
+from card import Card
 from property_set import PropertySet
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:  # Only imports the below statements during type checking
+    from player import Player
 
 
 @dataclass(kw_only=True)
@@ -25,7 +32,7 @@ class PropertyCard(Card):
         self.owner_character = character
         self.property_set.update_monopoly()
 
-    def get_rent(self) -> int:
+    def compute_rent(self) -> int:
         if self.mortgaged:
             return 0
         elif self.no_of_hotels > 0:
@@ -73,3 +80,13 @@ class PropertyCard(Card):
             raise ValueError("No hotels to remove")
         self.no_of_hotels = 0
         self.no_of_houses = c.CONST_HOUSE_LIMIT
+
+    def trigger(self, player: Player) -> int:
+        if self.owner_character is None:
+            return a.ASK_TO_BUY
+        elif self.owner_character == player.character:
+            return a.NOTHING
+        elif self.owner_character != player.character:
+            return a.CHARGE_RENT
+        else:
+            raise ValueError("Unknown action")

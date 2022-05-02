@@ -2,7 +2,10 @@ import pytest
 
 from property_card import PropertyCard
 from property_set import PropertySet
+from player import Player
+
 import constants as c
+import actions as a
 
 
 @pytest.fixture
@@ -37,7 +40,7 @@ def prop_card_monopoly():
 
 
 @pytest.fixture
-def prop_card_owner():
+def prop_card_diff_owners():
     property_set = PropertySet(set_id=0)
     property_card_1 = PropertyCard(
         name="Property 1",
@@ -62,6 +65,12 @@ def prop_card_owner():
     return property_card_1
 
 
+@pytest.fixture
+def player_simple():
+    player = Player(name="Player 1", character=0)
+    return player
+
+
 def test_property_card_init(prop_card_simple):
     assert prop_card_simple.name == 'Property 1'
     assert prop_card_simple.price == 60
@@ -81,83 +90,83 @@ def test_assign_owner(prop_card_simple):
     assert prop_card_simple.owner_character == 2
 
 
-def test_assign_owner_not_monopoly(prop_card_owner):
-    prop_card_owner.assign_owner(2)
-    assert prop_card_owner.property_set.monopoly is False
+def test_assign_owner_not_monopoly(prop_card_diff_owners):
+    prop_card_diff_owners.assign_owner(2)
+    assert prop_card_diff_owners.property_set.monopoly is False
 
 
-def test_assign_owner_is_monopoly(prop_card_owner):
-    prop_card_owner.assign_owner(10)
-    assert prop_card_owner.property_set.monopoly is True
+def test_assign_owner_is_monopoly(prop_card_diff_owners):
+    prop_card_diff_owners.assign_owner(10)
+    assert prop_card_diff_owners.property_set.monopoly is True
 
 
-def test_get_rent_without_monopoly(prop_card_simple):
-    assert prop_card_simple.get_rent() == 2
+def test_compute_rent_without_monopoly(prop_card_simple):
+    assert prop_card_simple.compute_rent() == 2
 
 
-def test_get_rent_with_monopoly(prop_card_monopoly):
-    assert prop_card_monopoly.get_rent() == 4
+def test_compute_rent_with_monopoly(prop_card_monopoly):
+    assert prop_card_monopoly.compute_rent() == 4
 
 
-def test_get_rent_some_houses_without_monopoly(prop_card_simple):
+def test_compute_rent_some_houses_without_monopoly(prop_card_simple):
     prop_card_simple.no_of_houses = 2
-    assert prop_card_simple.get_rent() == 30
+    assert prop_card_simple.compute_rent() == 30
 
 
-def test_get_rent_some_houses_with_monopoly(prop_card_monopoly):
+def test_compute_rent_some_houses_with_monopoly(prop_card_monopoly):
     prop_card_monopoly.no_of_houses = 2
-    assert prop_card_monopoly.get_rent() == 30
+    assert prop_card_monopoly.compute_rent() == 30
 
 
-def test_get_rent_full_houses_without_monopoly(prop_card_simple):
+def test_compute_rent_full_houses_without_monopoly(prop_card_simple):
     prop_card_simple.no_of_houses = c.CONST_HOUSE_LIMIT
-    assert prop_card_simple.get_rent() == 160
+    assert prop_card_simple.compute_rent() == 160
 
 
-def test_get_rent_full_houses_with_monopoly(prop_card_monopoly):
+def test_compute_rent_full_houses_with_monopoly(prop_card_monopoly):
     prop_card_monopoly.no_of_houses = c.CONST_HOUSE_LIMIT
-    assert prop_card_monopoly.get_rent() == 160
+    assert prop_card_monopoly.compute_rent() == 160
 
 
-def test_get_rent_hotel_without_monopoly(prop_card_simple):
+def test_compute_rent_hotel_without_monopoly(prop_card_simple):
     prop_card_simple.no_of_hotels = 1
-    assert prop_card_simple.get_rent() == 250
+    assert prop_card_simple.compute_rent() == 250
 
 
-def test_get_rent_hotel_with_monopoly(prop_card_monopoly):
+def test_compute_rent_hotel_with_monopoly(prop_card_monopoly):
     prop_card_monopoly.no_of_hotels = 1
-    assert prop_card_monopoly.get_rent() == 250
+    assert prop_card_monopoly.compute_rent() == 250
 
 
-def test_get_rent_mortgaged_without_monopoly(prop_card_simple):
+def test_compute_rent_mortgaged_without_monopoly(prop_card_simple):
     prop_card_simple.mortgaged = True
-    assert prop_card_simple.get_rent() == 0
+    assert prop_card_simple.compute_rent() == 0
 
 
-def test_get_rent_mortgaged_with_monopoly(prop_card_monopoly):
+def test_compute_rent_mortgaged_with_monopoly(prop_card_monopoly):
     prop_card_monopoly.mortgaged = True
-    assert prop_card_monopoly.get_rent() == 0
+    assert prop_card_monopoly.compute_rent() == 0
 
 
-def test_get_rent_mortgaged_with_house_or_hotel(prop_card_simple):
+def test_compute_rent_mortgaged_with_house_or_hotel(prop_card_simple):
     prop_card_simple.mortgaged = True
     prop_card_simple.no_of_houses = 2
-    assert prop_card_simple.get_rent() == 0
+    assert prop_card_simple.compute_rent() == 0
     prop_card_simple.no_of_houses = c.CONST_HOUSE_LIMIT
-    assert prop_card_simple.get_rent() == 0
+    assert prop_card_simple.compute_rent() == 0
     prop_card_simple.no_of_hotels = 1
-    assert prop_card_simple.get_rent() == 0
+    assert prop_card_simple.compute_rent() == 0
 
 
-def test_mortgage(prop_card_owner):
-    prop_card_owner.mortgage()
-    assert prop_card_owner.mortgaged is True
+def test_mortgage(prop_card_diff_owners):
+    prop_card_diff_owners.mortgage()
+    assert prop_card_diff_owners.mortgaged is True
 
 
-def test_mortgage_again(prop_card_owner):
-    prop_card_owner.mortgage()
+def test_mortgage_again(prop_card_diff_owners):
+    prop_card_diff_owners.mortgage()
     with pytest.raises(ValueError, match='Property is already mortgaged'):
-        prop_card_owner.mortgage()
+        prop_card_diff_owners.mortgage()
 
 
 def test_mortgage_no_owner(prop_card_simple):
@@ -235,3 +244,16 @@ def test_remove_hotel_empty(prop_card_simple):
     prop_card_simple.no_of_hotels = 0
     with pytest.raises(ValueError, match="No hotels to remove"):
         prop_card_simple.remove_hotel()
+
+
+def test_trigger_unowned(prop_card_simple, player_simple):
+    assert prop_card_simple.trigger(player_simple) == a.ASK_TO_BUY
+
+
+def test_trigger_diff_owner(prop_card_diff_owners, player_simple):
+    assert prop_card_diff_owners.trigger(player_simple) == a.CHARGE_RENT
+
+
+def test_trigger_same_owner(prop_card_diff_owners, player_simple):
+    player_simple.character = 1
+    assert prop_card_diff_owners.trigger(player_simple) == a.NOTHING
