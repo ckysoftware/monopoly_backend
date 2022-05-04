@@ -1,11 +1,11 @@
 import pytest
 
-from property_card import PropertyCard
-from property_set import PropertySet
-from player import Player
+from src.property_card import PropertyCard
+from src.property_set import PropertySet
+from src.player import Player
 
-import constants as c
-import actions as a
+import src.constants as c
+from src.actions import Action as a
 
 
 @pytest.fixture

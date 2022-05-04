@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 
-from cash import Cash
-from property_card import PropertyCard
+from src.cash import Cash
+from src.property_card import PropertyCard
 
-import constants as c
+import src.constants as c
 
 
 @dataclass
@@ -25,6 +25,9 @@ class Player:
         self.position += steps
         return self.position
 
+    # TODO add parameter to reset without giving cash
     def reset_position(self) -> None:
         self.position = 0
         self.cash.add(c.CONST_GO_MONEY)
+
+    # TODO roll dice and move player, also test for double roll

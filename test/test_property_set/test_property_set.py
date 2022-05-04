@@ -1,7 +1,7 @@
 import pytest
 
-from property_card import PropertyCard
-from property_set import PropertySet
+from src.property_card import PropertyCard
+from src.property_set import PropertySet
 
 
 @pytest.fixture

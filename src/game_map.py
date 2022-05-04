@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
-from card import Card
-from player import Player
+from src.card import Card
+from src.player import Player
 
 
 @dataclass

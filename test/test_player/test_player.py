@@ -1,7 +1,7 @@
 import pytest
 
-from player import Player
-import constants as c
+from src.player import Player
+import src.constants as c
 
 
 @pytest.fixture

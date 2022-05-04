@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import constants as c
-import actions as a
+import src.constants as c
 
-from card import Card
-from property_set import PropertySet
+from src.actions import Action as a
+from src.card import Card
+from src.property_set import PropertySet
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from player import Player
+    from src.player import Player
 
 
 @dataclass(kw_only=True)
@@ -44,6 +44,10 @@ class PropertyCard(Card):
         else:
             return self.rent[0]
 
+    # TODO check this later:
+    """Before an improved property can be mortgaged,
+    all the Houses and Hotels on all the properties of its color-group
+    must be sold back to the Bank"""
     def mortgage(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is already mortgaged")
@@ -51,6 +55,9 @@ class PropertyCard(Card):
             raise ValueError("Property has no owner")
         self.mortgaged = True
 
+    # TODO remove mortgage
+
+    # TODO need to evenly add house, need to check
     def add_house(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is mortgaged")
