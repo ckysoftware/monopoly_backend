@@ -5,8 +5,7 @@ from dataclasses import dataclass
 import src.constants as c
 
 from src.actions import Action as a
-from src.card import Card
-from src.property_set import PropertySet
+from src.property import Property
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # Only imports the below statements during type checking
@@ -14,16 +13,12 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 
 @dataclass(kw_only=True)
-class PropertyCard(Card):
-    price: int
+class PropertyCard(Property):
     rent: list[int]
     price_of_house: int
     price_of_hotel: int
-    property_set: PropertySet
     no_of_houses: int = 0
     no_of_hotels: int = 0
-    mortgaged: bool = False
-    owner_character: int = None
 
     def __post_init__(self):
         assert len(self.rent) == c.CONST_HOUSE_LIMIT + 2  # without + houses + hotel

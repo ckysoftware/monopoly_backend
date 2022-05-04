@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from src.card import Card
+from src.place import Place
 from src.player import Player
 
 
@@ -9,7 +9,7 @@ class GameMap():
     """
     This class represents the map of the game.
     """
-    map_list: list[Card] = field(default_factory=list)
+    map_list: list[Place] = field(default_factory=list)
 
     def trigger(self, player: Player) -> int:
         """

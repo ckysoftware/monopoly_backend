@@ -8,7 +8,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 
 @dataclass
-class Card:
+class Place:
     name: str
 
     def trigger(self, player: Player) -> int:
