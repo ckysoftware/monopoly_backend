@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from src.place import Place
 from src.property_set import PropertySet
@@ -16,8 +17,16 @@ class Property(Place):
         self.owner_character = character
         self.property_set.update_monopoly()
 
-    def compute_rent(self) -> int:
+    @abstractmethod
+    def compute_rent(self, **kwargs) -> int:
         pass
 
-    def mortgage(self) -> None:
+    # TODO may need to return money
+    @abstractmethod
+    def mortgage(self) -> None:  # NOTE probably need to return action/event
+        pass
+
+    # TODO may need to return money
+    @abstractmethod
+    def unmortgage(self) -> None:  # NOTE probably need to return action/event
         pass

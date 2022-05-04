@@ -51,6 +51,8 @@ class PropertyCard(Property):
         self.mortgaged = True
 
     # TODO remove mortgage
+    def unmortgage(self) -> None:
+        pass
 
     # TODO need to evenly add house, need to check
     def add_house(self) -> None:
