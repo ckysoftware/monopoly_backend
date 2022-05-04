@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
-from src.cash import Cash
-from src.property_card import PropertyCard
+from src.game.cash import Cash
+from src.game.place.property_card import PropertyCard
 
 import src.constants as c
 

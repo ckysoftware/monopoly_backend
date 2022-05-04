@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from src.place import Place
-from src.property_set import PropertySet
+from src.game.place.place import Place
+from src.game.place.property_set import PropertySet
 
 
 @dataclass

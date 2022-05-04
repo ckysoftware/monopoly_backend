@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from src.player import Player
+    from src.game.player import Player
 
 
 @dataclass

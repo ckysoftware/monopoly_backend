@@ -4,12 +4,12 @@ from dataclasses import dataclass
 
 import src.constants as c
 
-from src.actions import Action as a
-from src.property import Property
+from src.game.actions import Action as a
+from src.game.place.property import Property
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from src.player import Player
+    from src.game.player import Player
 
 
 @dataclass(kw_only=True)

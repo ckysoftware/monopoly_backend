@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
-from src.place import Place
-from src.player import Player
+from src.game.place.place import Place
+from src.game.player import Player
 
 
 @dataclass
