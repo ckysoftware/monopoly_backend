@@ -46,6 +46,48 @@ def prop_set_monopoly():
     return property_set
 
 
+@pytest.fixture
+def prop_set_four_unowned():
+    property_set = PropertySet(set_id=2)
+    property_card_1 = PropertyCard(
+        name="Property 1",
+        price=60,
+        rent=[2, 10, 30, 90, 160, 250],
+        price_of_house=50,
+        price_of_hotel=50,
+        property_set=property_set,
+    )
+    property_card_2 = PropertyCard(
+        name="Property 2",
+        price=60,
+        rent=[2, 10, 30, 90, 160, 250],
+        price_of_house=50,
+        price_of_hotel=50,
+        property_set=property_set,
+    )
+    property_card_3 = PropertyCard(
+        name="Property 3",
+        price=60,
+        rent=[2, 10, 30, 90, 160, 250],
+        price_of_house=50,
+        price_of_hotel=50,
+        property_set=property_set,
+    )
+    property_card_4 = PropertyCard(
+        name="Property 4",
+        price=60,
+        rent=[2, 10, 30, 90, 160, 250],
+        price_of_house=50,
+        price_of_hotel=50,
+        property_set=property_set,
+    )
+    property_set.add_property(property_card_1)
+    property_set.add_property(property_card_2)
+    property_set.add_property(property_card_3)
+    property_set.add_property(property_card_4)
+    return property_set
+
+
 def test_property_set_init(prop_set_simple):
     assert prop_set_simple.set_id == 2
     assert len(prop_set_simple.properties) == 1
@@ -75,3 +117,25 @@ def test_property_set_update_monopoly_has_unowned(prop_set_monopoly):
     prop_set_monopoly.properties[-1].owner_character = None
     prop_set_monopoly.update_monopoly()
     assert prop_set_monopoly.monopoly is False
+
+
+def test_property_set_count_owner_unowned(prop_set_four_unowned):
+    assert prop_set_four_unowned.count_owned(1) == 0
+
+
+def test_property_set_count_owner_one_with_unowned(prop_set_four_unowned):
+    prop_set_four_unowned.properties[2].owner_character = 1
+    assert prop_set_four_unowned.count_owned(1) == 1
+
+
+def test_property_set_count_owner_unowned_with_other_owned(prop_set_four_unowned):
+    prop_set_four_unowned.properties[2].owner_character = 1
+    prop_set_four_unowned.properties[3].owner_character = 10
+    assert prop_set_four_unowned.count_owned(5) == 0
+
+
+def test_property_set_count_owner_three_owned(prop_set_four_unowned):
+    prop_set_four_unowned.properties[0].owner_character = 1
+    prop_set_four_unowned.properties[2].owner_character = 1
+    prop_set_four_unowned.properties[3].owner_character = 1
+    assert prop_set_four_unowned.count_owned(1) == 3
