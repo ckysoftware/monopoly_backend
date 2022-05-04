@@ -1,10 +1,10 @@
 import pytest
 
-from src.utility_card import UtilityCard
-from src.property_set import PropertySet
-from src.player import Player
+from src.game.place.utility_card import UtilityCard
+from src.game.place.property_set import PropertySet
+from src.game.player import Player
 
-from src.actions import Action as a
+from src.game.actions import Action as a
 
 
 @pytest.fixture

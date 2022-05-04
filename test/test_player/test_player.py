@@ -1,6 +1,6 @@
 import pytest
 
-from src.player import Player
+from src.game.player import Player
 import src.constants as c
 
 

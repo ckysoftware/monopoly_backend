@@ -1,7 +1,7 @@
 import pytest
 
-from src.property_card import PropertyCard
-from src.property_set import PropertySet
+from src.game.place.property_card import PropertyCard
+from src.game.place.property_set import PropertySet
 
 
 @pytest.fixture
