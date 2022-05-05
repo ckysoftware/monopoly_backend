@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import src.constants as c
-
 from src.game.actions import Action as a
 from src.game.place.property import Property
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # Only imports the below statements during type checking
     from src.game.player import Player
 
@@ -43,6 +42,7 @@ class PropertyCard(Property):
     """Before an improved property can be mortgaged,
     all the Houses and Hotels on all the properties of its color-group
     must be sold back to the Bank"""
+
     def mortgage(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is already mortgaged")

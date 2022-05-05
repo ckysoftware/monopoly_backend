@@ -1,11 +1,9 @@
 import pytest
-
+import src.constants as c
+from src.game.actions import Action as a
 from src.game.place.property_card import PropertyCard
 from src.game.place.property_set import PropertySet
 from src.game.player import Player
-
-import src.constants as c
-from src.game.actions import Action as a
 
 
 @pytest.fixture
@@ -72,7 +70,7 @@ def player_simple():
 
 
 def test_property_card_init(prop_card_simple):
-    assert prop_card_simple.name == 'Property 1'
+    assert prop_card_simple.name == "Property 1"
     assert prop_card_simple.price == 60
     assert prop_card_simple.rent == [2, 10, 30, 90, 160, 250]
     assert prop_card_simple.price_of_house == 50
@@ -165,7 +163,7 @@ def test_mortgage(prop_card_diff_owners):
 
 def test_mortgage_again(prop_card_diff_owners):
     prop_card_diff_owners.mortgage()
-    with pytest.raises(ValueError, match='Property is already mortgaged'):
+    with pytest.raises(ValueError, match="Property is already mortgaged"):
         prop_card_diff_owners.mortgage()
 
 
@@ -180,7 +178,7 @@ def test_add_house_in_monopoly(prop_card_monopoly):
 
 
 def test_add_house_not_monopoly(prop_card_simple):
-    with pytest.raises(ValueError, match='Property is not in monopoly'):
+    with pytest.raises(ValueError, match="Property is not in monopoly"):
         prop_card_simple.add_house()
 
 

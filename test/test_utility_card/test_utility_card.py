@@ -1,10 +1,8 @@
 import pytest
-
-from src.game.place.utility_card import UtilityCard
-from src.game.place.property_set import PropertySet
-from src.game.player import Player
-
 from src.game.actions import Action as a
+from src.game.place.property_set import PropertySet
+from src.game.place.utility_card import UtilityCard
+from src.game.player import Player
 
 
 @pytest.fixture
@@ -59,7 +57,7 @@ def player_simple():
 
 
 def test_utility_card_init(util_card_simple):
-    assert util_card_simple.name == 'Utility 1'
+    assert util_card_simple.name == "Utility 1"
     assert util_card_simple.price == 150
     assert util_card_simple.property_set.set_id == 0
     assert id(util_card_simple.property_set.properties[0]) == id(util_card_simple)
@@ -107,7 +105,7 @@ def test_mortgage(util_card_diff_owners):
 
 def test_mortgage_again(util_card_diff_owners):
     util_card_diff_owners.mortgage()
-    with pytest.raises(ValueError, match='Property is already mortgaged'):
+    with pytest.raises(ValueError, match="Property is already mortgaged"):
         util_card_diff_owners.mortgage()
 
 

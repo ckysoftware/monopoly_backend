@@ -1,10 +1,8 @@
 import pytest
-
-from src.game.place.railroad_card import RailroadCard
-from src.game.place.property_set import PropertySet
-from src.game.player import Player
-
 from src.game.actions import Action as a
+from src.game.place.property_set import PropertySet
+from src.game.place.railroad_card import RailroadCard
+from src.game.player import Player
 
 
 @pytest.fixture
@@ -49,7 +47,7 @@ def player_simple():
 
 
 def test_rail_card_init(rail_card_simple):
-    assert rail_card_simple.name == 'Railroad 1'
+    assert rail_card_simple.name == "Railroad 1"
     assert rail_card_simple.price == 200
     assert rail_card_simple.rent == [25, 50, 100, 200]
     assert rail_card_simple.property_set.set_id == 0
@@ -65,16 +63,22 @@ def test_assign_owner(rail_card_simple):
 
 def test_assign_owner_one_owned_railroad(rail_card_diff_owners):
     rail_card_diff_owners.assign_owner(2)
-    assert rail_card_diff_owners.property_set.count_owned(
-        rail_card_diff_owners.owner_character
-    ) == 1
+    assert (
+        rail_card_diff_owners.property_set.count_owned(
+            rail_card_diff_owners.owner_character
+        )
+        == 1
+    )
 
 
 def test_assign_owner_two_owned_railroad(rail_card_diff_owners):
     rail_card_diff_owners.assign_owner(10)
-    assert rail_card_diff_owners.property_set.count_owned(
-        rail_card_diff_owners.owner_character
-    ) == 2
+    assert (
+        rail_card_diff_owners.property_set.count_owned(
+            rail_card_diff_owners.owner_character
+        )
+        == 2
+    )
 
 
 def test_compute_rent_one_owned_railroad(rail_card_diff_owners):
@@ -104,7 +108,7 @@ def test_mortgage(rail_card_diff_owners):
 
 def test_mortgage_again(rail_card_diff_owners):
     rail_card_diff_owners.mortgage()
-    with pytest.raises(ValueError, match='Property is already mortgaged'):
+    with pytest.raises(ValueError, match="Property is already mortgaged"):
         rail_card_diff_owners.mortgage()
 
 

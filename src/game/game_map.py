@@ -5,10 +5,11 @@ from src.game.player import Player
 
 
 @dataclass
-class GameMap():
+class GameMap:
     """
     This class represents the map of the game.
     """
+
     map_list: list[Place] = field(default_factory=list)
 
     def trigger(self, player: Player) -> int:

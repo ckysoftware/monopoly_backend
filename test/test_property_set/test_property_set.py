@@ -1,5 +1,4 @@
 import pytest
-
 from src.game.place.property_card import PropertyCard
 from src.game.place.property_set import PropertySet
 

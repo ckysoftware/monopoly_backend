@@ -1,7 +1,6 @@
 import pytest
-
-from src.game.player import Player
 import src.constants as c
+from src.game.player import Player
 
 
 @pytest.fixture
@@ -17,13 +16,13 @@ def player_comp():
         character=1,
         properties=["Property 1", "Property 2"],
         cash=3000,
-        position=10
+        position=10,
     )
     return player
 
 
 def test_player_init(player_simple, player_comp):
-    assert player_simple.name == 'Player 1'
+    assert player_simple.name == "Player 1"
     assert player_simple.character == 0
     assert player_simple.properties == []
     assert player_simple.cash.balance == 1500
