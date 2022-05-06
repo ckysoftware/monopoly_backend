@@ -26,14 +26,14 @@ def rail_card_diff_owners():
         price=200,
         rent=[25, 50, 100, 200],
         property_set=property_set,
-        owner_character=1,
+        owner_uid=1,
     )
     rail_card_2 = RailroadCard(
         name="Railroad 2",
         price=200,
         rent=[25, 50, 100, 200],
         property_set=property_set,
-        owner_character=10,
+        owner_uid=10,
     )
     property_set.add_property(rail_card_1)
     property_set.add_property(rail_card_2)
@@ -42,7 +42,7 @@ def rail_card_diff_owners():
 
 @pytest.fixture
 def player_simple():
-    player = Player(name="Player 1", character=0)
+    player = Player(name="Player 1", uid=0)
     return player
 
 
@@ -53,20 +53,18 @@ def test_rail_card_init(rail_card_simple):
     assert rail_card_simple.property_set.set_id == 0
     assert id(rail_card_simple.property_set.properties[0]) == id(rail_card_simple)
     assert rail_card_simple.mortgaged is False
-    assert rail_card_simple.owner_character is None
+    assert rail_card_simple.owner_uid is None
 
 
 def test_assign_owner(rail_card_simple):
     rail_card_simple.assign_owner(2)
-    assert rail_card_simple.owner_character == 2
+    assert rail_card_simple.owner_uid == 2
 
 
 def test_assign_owner_one_owned_railroad(rail_card_diff_owners):
     rail_card_diff_owners.assign_owner(2)
     assert (
-        rail_card_diff_owners.property_set.count_owned(
-            rail_card_diff_owners.owner_character
-        )
+        rail_card_diff_owners.property_set.count_owned(rail_card_diff_owners.owner_uid)
         == 1
     )
 
@@ -74,9 +72,7 @@ def test_assign_owner_one_owned_railroad(rail_card_diff_owners):
 def test_assign_owner_two_owned_railroad(rail_card_diff_owners):
     rail_card_diff_owners.assign_owner(10)
     assert (
-        rail_card_diff_owners.property_set.count_owned(
-            rail_card_diff_owners.owner_character
-        )
+        rail_card_diff_owners.property_set.count_owned(rail_card_diff_owners.owner_uid)
         == 2
     )
 
@@ -126,5 +122,5 @@ def test_trigger_diff_owner(rail_card_diff_owners, player_simple):
 
 
 def test_trigger_same_owner(rail_card_diff_owners, player_simple):
-    player_simple.character = 1
+    player_simple.uid = 1
     assert rail_card_diff_owners.trigger(player_simple) == a.NOTHING

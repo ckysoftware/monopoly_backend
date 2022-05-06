@@ -23,7 +23,7 @@ class UtilityCard(Property):
     def mortgage(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is already mortgaged")
-        elif self.owner_character is None:
+        elif self.owner_uid is None:
             raise ValueError("Property has no owner")
         self.mortgaged = True
 
@@ -32,11 +32,11 @@ class UtilityCard(Property):
         pass
 
     def trigger(self, player: Player) -> int:
-        if self.owner_character is None:
+        if self.owner_uid is None:
             return a.ASK_TO_BUY
-        elif self.owner_character == player.character:
+        elif self.owner_uid == player.uid:
             return a.NOTHING
-        elif self.owner_character != player.character:
+        elif self.owner_uid != player.uid:
             return a.CHARGE_RENT
         else:
             raise ValueError("Unknown action")

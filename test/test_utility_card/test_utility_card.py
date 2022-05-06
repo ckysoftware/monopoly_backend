@@ -37,13 +37,13 @@ def util_card_diff_owners():
         name="Utility 1",
         price=150,
         property_set=property_set,
-        owner_character=1,
+        owner_uid=1,
     )
     util_card_2 = UtilityCard(
         name="Utility 2",
         price=150,
         property_set=property_set,
-        owner_character=10,
+        owner_uid=10,
     )
     property_set.add_property(util_card_1)
     property_set.add_property(util_card_2)
@@ -52,7 +52,7 @@ def util_card_diff_owners():
 
 @pytest.fixture
 def player_simple():
-    player = Player(name="Player 1", character=0)
+    player = Player(name="Player 1", uid=0)
     return player
 
 
@@ -62,12 +62,12 @@ def test_utility_card_init(util_card_simple):
     assert util_card_simple.property_set.set_id == 0
     assert id(util_card_simple.property_set.properties[0]) == id(util_card_simple)
     assert util_card_simple.mortgaged is False
-    assert util_card_simple.owner_character is None
+    assert util_card_simple.owner_uid is None
 
 
 def test_assign_owner(util_card_simple):
     util_card_simple.assign_owner(2)
-    assert util_card_simple.owner_character == 2
+    assert util_card_simple.owner_uid == 2
 
 
 def test_assign_owner_not_monopoly(util_card_diff_owners):
@@ -123,5 +123,5 @@ def test_trigger_diff_owner(util_card_diff_owners, player_simple):
 
 
 def test_trigger_same_owner(util_card_diff_owners, player_simple):
-    player_simple.character = 1
+    player_simple.uid = 1
     assert util_card_diff_owners.trigger(player_simple) == a.NOTHING

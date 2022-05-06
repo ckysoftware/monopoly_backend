@@ -8,7 +8,8 @@ from src.game.place.property_card import PropertyCard
 @dataclass
 class Player:
     name: str
-    character: int
+    uid: int
+    token: int = None
     properties: list[PropertyCard] = field(default_factory=list)
     cash: Cash | int = c.CONST_STARTING_CASH
     position: int = 0
@@ -19,6 +20,9 @@ class Player:
 
     def add_property(self, property: PropertyCard) -> None:
         self.properties.append(property)
+
+    def assign_token(self, token: int) -> None:
+        self.token = token
 
     def move(self, steps) -> int:
         self.position += steps

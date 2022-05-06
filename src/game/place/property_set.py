@@ -21,19 +21,19 @@ class PropertySet:
             self.monopoly = False
             return
 
-        owner_character = self.properties[0].owner_character
+        owner_uid = self.properties[0].owner_uid
         for property in self.properties[1:]:
-            if property.owner_character != owner_character:
+            if property.owner_uid != owner_uid:
                 self.monopoly = False
                 return
         self.monopoly = True
 
-    def count_owned(self, owner_character: int):
+    def count_owned(self, owner_uid: int):
         """
         Return the number of properties owned by this owner
         """
         count = 0
         for property in self.properties:
-            if property.owner_character == owner_character:
+            if property.owner_uid == owner_uid:
                 count += 1
         return count

@@ -12,10 +12,10 @@ class Property(Place):
     price: int
     property_set: PropertySet
     mortgaged: bool = False
-    owner_character: int = None
+    owner_uid: int = None
 
-    def assign_owner(self, character) -> None:
-        self.owner_character = character
+    def assign_owner(self, player_uid) -> None:
+        self.owner_uid = player_uid
         self.property_set.update_monopoly()
 
     @abstractmethod

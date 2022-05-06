@@ -28,7 +28,7 @@ def prop_set_monopoly():
         price_of_house=50,
         price_of_hotel=50,
         property_set=property_set,
-        owner_character=1,
+        owner_uid=1,
     )
     property_card_2 = PropertyCard(
         name="Property 1",
@@ -37,7 +37,7 @@ def prop_set_monopoly():
         price_of_house=50,
         price_of_hotel=50,
         property_set=property_set,
-        owner_character=1,
+        owner_uid=1,
     )
     property_set.add_property(property_card_1)
     property_set.add_property(property_card_2)
@@ -107,13 +107,13 @@ def test_property_set_update_is_monopoly(prop_set_monopoly):
 
 
 def test_property_set_update_not_monopoly(prop_set_monopoly):
-    prop_set_monopoly.properties[0].owner_character = 0
+    prop_set_monopoly.properties[0].owner_uid = 0
     prop_set_monopoly.update_monopoly()
     assert prop_set_monopoly.monopoly is False
 
 
 def test_property_set_update_monopoly_has_unowned(prop_set_monopoly):
-    prop_set_monopoly.properties[-1].owner_character = None
+    prop_set_monopoly.properties[-1].owner_uid = None
     prop_set_monopoly.update_monopoly()
     assert prop_set_monopoly.monopoly is False
 
@@ -123,18 +123,18 @@ def test_property_set_count_owner_unowned(prop_set_four_unowned):
 
 
 def test_property_set_count_owner_one_with_unowned(prop_set_four_unowned):
-    prop_set_four_unowned.properties[2].owner_character = 1
+    prop_set_four_unowned.properties[2].owner_uid = 1
     assert prop_set_four_unowned.count_owned(1) == 1
 
 
 def test_property_set_count_owner_unowned_with_other_owned(prop_set_four_unowned):
-    prop_set_four_unowned.properties[2].owner_character = 1
-    prop_set_four_unowned.properties[3].owner_character = 10
+    prop_set_four_unowned.properties[2].owner_uid = 1
+    prop_set_four_unowned.properties[3].owner_uid = 10
     assert prop_set_four_unowned.count_owned(5) == 0
 
 
 def test_property_set_count_owner_three_owned(prop_set_four_unowned):
-    prop_set_four_unowned.properties[0].owner_character = 1
-    prop_set_four_unowned.properties[2].owner_character = 1
-    prop_set_four_unowned.properties[3].owner_character = 1
+    prop_set_four_unowned.properties[0].owner_uid = 1
+    prop_set_four_unowned.properties[2].owner_uid = 1
+    prop_set_four_unowned.properties[3].owner_uid = 1
     assert prop_set_four_unowned.count_owned(1) == 3
