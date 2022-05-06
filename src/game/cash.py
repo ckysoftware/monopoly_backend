@@ -8,5 +8,5 @@ class Cash:
     def add(self, amount):
         self.balance += amount
 
-    def minus(self, amount):
+    def sub(self, amount):
         self.balance -= amount

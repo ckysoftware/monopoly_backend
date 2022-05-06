@@ -5,7 +5,7 @@ from src.game.cash import Cash
 from src.game.place.property_card import PropertyCard
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Player:
     name: str
     uid: int
@@ -24,13 +24,19 @@ class Player:
     def assign_token(self, token: int) -> None:
         self.token = token
 
-    def move(self, steps) -> int:
+    def move(self, steps: int) -> int:
         self.position += steps
         return self.position
 
-    # TODO add parameter to reset without giving cash
-    def reset_position(self) -> None:
-        self.position = 0
-        self.cash.add(c.CONST_GO_MONEY)
+    def offset_position(self, offset: int) -> int:
+        # offset position after passing Go
+        self.position -= offset
+        return self.position
+
+    def add_cash(self, amount: int):
+        self.cash.add(amount)
+
+    def sub_cash(self, amount: int) -> None:
+        self.cash.sub(amount)
 
     # TODO roll dice and move player, also test for double roll

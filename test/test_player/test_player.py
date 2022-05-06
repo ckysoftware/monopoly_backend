@@ -54,20 +54,18 @@ def test_move_player_from_nonzero(player_comp):
     assert player_comp.position == 20
 
 
-def test_reset_player_position_from_zero(player_simple):
-    player_simple.reset_position()
-    assert player_simple.position == 0
-    assert player_simple.cash.balance == c.CONST_STARTING_CASH + c.CONST_GO_MONEY
+def test_add_cash(player_comp):
+    player_comp.add_cash(1000)
+    assert player_comp.cash.balance == 4000
 
 
-def test_reset_player_position_from_nonzero(player_comp):
-    player_comp.reset_position()
-    assert player_comp.position == 0
-    assert player_comp.cash.balance == 3000 + c.CONST_GO_MONEY
+def test_sub_cash(player_comp):
+    player_comp.sub_cash(500)
+    assert player_comp.cash.balance == 2500
 
 
-def test_reset_player_position_and_move(player_comp):
-    player_comp.reset_position()
-    player_comp.move(10)
-    assert player_comp.position == 10
-    assert player_comp.cash.balance == 3000 + c.CONST_GO_MONEY
+def test_offset_position(player_comp):
+    pos = player_comp.move(25)
+    pos = player_comp.offset_position(10)
+    assert pos == 25
+    assert player_comp.position == 25
