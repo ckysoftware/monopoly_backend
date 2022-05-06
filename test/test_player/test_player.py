@@ -1,5 +1,6 @@
 import pytest
-import src.constants as c
+from src.game.place.property_card import PropertyCard
+from src.game.place.property_set import PropertySet
 from src.game.player import Player
 
 
@@ -20,6 +21,21 @@ def player_comp():
         position=10,
     )
     return player
+
+
+@pytest.fixture
+def prop_card_simple():
+    property_set = PropertySet(set_id=0)
+    property_card = PropertyCard(
+        name="Property 1",
+        price=60,
+        rent=[2, 10, 30, 90, 160, 250],
+        price_of_house=50,
+        price_of_hotel=50,
+        property_set=property_set,
+    )
+    property_set.add_property(property_card)
+    return property_card
 
 
 def test_player_init(player_simple, player_comp):
@@ -54,13 +70,21 @@ def test_move_player_from_nonzero(player_comp):
     assert player_comp.position == 20
 
 
+def test_add_property(player_simple, prop_card_simple):
+    player_simple.add_property(prop_card_simple)
+    assert len(player_simple.properties) == 1
+    assert id(player_simple.properties[0]) == id(prop_card_simple)
+
+
 def test_add_cash(player_comp):
-    player_comp.add_cash(1000)
+    new_balance = player_comp.add_cash(1000)
+    assert new_balance == 4000
     assert player_comp.cash.balance == 4000
 
 
 def test_sub_cash(player_comp):
-    player_comp.sub_cash(500)
+    new_balance = player_comp.sub_cash(500)
+    assert new_balance == 2500
     assert player_comp.cash.balance == 2500
 
 

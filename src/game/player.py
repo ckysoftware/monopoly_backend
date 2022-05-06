@@ -33,10 +33,12 @@ class Player:
         self.position -= offset
         return self.position
 
-    def add_cash(self, amount: int):
+    def add_cash(self, amount: int) -> int:
         self.cash.add(amount)
+        return self.cash.balance
 
-    def sub_cash(self, amount: int) -> None:
+    def sub_cash(self, amount: int) -> int:
         self.cash.sub(amount)
+        return self.cash.balance
 
     # TODO roll dice and move player, also test for double roll
