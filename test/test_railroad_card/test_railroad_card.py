@@ -1,5 +1,5 @@
 import pytest
-from src.game.actions import Action as a
+from src.game.actions import Action as A
 from src.game.place.property_set import PropertySet
 from src.game.place.railroad_card import RailroadCard
 from src.game.player import Player
@@ -114,13 +114,13 @@ def test_mortgage_no_owner(rail_card_simple):
 
 
 def test_trigger_unowned(rail_card_simple, player_simple):
-    assert rail_card_simple.trigger(player_simple) == a.ASK_TO_BUY
+    assert rail_card_simple.trigger(player_simple) == A.ASK_TO_BUY
 
 
 def test_trigger_diff_owner(rail_card_diff_owners, player_simple):
-    assert rail_card_diff_owners.trigger(player_simple) == a.CHARGE_RENT
+    assert rail_card_diff_owners.trigger(player_simple) == A.CHARGE_RENT
 
 
 def test_trigger_same_owner(rail_card_diff_owners, player_simple):
     player_simple.uid = 1
-    assert rail_card_diff_owners.trigger(player_simple) == a.NOTHING
+    assert rail_card_diff_owners.trigger(player_simple) == A.NOTHING

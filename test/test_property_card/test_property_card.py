@@ -1,6 +1,6 @@
 import pytest
 import src.constants as c
-from src.game.actions import Action as a
+from src.game.actions import Action as A
 from src.game.place.property_card import PropertyCard
 from src.game.place.property_set import PropertySet
 from src.game.player import Player
@@ -202,8 +202,8 @@ def test_add_hotel(prop_card_simple):
 
 
 def test_add_hotel_full_hotel(prop_card_simple):
-    prop_card_simple.no_of_hotels = c.CONST_HOUSE_LIMIT
-    with pytest.raises(ValueError, match="Not enough houses"):
+    prop_card_simple.no_of_hotels = c.CONST_HOTEL_LIMIT
+    with pytest.raises(ValueError, match="Hotel limit reached"):
         prop_card_simple.add_hotel()
 
 
@@ -245,13 +245,13 @@ def test_remove_hotel_empty(prop_card_simple):
 
 
 def test_trigger_unowned(prop_card_simple, player_simple):
-    assert prop_card_simple.trigger(player_simple) == a.ASK_TO_BUY
+    assert prop_card_simple.trigger(player_simple) == A.ASK_TO_BUY
 
 
 def test_trigger_diff_owner(prop_card_diff_owners, player_simple):
-    assert prop_card_diff_owners.trigger(player_simple) == a.CHARGE_RENT
+    assert prop_card_diff_owners.trigger(player_simple) == A.CHARGE_RENT
 
 
 def test_trigger_same_owner(prop_card_diff_owners, player_simple):
     player_simple.uid = 1
-    assert prop_card_diff_owners.trigger(player_simple) == a.NOTHING
+    assert prop_card_diff_owners.trigger(player_simple) == A.NOTHING
