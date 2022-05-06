@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import src.constants as c
-from src.game.actions import Action as a
+from src.game.actions import Action as A
 from src.game.place.property import Property
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
@@ -67,10 +67,10 @@ class PropertyCard(Property):
     def add_hotel(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is mortgaged")
-        if self.no_of_houses != c.CONST_HOUSE_LIMIT:
-            raise ValueError("Not enough houses")
         if self.no_of_hotels == c.CONST_HOTEL_LIMIT:
             raise ValueError("Hotel limit reached")
+        if self.no_of_houses != c.CONST_HOUSE_LIMIT:
+            raise ValueError("Not enough houses")
         self.no_of_houses = 0
         self.no_of_hotels = 1
 
@@ -87,10 +87,8 @@ class PropertyCard(Property):
 
     def trigger(self, player: Player) -> int:
         if self.owner_uid is None:
-            return a.ASK_TO_BUY
+            return A.ASK_TO_BUY
         elif self.owner_uid == player.uid:
-            return a.NOTHING
-        elif self.owner_uid != player.uid:
-            return a.CHARGE_RENT
-        else:
-            raise ValueError("Unknown action")
+            return A.NOTHING
+        else:  # self.owner_uid != player.uid:
+            return A.CHARGE_RENT

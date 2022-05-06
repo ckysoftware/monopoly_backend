@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from src.game.actions import Action as a
+from src.game.actions import Action as A
 from src.game.place.property import Property
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
@@ -33,10 +33,8 @@ class UtilityCard(Property):
 
     def trigger(self, player: Player) -> int:
         if self.owner_uid is None:
-            return a.ASK_TO_BUY
+            return A.ASK_TO_BUY
         elif self.owner_uid == player.uid:
-            return a.NOTHING
-        elif self.owner_uid != player.uid:
-            return a.CHARGE_RENT
-        else:
-            raise ValueError("Unknown action")
+            return A.NOTHING
+        else:  # self.owner_uid != player.uid:
+            return A.CHARGE_RENT
