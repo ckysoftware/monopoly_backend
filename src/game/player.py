@@ -1,11 +1,12 @@
 from dataclasses import dataclass, field
 
 import constants as c
+
 from game.cash import Cash
 from game.place.property.property_card import PropertyCard
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, slots=True)
 class Player:
     name: str
     uid: int

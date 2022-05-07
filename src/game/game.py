@@ -8,7 +8,7 @@ from game.game_map import GameMap
 from game.player import Player
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, slots=True)
 class Game:
     game_map: GameMap
     players: list[Player] = field(default_factory=list)

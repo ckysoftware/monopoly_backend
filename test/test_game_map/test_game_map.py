@@ -46,7 +46,7 @@ def test_game_map_init(prop_cards):
 
 def test_game_map_trigger(prop_cards, player_simple):
     game_map = GameMap(map_list=prop_cards)
-    player_simple.character = 1
+    player_simple.uid = 1
     player_simple.position = 0
     assert game_map.trigger(player_simple) == prop_cards[0].trigger(player_simple)
     player_simple.position = 1

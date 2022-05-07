@@ -9,7 +9,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game.player import Player
 
 
-@dataclass
+@dataclass(slots=True)
 class Place(ABC):
     name: str
 

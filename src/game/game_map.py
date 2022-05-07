@@ -4,7 +4,7 @@ from game.place.place import Place
 from game.player import Player
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, slots=True)
 class GameMap:
     """
     This class represents the map of the game.
