@@ -71,8 +71,7 @@ def test_game_init(game_init):
     game, game_map = game_init
     assert id(game.game_map) == id(game_map)
     assert game.players == []
-    assert game.current_order_pos is None
-    assert game.player_order == []
+    assert game.current_player_uid is None
     assert game._roll_double_counter is None
 
 
@@ -105,24 +104,19 @@ def test_offset_go_pos(game_with_players):
     assert game_with_players.players[0].position == 1
 
 
-def test_initilize_player_order(game_with_players):
-    roll_result = game_with_players.initilize_player_order()
+def test_initilize_first_player(game_with_players):
+    roll_result = game_with_players.initilize_first_player()
+
     recon_result = []  # reconstruct the order from the roll result
     for player_uid, dice_rolls in roll_result.items():
         dice_1, dice_2 = dice_rolls
         recon_result.append((dice_1 + dice_2, player_uid))
-    recon_result.sort()
-    recon_order = [x[1] for x in recon_result]
 
-    assert recon_order == game_with_players.player_order
-    assert len(roll_result) == len(game_with_players.player_order)
-
-    player_order = (
-        game_with_players.player_order.copy()
-    )  # check all players are covered
-    for player_uid in roll_result.keys():
-        player_order.remove(player_uid)
-    assert len(player_order) == 0
+    recon_result.sort(
+        key=lambda x: (x[0], -1 * x[1]), reverse=True
+    )  # smaller uid first
+    first_player = recon_result[0][1]
+    assert first_player == game_with_players.current_player_uid
 
 
 def test_check_double_roll_with_none(game_with_players):

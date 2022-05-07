@@ -12,8 +12,7 @@ from game.player import Player
 class Game:
     game_map: GameMap
     players: list[Player] = field(default_factory=list)
-    current_order_pos: int = None  # current pos of the player_order
-    player_order: list[int] = field(default_factory=list)
+    current_player_uid: int = None  # current pos of the player_order
     _roll_double_counter: (int) = None  # tuple(int, int) to store (uid, double_count)
 
     def add_player(self, name: str):
@@ -21,15 +20,16 @@ class Game:
         self.players.append(new_player)
         return new_player.uid
 
-    def initilize_player_order(self) -> dict[int, int]:
-        # TODO fix, order should be clockwise starting from the highest player
+    def initilize_first_player(self) -> dict[int, int]:
         # NOTE roll dice and return, may be difficult for frontend, probably trigger event -> listen
-        roll_result = []  # (sum, uid, (dice_1, dice_2))
+        roll_result = []  # (sum, player_uid, (dice_1, dice_2))
+        roll_max = (0, -1)  # (sum, player_uid)
         for player in self.players:
             dice_1, dice_2 = dice.roll(num_faces=6, num_dice=2)
             roll_result.append((dice_1 + dice_2, player.uid, (dice_1, dice_2)))
-        sorted_rank = sorted(roll_result)
-        self.player_order = [x[1] for x in sorted_rank]
+            if dice_1 + dice_2 > roll_max[0]:  # if same value, first player first
+                roll_max = (dice_1 + dice_2, player.uid)
+        self.current_player_uid = roll_max[1]
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
     # NOTE probably need to break down host into round instance maybe
