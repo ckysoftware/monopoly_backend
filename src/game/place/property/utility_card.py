@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game.player import Player
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, slots=True)
 class UtilityCard(Property):
     def compute_rent(self, dice_count) -> int:
         if self.mortgaged:

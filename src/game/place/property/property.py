@@ -7,7 +7,7 @@ from game.place.place import Place
 from game.place.property.property_set import PropertySet
 
 
-@dataclass
+@dataclass(kw_only=True, slots=True)
 class Property(Place):
     price: int
     property_set: PropertySet

@@ -17,7 +17,7 @@ class Player:
 
     def __post_init__(self):
         if isinstance(self.cash, int):
-            self.cash = Cash(self.cash)
+            self.cash = Cash(balance=self.cash)
 
     def add_property(self, property: PropertyCard) -> None:
         self.properties.append(property)

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-@dataclass(slots=True)
+@dataclass(kw_only=True, slots=True)
 class Cash:
     balance: int
 

@@ -7,7 +7,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game.place.property.property import Property
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, slots=True)
 class PropertySet:
     set_id: int
     properties: list[Property] = field(default_factory=list)

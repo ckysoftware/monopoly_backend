@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game.player import Player
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, slots=True)
 class RailroadCard(Property):
     rent: list[int] = field(default_factory=list)
 
