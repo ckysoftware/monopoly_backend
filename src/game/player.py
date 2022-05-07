@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-import src.constants as c
+import constants as c
 from game.cash import Cash
 from game.place.property.property_card import PropertyCard
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import src.constants as c
+import constants as c
 from game.actions import Action as A
 from game.place.property.property import Property
 

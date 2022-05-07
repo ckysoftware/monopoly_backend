@@ -1,5 +1,5 @@
 import pytest
-import src.constants as c
+import constants as c
 from game.actions import Action as A
 from game.place.property.property_card import PropertyCard
 from game.place.property.property_set import PropertySet
