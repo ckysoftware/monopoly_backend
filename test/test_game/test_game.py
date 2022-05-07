@@ -93,14 +93,14 @@ def test_roll_dice(game_with_players):
 
 
 def test_move_player(game_with_players):
-    new_pos = game_with_players.move_player(uid=0, steps=8)
+    new_pos = game_with_players.move_player(player_uid=0, steps=8)
     assert new_pos == 8
     assert game_with_players.players[0].position == 8
 
 
 def test_offset_go_pos(game_with_players):
-    new_pos = game_with_players.move_player(uid=0, steps=3)
-    new_pos = game_with_players.offset_go_pos(uid=0)
+    new_pos = game_with_players.move_player(player_uid=0, steps=3)
+    new_pos = game_with_players.offset_go_pos(player_uid=0)
     assert new_pos == 1
     assert game_with_players.players[0].position == 1
 
@@ -108,9 +108,9 @@ def test_offset_go_pos(game_with_players):
 def test_initilize_player_order(game_with_players):
     roll_result = game_with_players.initilize_player_order()
     recon_result = []  # reconstruct the order from the roll result
-    for uid, dice_rolls in roll_result.items():
+    for player_uid, dice_rolls in roll_result.items():
         dice_1, dice_2 = dice_rolls
-        recon_result.append((dice_1 + dice_2, uid))
+        recon_result.append((dice_1 + dice_2, player_uid))
     recon_result.sort()
     recon_order = [x[1] for x in recon_result]
 
@@ -120,34 +120,34 @@ def test_initilize_player_order(game_with_players):
     player_order = (
         game_with_players.player_order.copy()
     )  # check all players are covered
-    for uid in roll_result.keys():
-        player_order.remove(uid)
+    for player_uid in roll_result.keys():
+        player_order.remove(player_uid)
     assert len(player_order) == 0
 
 
 def test_check_double_roll_with_none(game_with_players):
-    action = game_with_players.check_double_roll(uid=2, dice_1=5, dice_2=5)
+    action = game_with_players.check_double_roll(player_uid=2, dice_1=5, dice_2=5)
     assert action is A.ASK_TO_ROLL
     assert game_with_players._roll_double_counter == (2, 1)
 
 
 def test_check_double_roll_with_one_count(game_with_players):
     game_with_players._roll_double_counter = (2, 1)
-    action = game_with_players.check_double_roll(uid=2, dice_1=1, dice_2=1)
+    action = game_with_players.check_double_roll(player_uid=2, dice_1=1, dice_2=1)
     assert action is A.ASK_TO_ROLL
     assert game_with_players._roll_double_counter == (2, 2)
 
 
 def test_check_double_roll_over_limit(game_with_players):
     game_with_players._roll_double_counter = (2, 2)
-    action = game_with_players.check_double_roll(uid=2, dice_1=3, dice_2=3)
+    action = game_with_players.check_double_roll(player_uid=2, dice_1=3, dice_2=3)
     assert action is A.SEND_TO_JAIL
     assert game_with_players._roll_double_counter is None
 
 
 def test_check_double_roll_not_double_reset(game_with_players):
     game_with_players._roll_double_counter = (2, 1)
-    action = game_with_players.check_double_roll(uid=2, dice_1=1, dice_2=3)
+    action = game_with_players.check_double_roll(player_uid=2, dice_1=1, dice_2=3)
     assert action is A.NOTHING
     assert game_with_players._roll_double_counter is None
 
@@ -157,34 +157,34 @@ def test_check_double_roll_diff_player_incorrect_reset(game_with_players):
     with pytest.raises(
         ValueError, match="Roll double counter has not been resetted correctly"
     ):
-        _ = game_with_players.check_double_roll(uid=5, dice_1=1, dice_2=1)
+        _ = game_with_players.check_double_roll(player_uid=5, dice_1=1, dice_2=1)
 
 
 def test_check_go_pass_false(game_with_players):
     game_with_players.players[0].position = 1
-    action = game_with_players.check_go_pass(uid=0)
+    action = game_with_players.check_go_pass(player_uid=0)
     assert action == A.NOTHING
 
 
 def test_check_go_pass_true(game_with_players):
     game_with_players.players[0].position = 3
-    action = game_with_players.check_go_pass(uid=0)
+    action = game_with_players.check_go_pass(player_uid=0)
     assert action == A.PASS_GO
 
 
 def test_trigger_place(game_with_players):
     game_with_players.players[0].position = 1
-    action = game_with_players.trigger_place(uid=0)
+    action = game_with_players.trigger_place(player_uid=0)
     assert action == A.CHARGE_RENT
 
 
 def test_add_player_cash(game_with_players):
-    new_cash = game_with_players.add_player_cash(uid=0, amount=300)
+    new_cash = game_with_players.add_player_cash(player_uid=0, amount=300)
     assert new_cash == c.CONST_STARTING_CASH + 300
     assert game_with_players.players[0].cash.balance == c.CONST_STARTING_CASH + 300
 
 
 def test_sub_player_cash(game_with_players):
-    new_cash = game_with_players.sub_player_cash(uid=0, amount=600)
+    new_cash = game_with_players.sub_player_cash(player_uid=0, amount=600)
     assert new_cash == c.CONST_STARTING_CASH - 600
     assert game_with_players.players[0].cash.balance == c.CONST_STARTING_CASH - 600

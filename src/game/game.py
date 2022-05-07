@@ -42,16 +42,16 @@ class Game:
     def roll_dice(self) -> (int):
         return dice.roll(num_faces=6, num_dice=2)
 
-    def check_double_roll(self, uid: int, dice_1: int, dice_2: int) -> A:
+    def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> A:
         if dice_1 == dice_2:
             if self._roll_double_counter is None:
-                self._roll_double_counter = (uid, 1)
+                self._roll_double_counter = (player_uid, 1)
                 return A.ASK_TO_ROLL
-            elif self._roll_double_counter[0] != uid:
+            elif self._roll_double_counter[0] != player_uid:
                 raise ValueError("Roll double counter has not been resetted correctly")
             elif self._roll_double_counter[1] < c.CONST_MAX_DOUBLE_ROLL - 1:
                 self._roll_double_counter = (
-                    uid,
+                    player_uid,
                     self._roll_double_counter[1] + 1,
                 )
                 return A.ASK_TO_ROLL
@@ -62,27 +62,27 @@ class Game:
             self._roll_double_counter = None
             return A.NOTHING
 
-    def move_player(self, uid: int, steps: int) -> int:
-        return self.players[uid].move(steps)
+    def move_player(self, player_uid: int, steps: int) -> int:
+        return self.players[player_uid].move(steps)
 
-    def check_go_pass(self, uid: int) -> A:
-        if self.players[uid].position >= self.game_map.size:
+    def check_go_pass(self, player_uid: int) -> A:
+        if self.players[player_uid].position >= self.game_map.size:
             return A.PASS_GO
         else:
             return A.NOTHING
 
-    def offset_go_pos(self, uid: int) -> int:
-        new_pos = self.players[uid].offset_position(self.game_map.size)
+    def offset_go_pos(self, player_uid: int) -> int:
+        new_pos = self.players[player_uid].offset_position(self.game_map.size)
         return new_pos
 
-    def trigger_place(self, uid: int) -> A:
-        action = self.game_map.trigger(self.players[uid])
+    def trigger_place(self, player_uid: int) -> A:
+        action = self.game_map.trigger(self.players[player_uid])
         return action
 
-    def add_player_cash(self, uid: int, amount: int) -> int:
-        new_cash = self.players[uid].add_cash(amount)
+    def add_player_cash(self, player_uid: int, amount: int) -> int:
+        new_cash = self.players[player_uid].add_cash(amount)
         return new_cash
 
-    def sub_player_cash(self, uid: int, amount: int) -> int:
-        new_cash = self.players[uid].sub_cash(amount)
+    def sub_player_cash(self, player_uid: int, amount: int) -> int:
+        new_cash = self.players[player_uid].sub_cash(amount)
         return new_cash
