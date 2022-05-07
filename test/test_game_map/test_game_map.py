@@ -1,8 +1,8 @@
 import pytest
-from src.game.game_map import GameMap
-from src.game.place.property.property_card import PropertyCard
-from src.game.place.property.property_set import PropertySet
-from src.game.player import Player
+from game.game_map import GameMap
+from game.place.property.property_card import PropertyCard
+from game.place.property.property_set import PropertySet
+from game.player import Player
 
 
 @pytest.fixture

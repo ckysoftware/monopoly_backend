@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
-from src.game.place.place import Place
-from src.game.player import Player
+from game.place.place import Place
+from game.player import Player
 
 
 @dataclass(kw_only=True)

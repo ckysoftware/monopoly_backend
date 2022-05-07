@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 
 import src.constants as c
-from src.game.cash import Cash
-from src.game.place.property.property_card import PropertyCard
+from game.cash import Cash
+from game.place.property.property_card import PropertyCard
 
 
 @dataclass(kw_only=True)

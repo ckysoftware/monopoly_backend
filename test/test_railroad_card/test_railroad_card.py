@@ -1,8 +1,8 @@
 import pytest
-from src.game.actions import Action as A
-from src.game.place.property.property_set import PropertySet
-from src.game.place.property.railroad_card import RailroadCard
-from src.game.player import Player
+from game.actions import Action as A
+from game.place.property.property_set import PropertySet
+from game.place.property.railroad_card import RailroadCard
+from game.player import Player
 
 
 @pytest.fixture

@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
 
-import src.constants as c
-import src.game.dice as dice
-from src.game.actions import Action as A
-from src.game.game_map import GameMap
-from src.game.player import Player
+import constants as c
+
+import game.dice as dice
+from game.actions import Action as A
+from game.game_map import GameMap
+from game.player import Player
 
 
 @dataclass(kw_only=True)
