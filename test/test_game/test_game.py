@@ -3,8 +3,8 @@ import src.constants as c
 from src.game.actions import Action as A
 from src.game.game import Game
 from src.game.game_map import GameMap
-from src.game.place.property_card import PropertyCard
-from src.game.place.property_set import PropertySet
+from src.game.place.property.property_card import PropertyCard
+from src.game.place.property.property_set import PropertySet
 from src.game.player import Player
 
 
@@ -71,7 +71,7 @@ def test_game_init(game_init):
     game, game_map = game_init
     assert id(game.game_map) == id(game_map)
     assert game.players == []
-    assert game.current_player_uid is None
+    assert game.current_order_pos is None
     assert game.player_order == []
     assert game._roll_double_counter is None
 

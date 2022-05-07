@@ -1,7 +1,7 @@
 import pytest
 from src.game.actions import Action as A
-from src.game.place.property_set import PropertySet
-from src.game.place.railroad_card import RailroadCard
+from src.game.place.property.property_set import PropertySet
+from src.game.place.property.railroad_card import RailroadCard
 from src.game.player import Player
 
 

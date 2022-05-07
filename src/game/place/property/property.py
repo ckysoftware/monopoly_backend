@@ -4,7 +4,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 
 from src.game.place.place import Place
-from src.game.place.property_set import PropertySet
+from src.game.place.property.property_set import PropertySet
 
 
 @dataclass

@@ -1,6 +1,6 @@
 import pytest
-from src.game.place.property_card import PropertyCard
-from src.game.place.property_set import PropertySet
+from src.game.place.property.property_card import PropertyCard
+from src.game.place.property.property_set import PropertySet
 from src.game.player import Player
 
 

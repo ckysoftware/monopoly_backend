@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from src.game.place.property import Property
+    from src.game.place.property.property import Property
 
 
 @dataclass(kw_only=True)
