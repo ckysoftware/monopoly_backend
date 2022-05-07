@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from game.actions import Action as A
-from game.place.property.property import Property
+from game.space.property.property import Property
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game.player import Player

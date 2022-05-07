@@ -3,12 +3,12 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 
-from game.place.place import Place
-from game.place.property.property_set import PropertySet
+from game.space.property.property_set import PropertySet
+from game.space.space import Space
 
 
 @dataclass(kw_only=True, slots=True)
-class Property(Place):
+class Property(Space):
     price: int
     property_set: PropertySet
     mortgaged: bool = False

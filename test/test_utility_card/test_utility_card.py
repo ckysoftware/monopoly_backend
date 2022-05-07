@@ -1,9 +1,9 @@
 import constants as c
 import pytest
 from game.actions import Action as A
-from game.place.property.property_set import PropertySet
-from game.place.property.utility_card import UtilityCard
 from game.player import Player
+from game.space.property.property_set import PropertySet
+from game.space.property.utility_card import UtilityCard
 
 
 @pytest.fixture

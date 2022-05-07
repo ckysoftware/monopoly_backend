@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from game.cash import Cash
-from game.place.property.property_card import PropertyCard
+from game.space.property.property_card import PropertyCard
 
 
 @dataclass(kw_only=True, slots=True)

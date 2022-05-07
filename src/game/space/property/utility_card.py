@@ -1,24 +1,24 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from game.actions import Action as A
-from game.place.property.property import Property
+from game.space.property.property import Property
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game.player import Player
 
 
 @dataclass(kw_only=True, slots=True)
-class RailroadCard(Property):
-    rent: list[int] = field(default_factory=list)
-
-    def compute_rent(self) -> int:
+class UtilityCard(Property):
+    def compute_rent(self, dice_count) -> int:
         if self.mortgaged:
             return 0
-        owned_stations = self.property_set.count_owned(self.owner_uid)
-        return self.rent[owned_stations - 1]
+        elif self.property_set.monopoly:
+            return dice_count * 10
+        else:
+            return dice_count * 4
 
     def mortgage(self) -> None:
         if self.mortgaged:

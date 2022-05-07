@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 
 @dataclass(kw_only=True, slots=True)
-class Place(ABC):
+class Space(ABC):
     name: str
 
     @abstractmethod
