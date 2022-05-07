@@ -1,3 +1,4 @@
+import constants as c
 import pytest
 from game.actions import Action as A
 from game.place.property.property_set import PropertySet
@@ -52,7 +53,7 @@ def util_card_diff_owners():
 
 @pytest.fixture
 def player_simple():
-    player = Player(name="Player 1", uid=0)
+    player = Player(name="Player 1", uid=0, cash=c.CONST_STARTING_CASH)
     return player
 
 

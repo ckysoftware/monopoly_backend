@@ -17,6 +17,8 @@ def game_init():
         rent=[2, 10, 30, 90, 160, 250],
         price_of_house=50,
         price_of_hotel=50,
+        CONST_HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
         owner_uid=1,
     )
@@ -26,6 +28,8 @@ def game_init():
         rent=[2, 10, 30, 90, 160, 250],
         price_of_house=50,
         price_of_hotel=50,
+        CONST_HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
         owner_uid=10,
     )
@@ -45,6 +49,8 @@ def game_with_players():
         rent=[2, 10, 30, 90, 160, 250],
         price_of_house=50,
         price_of_hotel=50,
+        CONST_HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
         owner_uid=1,
     )
@@ -54,6 +60,8 @@ def game_with_players():
         rent=[2, 10, 30, 90, 160, 250],
         price_of_house=50,
         price_of_hotel=50,
+        CONST_HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
         owner_uid=10,
     )
@@ -62,7 +70,7 @@ def game_with_players():
     game_map = GameMap(map_list=[property_card_1, property_card_2])
     game = Game(game_map=game_map)
     for i in range(4):
-        new_player = Player(name=f"Player {i + 1}", uid=i)
+        new_player = Player(name=f"Player {i + 1}", uid=i, cash=c.CONST_STARTING_CASH)
         game.players.append(new_player)
     return game
 

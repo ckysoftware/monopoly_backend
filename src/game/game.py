@@ -16,7 +16,9 @@ class Game:
     _roll_double_counter: (int) = None  # tuple(int, int) to store (uid, double_count)
 
     def add_player(self, name: str):
-        new_player = Player(name=name, uid=len(self.players))
+        new_player = Player(
+            name=name, uid=len(self.players), cash=c.CONST_STARTING_CASH
+        )
         self.players.append(new_player)
         return new_player.uid
 

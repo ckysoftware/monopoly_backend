@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import constants as c
 from game.actions import Action as A
 from game.place.property.property import Property
 
@@ -16,11 +15,13 @@ class PropertyCard(Property):
     rent: list[int]
     price_of_house: int
     price_of_hotel: int
+    CONST_HOUSE_LIMIT: int
+    CONST_HOTEL_LIMIT: int
     no_of_houses: int = 0
     no_of_hotels: int = 0
 
     def __post_init__(self):
-        assert len(self.rent) == c.CONST_HOUSE_LIMIT + 2  # without + houses + hotel
+        assert len(self.rent) == self.CONST_HOUSE_LIMIT + 2  # without + houses + hotel
 
     def assign_owner(self, character) -> None:
         self.owner_uid = character
@@ -58,7 +59,7 @@ class PropertyCard(Property):
     def add_house(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is mortgaged")
-        if self.no_of_houses == c.CONST_HOUSE_LIMIT:
+        if self.no_of_houses == self.CONST_HOUSE_LIMIT:
             raise ValueError("House limit reached")
         if not self.property_set.monopoly:
             raise ValueError("Property is not in monopoly")
@@ -67,9 +68,9 @@ class PropertyCard(Property):
     def add_hotel(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is mortgaged")
-        if self.no_of_hotels == c.CONST_HOTEL_LIMIT:
+        if self.no_of_hotels == self.CONST_HOTEL_LIMIT:
             raise ValueError("Hotel limit reached")
-        if self.no_of_houses != c.CONST_HOUSE_LIMIT:
+        if self.no_of_houses != self.CONST_HOUSE_LIMIT:
             raise ValueError("Not enough houses")
         self.no_of_houses = 0
         self.no_of_hotels = 1
@@ -83,7 +84,7 @@ class PropertyCard(Property):
         if self.no_of_hotels == 0:
             raise ValueError("No hotels to remove")
         self.no_of_hotels = 0
-        self.no_of_houses = c.CONST_HOUSE_LIMIT
+        self.no_of_houses = self.CONST_HOUSE_LIMIT
 
     def trigger(self, player: Player) -> int:
         if self.owner_uid is None:

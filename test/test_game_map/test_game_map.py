@@ -1,3 +1,4 @@
+import constants as c
 import pytest
 from game.game_map import GameMap
 from game.place.property.property_card import PropertyCard
@@ -7,7 +8,7 @@ from game.player import Player
 
 @pytest.fixture
 def player_simple():
-    player = Player(name="Player 1", uid=0)
+    player = Player(name="Player 1", uid=0, cash=c.CONST_STARTING_CASH)
     return player
 
 
@@ -20,6 +21,8 @@ def prop_cards():
         rent=[2, 10, 30, 90, 160, 250],
         price_of_house=50,
         price_of_hotel=50,
+        CONST_HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
         owner_uid=1,
     )
@@ -29,6 +32,8 @@ def prop_cards():
         rent=[2, 10, 30, 90, 160, 250],
         price_of_house=50,
         price_of_hotel=50,
+        CONST_HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
         owner_uid=10,
     )

@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
 
-import constants as c
-
 from game.cash import Cash
 from game.place.property.property_card import PropertyCard
 
@@ -10,9 +8,9 @@ from game.place.property.property_card import PropertyCard
 class Player:
     name: str
     uid: int
+    cash: Cash | int
     token: int = None
     properties: list[PropertyCard] = field(default_factory=list)
-    cash: Cash | int = c.CONST_STARTING_CASH
     position: int = 0
 
     def __post_init__(self):
