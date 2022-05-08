@@ -23,10 +23,6 @@ class PropertyCard(Property):
     def __post_init__(self):
         assert len(self.rent) == self.CONST_HOUSE_LIMIT + 2  # without + houses + hotel
 
-    def assign_owner(self, character) -> None:
-        self.owner_uid = character
-        self.property_set.update_monopoly()
-
     def compute_rent(self) -> int:
         if self.mortgaged:
             return 0
