@@ -16,6 +16,6 @@ class Space(ABC):
     @abstractmethod
     def trigger(self, player: Player) -> A:
         """
-        This method triggers the card's action and return action result.
+        This method triggers the space's action and return action result.
         """
         pass
