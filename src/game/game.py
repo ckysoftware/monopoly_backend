@@ -22,13 +22,15 @@ class Game:
         self.players.append(new_player)
         return new_player.uid
 
-    def initilize_first_player(self) -> dict[int, int]:
+    def initilize_first_player(self) -> dict[int, tuple[int, ...]]:
         # NOTE roll dice and return, may be difficult for frontend, probably trigger event -> listen
         roll_result = []  # (sum, player_uid, (dice_1, dice_2))
         roll_max = (0, -1)  # (sum, player_uid)
         for player in self.players:
             dice_1, dice_2 = dice.roll(num_faces=6, num_dice=2)
-            roll_result.append((dice_1 + dice_2, player.uid, (dice_1, dice_2)))
+            roll_result.append(
+                (dice_1 + dice_2, player.uid, (dice_1, dice_2))
+            )  # sum, player_uid, roll_result tuple(int, ...)
             if dice_1 + dice_2 > roll_max[0]:  # if same value, first player first
                 roll_max = (dice_1 + dice_2, player.uid)
         self.current_player_uid = roll_max[1]
@@ -38,6 +40,7 @@ class Game:
     # host = trigger game.action, ask -> relay msg
     # game = handle game logic -> apply logic
 
+    # TODO
     def next_player(self) -> int:
         pass
 
@@ -46,21 +49,21 @@ class Game:
 
     def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> A:
         if dice_1 == dice_2:
-            if self._roll_double_counter is None:
+            if self._roll_double_counter is None:  # 1st roll
                 self._roll_double_counter = (player_uid, 1)
                 return A.ASK_TO_ROLL
-            elif self._roll_double_counter[0] != player_uid:
+            elif self._roll_double_counter[0] != player_uid:  # Error
                 raise ValueError("Roll double counter has not been resetted correctly")
-            elif self._roll_double_counter[1] < c.CONST_MAX_DOUBLE_ROLL - 1:
+            elif self._roll_double_counter[1] < c.CONST_MAX_DOUBLE_ROLL - 1:  # 2nd roll
                 self._roll_double_counter = (
                     player_uid,
                     self._roll_double_counter[1] + 1,
                 )
                 return A.ASK_TO_ROLL
-            else:
+            else:  # 3rd roll
                 self._roll_double_counter = None
                 return A.SEND_TO_JAIL
-        else:
+        else:  # not double roll
             self._roll_double_counter = None
             return A.NOTHING
 
