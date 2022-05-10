@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from game.card.deck import Deck
+from src.game.card.deck import Deck
 
 from ..space import Space
 

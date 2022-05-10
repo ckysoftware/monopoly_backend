@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from game.actions import Action as A
+from src.game.actions import Action as A
 
 from .property import Property
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from game.player import Player
+    from src.game.player import Player
 
 
 @dataclass(kw_only=True, slots=True)

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from game.actions import Action as A
-    from game.player import Player
+    from src.game.actions import Action as A
+    from src.game.player import Player
 
 
 @dataclass(kw_only=True, slots=True)

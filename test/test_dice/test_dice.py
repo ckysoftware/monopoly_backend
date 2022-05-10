@@ -1,4 +1,4 @@
-import game.dice as dice
+import src.game.dice as dice
 
 
 def test_roll_dice():

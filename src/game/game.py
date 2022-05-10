@@ -2,10 +2,10 @@ from dataclasses import dataclass, field
 
 import constants as c
 
-import game.dice as dice
-from game.actions import Action as A
-from game.game_map import GameMap
-from game.player import Player
+import src.game.dice as dice
+from src.game.actions import Action as A
+from src.game.game_map import GameMap
+from src.game.player import Player
 
 
 @dataclass(kw_only=True, slots=True)
@@ -37,7 +37,7 @@ class Game:
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
     # NOTE probably need to break down host into round instance maybe
-    # host = trigger game.action, ask -> relay msg
+    # host = trigger src.game.action, ask -> relay msg
     # game = handle game logic -> apply logic
 
     # TODO

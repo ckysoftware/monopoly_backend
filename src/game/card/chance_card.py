@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from game.actions import Action
+from src.game.actions import Action
 
 
 # TODO write test

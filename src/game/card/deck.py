@@ -2,7 +2,7 @@ import random
 from collections import deque
 from dataclasses import dataclass, field
 
-from game.card.chance_card import ChanceCard
+from src.game.card.chance_card import ChanceCard
 
 
 # TODO write test

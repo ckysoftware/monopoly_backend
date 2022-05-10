@@ -1,8 +1,8 @@
 import constants as c
 import pytest
-from game.actions import Action as A
-from game.player import Player
-from game.space import TaxSpace
+from src.game.actions import Action as A
+from src.game.player import Player
+from src.game.space import TaxSpace
 
 
 @pytest.fixture

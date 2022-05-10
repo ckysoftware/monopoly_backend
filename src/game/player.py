@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from game.cash import Cash
+from src.game.cash import Cash
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from game.space import PropertySpace
+    from src.game.space import PropertySpace
 
 
 @dataclass(kw_only=True, slots=True)
