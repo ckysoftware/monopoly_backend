@@ -1,7 +1,7 @@
 import constants as c
 import pytest
 from game.player import Player
-from game.space import PropertyCard, PropertySet
+from game.space import PropertySpace, PropertySet
 
 
 @pytest.fixture
@@ -24,9 +24,9 @@ def player_comp():
 
 
 @pytest.fixture
-def prop_card_simple():
+def prop_space_simple():
     property_set = PropertySet(set_id=0)
-    property_card = PropertyCard(
+    property_space = PropertySpace(
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -36,8 +36,8 @@ def prop_card_simple():
         CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
     )
-    property_set.add_property(property_card)
-    return property_card
+    property_set.add_property(property_space)
+    return property_space
 
 
 def test_player_init(player_simple, player_comp):
@@ -72,10 +72,10 @@ def test_move_player_from_nonzero(player_comp):
     assert player_comp.position == 20
 
 
-def test_add_property(player_simple, prop_card_simple):
-    player_simple.add_property(prop_card_simple)
+def test_add_property(player_simple, prop_space_simple):
+    player_simple.add_property(prop_space_simple)
     assert len(player_simple.properties) == 1
-    assert id(player_simple.properties[0]) == id(prop_card_simple)
+    assert id(player_simple.properties[0]) == id(prop_space_simple)
 
 
 def test_add_cash(player_comp):

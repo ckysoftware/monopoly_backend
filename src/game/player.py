@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from game.cash import Cash
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from game.space import PropertyCard
+    from game.space import PropertySpace
 
 
 @dataclass(kw_only=True, slots=True)
@@ -15,14 +15,14 @@ class Player:
     uid: int
     cash: Cash | int
     token: int = None
-    properties: list[PropertyCard] = field(default_factory=list)
+    properties: list[PropertySpace] = field(default_factory=list)
     position: int = 0
 
     def __post_init__(self):
         if isinstance(self.cash, int):
             self.cash = Cash(balance=self.cash)
 
-    def add_property(self, property: PropertyCard) -> None:
+    def add_property(self, property: PropertySpace) -> None:
         self.properties.append(property)
 
     def assign_token(self, token: int) -> None:

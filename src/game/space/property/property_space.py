@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 
 @dataclass(kw_only=True, slots=True)
-class PropertyCard(Property):
+class PropertySpace(Property):
     rent: list[int]
     price_of_house: int
     price_of_hotel: int

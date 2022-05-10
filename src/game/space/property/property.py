@@ -26,13 +26,13 @@ class Property(Space):
         pass
 
     # TODO may need to return money
-    # NOTE probably can use default for utility_card, railroad_card, and only override property_card
+    # NOTE probably can use default for utility_space, railroad_space, and only override property_space
     @abstractmethod
     def mortgage(self) -> None:  # NOTE probably need to return action/event
         pass
 
     # TODO may need to return money
-    # NOTE probably can use default for utility_card, railroad_card, and only override property_card
+    # NOTE probably can use default for utility_space, railroad_space, and only override property_space
     @abstractmethod
     def unmortgage(self) -> None:  # NOTE probably need to return action/event
         pass

@@ -4,13 +4,13 @@ from game.actions import Action as A
 from game.game import Game
 from game.game_map import GameMap
 from game.player import Player
-from game.space import PropertyCard, PropertySet
+from game.space import PropertySpace, PropertySet
 
 
 @pytest.fixture
 def game_init():
     property_set = PropertySet(set_id=0)
-    property_card_1 = PropertyCard(
+    property_space_1 = PropertySpace(
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -21,7 +21,7 @@ def game_init():
         property_set=property_set,
         owner_uid=1,
     )
-    property_card_2 = PropertyCard(
+    property_space_2 = PropertySpace(
         name="Property 2",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -32,9 +32,9 @@ def game_init():
         property_set=property_set,
         owner_uid=10,
     )
-    property_set.add_property(property_card_1)
-    property_set.add_property(property_card_2)
-    game_map = GameMap(map_list=[property_card_1, property_card_2])
+    property_set.add_property(property_space_1)
+    property_set.add_property(property_space_2)
+    game_map = GameMap(map_list=[property_space_1, property_space_2])
     game = Game(game_map=game_map)
     return game, game_map
 
@@ -42,7 +42,7 @@ def game_init():
 @pytest.fixture
 def game_with_players():
     property_set = PropertySet(set_id=0)
-    property_card_1 = PropertyCard(
+    property_space_1 = PropertySpace(
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -53,7 +53,7 @@ def game_with_players():
         property_set=property_set,
         owner_uid=1,
     )
-    property_card_2 = PropertyCard(
+    property_space_2 = PropertySpace(
         name="Property 2",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -64,9 +64,9 @@ def game_with_players():
         property_set=property_set,
         owner_uid=10,
     )
-    property_set.add_property(property_card_1)
-    property_set.add_property(property_card_2)
-    game_map = GameMap(map_list=[property_card_1, property_card_2])
+    property_set.add_property(property_space_1)
+    property_set.add_property(property_space_2)
+    game_map = GameMap(map_list=[property_space_1, property_space_2])
     game = Game(game_map=game_map)
     for i in range(4):
         new_player = Player(name=f"Player {i + 1}", uid=i, cash=c.CONST_STARTING_CASH)

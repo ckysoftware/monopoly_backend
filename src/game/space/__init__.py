@@ -1,5 +1,5 @@
 from .misc import DrawSpace, NthSpace, TaxSpace
-from .property import Property, PropertyCard, PropertySet, RailroadCard, UtilityCard
+from .property import Property, PropertySpace, PropertySet, RailroadSpace, UtilitySpace
 from .space import Space
 
 __all__ = [
@@ -7,9 +7,9 @@ __all__ = [
     "NthSpace",
     "TaxSpace",
     "Property",
-    "PropertyCard",
+    "PropertySpace",
     "PropertySet",
-    "RailroadCard",
-    "UtilityCard",
+    "RailroadSpace",
+    "UtilitySpace",
     "Space",
 ]

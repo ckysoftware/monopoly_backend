@@ -1,12 +1,12 @@
 import constants as c
 import pytest
-from game.space import PropertyCard, PropertySet
+from game.space import PropertySpace, PropertySet
 
 
 @pytest.fixture
 def prop_set_simple():
     property_set = PropertySet(set_id=2)
-    property_card = PropertyCard(
+    property_space = PropertySpace(
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -16,14 +16,14 @@ def prop_set_simple():
         CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
     )
-    property_set.add_property(property_card)
+    property_set.add_property(property_space)
     return property_set
 
 
 @pytest.fixture
 def prop_set_monopoly():
     property_set = PropertySet(set_id=2)
-    property_card_1 = PropertyCard(
+    property_space_1 = PropertySpace(
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -34,7 +34,7 @@ def prop_set_monopoly():
         property_set=property_set,
         owner_uid=1,
     )
-    property_card_2 = PropertyCard(
+    property_space_2 = PropertySpace(
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -45,8 +45,8 @@ def prop_set_monopoly():
         property_set=property_set,
         owner_uid=1,
     )
-    property_set.add_property(property_card_1)
-    property_set.add_property(property_card_2)
+    property_set.add_property(property_space_1)
+    property_set.add_property(property_space_2)
     property_set.monopoly = True
     return property_set
 
@@ -54,7 +54,7 @@ def prop_set_monopoly():
 @pytest.fixture
 def prop_set_four_unowned():
     property_set = PropertySet(set_id=2)
-    property_card_1 = PropertyCard(
+    property_space_1 = PropertySpace(
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -64,7 +64,7 @@ def prop_set_four_unowned():
         CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
     )
-    property_card_2 = PropertyCard(
+    property_space_2 = PropertySpace(
         name="Property 2",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -74,7 +74,7 @@ def prop_set_four_unowned():
         CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
     )
-    property_card_3 = PropertyCard(
+    property_space_3 = PropertySpace(
         name="Property 3",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -84,7 +84,7 @@ def prop_set_four_unowned():
         CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
     )
-    property_card_4 = PropertyCard(
+    property_space_4 = PropertySpace(
         name="Property 4",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -94,10 +94,10 @@ def prop_set_four_unowned():
         CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
     )
-    property_set.add_property(property_card_1)
-    property_set.add_property(property_card_2)
-    property_set.add_property(property_card_3)
-    property_set.add_property(property_card_4)
+    property_set.add_property(property_space_1)
+    property_set.add_property(property_space_2)
+    property_set.add_property(property_space_3)
+    property_set.add_property(property_space_4)
     return property_set
 
 
