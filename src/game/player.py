@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from game.cash import Cash
-from game.space.property.property_card import PropertyCard
+
+if TYPE_CHECKING:  # Only imports the below statements during type checking
+    from game.space import PropertyCard
 
 
 @dataclass(kw_only=True, slots=True)

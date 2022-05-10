@@ -2,7 +2,7 @@ import constants as c
 import pytest
 from game.actions import Action as A
 from game.player import Player
-from game.space.tax_space import TaxSpace
+from game.space import TaxSpace
 
 
 @pytest.fixture

@@ -1,8 +1,7 @@
 import constants as c
 import pytest
 from game.player import Player
-from game.space.property.property_card import PropertyCard
-from game.space.property.property_set import PropertySet
+from game.space import PropertyCard, PropertySet
 
 
 @pytest.fixture

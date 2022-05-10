@@ -2,8 +2,7 @@ import constants as c
 import pytest
 from game.actions import Action as A
 from game.player import Player
-from game.space.property.property_set import PropertySet
-from game.space.property.railroad_card import RailroadCard
+from game.space import PropertySet, RailroadCard
 
 
 @pytest.fixture

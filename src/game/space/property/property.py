@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from game.space.property.property_set import PropertySet
-from game.space.space import Space
+from ..space import Space
+
+if TYPE_CHECKING:  # Only imports the below statements during type checking
+    from .property_set import PropertySet
 
 
 @dataclass(kw_only=True, slots=True)

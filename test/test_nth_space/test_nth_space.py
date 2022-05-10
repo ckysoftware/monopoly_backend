@@ -2,7 +2,7 @@ import constants as c
 import pytest
 from game.actions import Action as A
 from game.player import Player
-from game.space.nth_space import NthSpace
+from game.space import NthSpace
 
 
 @pytest.fixture

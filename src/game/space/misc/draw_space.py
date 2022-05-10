@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 from game.card.deck import Deck
-from game.space.space import Space
+
+from ..space import Space
 
 
 @dataclass(kw_only=True, slots=True)

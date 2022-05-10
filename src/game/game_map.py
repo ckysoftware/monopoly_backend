@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from game.player import Player
-from game.space.space import Space
+from game.space import Space
 
 
 @dataclass(kw_only=True, slots=True)
