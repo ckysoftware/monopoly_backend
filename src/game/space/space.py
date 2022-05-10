@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from src.game.actions import Action as A
+    from src.game.actions import Action
     from src.game.player import Player
 
 
@@ -14,7 +14,7 @@ class Space(ABC):
     name: str
 
     @abstractmethod
-    def trigger(self, player: Player) -> A:
+    def trigger(self, player: Player) -> Action:
         """
         This method triggers the space's action and return action result.
         """

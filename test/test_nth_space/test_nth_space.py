@@ -1,6 +1,6 @@
 import constants as c
 import pytest
-from src.game.actions import Action as A
+from src.game.actions import Action
 from src.game.player import Player
 from src.game.space import NthSpace
 
@@ -22,4 +22,4 @@ def test_nth_space_init(nth_space_simple):
 
 
 def test_nth_space_trigger(nth_space_simple, player_simple):
-    assert nth_space_simple.trigger(player_simple) == A.NOTHING
+    assert nth_space_simple.trigger(player_simple) == Action.NOTHING

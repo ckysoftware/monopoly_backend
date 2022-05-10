@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from src.game.player import Player
 from src.game.space import Space
 
+from game.actions import Action
+
 
 @dataclass(kw_only=True, slots=True)
 class GameMap:
@@ -16,7 +18,7 @@ class GameMap:
     def __post_init__(self):
         self.size = len(self.map_list)
 
-    def trigger(self, player: Player) -> int:
+    def trigger(self, player: Player) -> Action:
         """
         This method triggers the card's action and action result.
         """

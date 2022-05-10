@@ -1,6 +1,6 @@
 import constants as c
 import pytest
-from src.game.actions import Action as A
+from src.game.actions import Action
 from src.game.player import Player
 from src.game.space import TaxSpace
 
@@ -13,32 +13,32 @@ def player_simple():
 
 @pytest.fixture
 def tax_space_income_tax():
-    tax_space_income = TaxSpace(name="Income Tax", TAX_ACTION=A.CHARGE_INCOME_TAX)
+    tax_space_income = TaxSpace(name="Income Tax", TAX_ACTION=Action.CHARGE_INCOME_TAX)
     return tax_space_income
 
 
 @pytest.fixture
 def tax_space_luxary_tax():
-    tax_space_luxuary = TaxSpace(name="Luxary Tax", TAX_ACTION=A.CHARGE_LUXARY_TAX)
+    tax_space_luxuary = TaxSpace(name="Luxary Tax", TAX_ACTION=Action.CHARGE_LUXARY_TAX)
     return tax_space_luxuary
 
 
 def test_tax_space_income_init(tax_space_income_tax):
     assert tax_space_income_tax.name == "Income Tax"
-    assert tax_space_income_tax.TAX_ACTION == A.CHARGE_INCOME_TAX
+    assert tax_space_income_tax.TAX_ACTION == Action.CHARGE_INCOME_TAX
 
 
 def test_tax_space_luxary_init(tax_space_luxary_tax):
     assert tax_space_luxary_tax.name == "Luxary Tax"
-    assert tax_space_luxary_tax.TAX_ACTION == A.CHARGE_LUXARY_TAX
+    assert tax_space_luxary_tax.TAX_ACTION == Action.CHARGE_LUXARY_TAX
 
 
 def test_tax_space_income_trigger(tax_space_income_tax, player_simple):
-    assert tax_space_income_tax.trigger(player_simple) == A.CHARGE_INCOME_TAX
+    assert tax_space_income_tax.trigger(player_simple) == Action.CHARGE_INCOME_TAX
 
 
 def test_tax_space_luxary_trigger(tax_space_luxary_tax, player_simple):
-    assert tax_space_luxary_tax.trigger(player_simple) == A.CHARGE_LUXARY_TAX
+    assert tax_space_luxary_tax.trigger(player_simple) == Action.CHARGE_LUXARY_TAX
 
 
 def test_tax_space_income_init_other_tax_action():
@@ -46,4 +46,4 @@ def test_tax_space_income_init_other_tax_action():
         ValueError,
         match="Tax space must have a TAX_ACTION of either CHARGE_INCOME_TAX or CHARGE_LUXARY_TAX",
     ):
-        TaxSpace(name="Income Tax", TAX_ACTION=A.NOTHING)
+        TaxSpace(name="Income Tax", TAX_ACTION=Action.NOTHING)

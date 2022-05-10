@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from src.game.actions import Action as A
+from src.game.actions import Action
 
 from .property import Property
 
@@ -83,10 +83,10 @@ class PropertySpace(Property):
         self.no_of_hotels = 0
         self.no_of_houses = self.CONST_HOUSE_LIMIT
 
-    def trigger(self, player: Player) -> int:
+    def trigger(self, player: Player) -> Action:
         if self.owner_uid is None:
-            return A.ASK_TO_BUY
+            return Action.ASK_TO_BUY
         elif self.owner_uid == player.uid:
-            return A.NOTHING
+            return Action.NOTHING
         else:  # self.owner_uid != player.uid:
-            return A.CHARGE_RENT
+            return Action.CHARGE_RENT

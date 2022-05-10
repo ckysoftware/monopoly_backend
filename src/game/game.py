@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field
 
 import constants as c
-
 import src.game.dice as dice
-from src.game.actions import Action as A
+from src.game.actions import Action
 from src.game.game_map import GameMap
 from src.game.player import Player
 
@@ -47,11 +46,11 @@ class Game:
     def roll_dice(self) -> (int):
         return dice.roll(num_faces=6, num_dice=2)
 
-    def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> A:
+    def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> Action:
         if dice_1 == dice_2:
             if self._roll_double_counter is None:  # 1st roll
                 self._roll_double_counter = (player_uid, 1)
-                return A.ASK_TO_ROLL
+                return Action.ASK_TO_ROLL
             elif self._roll_double_counter[0] != player_uid:  # Error
                 raise ValueError("Roll double counter has not been resetted correctly")
             elif self._roll_double_counter[1] < c.CONST_MAX_DOUBLE_ROLL - 1:  # 2nd roll
@@ -59,28 +58,28 @@ class Game:
                     player_uid,
                     self._roll_double_counter[1] + 1,
                 )
-                return A.ASK_TO_ROLL
+                return Action.ASK_TO_ROLL
             else:  # 3rd roll
                 self._roll_double_counter = None
-                return A.SEND_TO_JAIL
+                return Action.SEND_TO_JAIL
         else:  # not double roll
             self._roll_double_counter = None
-            return A.NOTHING
+            return Action.NOTHING
 
     def move_player(self, player_uid: int, steps: int) -> int:
         return self.players[player_uid].move(steps)
 
-    def check_go_pass(self, player_uid: int) -> A:
+    def check_go_pass(self, player_uid: int) -> Action:
         if self.players[player_uid].position >= self.game_map.size:
-            return A.PASS_GO
+            return Action.PASS_GO
         else:
-            return A.NOTHING
+            return Action.NOTHING
 
     def offset_go_pos(self, player_uid: int) -> int:
         new_pos = self.players[player_uid].offset_position(self.game_map.size)
         return new_pos
 
-    def trigger_place(self, player_uid: int) -> A:
+    def trigger_space(self, player_uid: int) -> Action:
         action = self.game_map.trigger(self.players[player_uid])
         return action
 

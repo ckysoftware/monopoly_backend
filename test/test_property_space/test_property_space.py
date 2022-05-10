@@ -1,6 +1,6 @@
 import constants as c
 import pytest
-from src.game.actions import Action as A
+from src.game.actions import Action
 from src.game.player import Player
 from src.game.space import PropertySpace, PropertySet
 
@@ -252,13 +252,13 @@ def test_remove_hotel_empty(prop_space_simple):
 
 
 def test_trigger_unowned(prop_space_simple, player_simple):
-    assert prop_space_simple.trigger(player_simple) == A.ASK_TO_BUY
+    assert prop_space_simple.trigger(player_simple) == Action.ASK_TO_BUY
 
 
 def test_trigger_diff_owner(prop_space_diff_owners, player_simple):
-    assert prop_space_diff_owners.trigger(player_simple) == A.CHARGE_RENT
+    assert prop_space_diff_owners.trigger(player_simple) == Action.CHARGE_RENT
 
 
 def test_trigger_same_owner(prop_space_diff_owners, player_simple):
     player_simple.uid = 1
-    assert prop_space_diff_owners.trigger(player_simple) == A.NOTHING
+    assert prop_space_diff_owners.trigger(player_simple) == Action.NOTHING

@@ -1,6 +1,6 @@
 import constants as c
 import pytest
-from src.game.actions import Action as A
+from src.game.actions import Action
 from src.game.player import Player
 from src.game.space import PropertySet, RailroadSpace
 
@@ -118,13 +118,13 @@ def test_mortgage_no_owner(rail_space_simple):
 
 
 def test_trigger_unowned(rail_space_simple, player_simple):
-    assert rail_space_simple.trigger(player_simple) == A.ASK_TO_BUY
+    assert rail_space_simple.trigger(player_simple) == Action.ASK_TO_BUY
 
 
 def test_trigger_diff_owner(rail_space_diff_owners, player_simple):
-    assert rail_space_diff_owners.trigger(player_simple) == A.CHARGE_RENT
+    assert rail_space_diff_owners.trigger(player_simple) == Action.CHARGE_RENT
 
 
 def test_trigger_same_owner(rail_space_diff_owners, player_simple):
     player_simple.uid = 1
-    assert rail_space_diff_owners.trigger(player_simple) == A.NOTHING
+    assert rail_space_diff_owners.trigger(player_simple) == Action.NOTHING

@@ -1,6 +1,6 @@
 import constants as c
 import pytest
-from src.game.actions import Action as A
+from src.game.actions import Action
 from src.game.game import Game
 from src.game.game_map import GameMap
 from src.game.player import Player
@@ -128,28 +128,28 @@ def test_initilize_first_player(game_with_players):
 
 def test_check_double_roll_with_none(game_with_players):
     action = game_with_players.check_double_roll(player_uid=2, dice_1=5, dice_2=5)
-    assert action is A.ASK_TO_ROLL
+    assert action is Action.ASK_TO_ROLL
     assert game_with_players._roll_double_counter == (2, 1)
 
 
 def test_check_double_roll_with_one_count(game_with_players):
     game_with_players._roll_double_counter = (2, 1)
     action = game_with_players.check_double_roll(player_uid=2, dice_1=1, dice_2=1)
-    assert action is A.ASK_TO_ROLL
+    assert action is Action.ASK_TO_ROLL
     assert game_with_players._roll_double_counter == (2, 2)
 
 
 def test_check_double_roll_over_limit(game_with_players):
     game_with_players._roll_double_counter = (2, 2)
     action = game_with_players.check_double_roll(player_uid=2, dice_1=3, dice_2=3)
-    assert action is A.SEND_TO_JAIL
+    assert action is Action.SEND_TO_JAIL
     assert game_with_players._roll_double_counter is None
 
 
 def test_check_double_roll_not_double_reset(game_with_players):
     game_with_players._roll_double_counter = (2, 1)
     action = game_with_players.check_double_roll(player_uid=2, dice_1=1, dice_2=3)
-    assert action is A.NOTHING
+    assert action is Action.NOTHING
     assert game_with_players._roll_double_counter is None
 
 
@@ -164,19 +164,19 @@ def test_check_double_roll_diff_player_incorrect_reset(game_with_players):
 def test_check_go_pass_false(game_with_players):
     game_with_players.players[0].position = 1
     action = game_with_players.check_go_pass(player_uid=0)
-    assert action == A.NOTHING
+    assert action == Action.NOTHING
 
 
 def test_check_go_pass_true(game_with_players):
     game_with_players.players[0].position = 3
     action = game_with_players.check_go_pass(player_uid=0)
-    assert action == A.PASS_GO
+    assert action == Action.PASS_GO
 
 
-def test_trigger_place(game_with_players):
+def test_trigger_space(game_with_players):
     game_with_players.players[0].position = 1
-    action = game_with_players.trigger_place(player_uid=0)
-    assert action == A.CHARGE_RENT
+    action = game_with_players.trigger_space(player_uid=0)
+    assert action == Action.CHARGE_RENT
 
 
 def test_add_player_cash(game_with_players):
