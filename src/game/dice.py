@@ -13,5 +13,3 @@ import random
 
 def roll(num_faces: int = 6, num_dice: int = 2) -> (int):
     return (random.randint(1, num_faces) for _die in range(num_dice))
-
-    # TODO handle 3 double roll, handle double due to utility calculation, probably do it in game logic
