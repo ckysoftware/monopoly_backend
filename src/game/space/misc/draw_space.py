@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-import constants as c
+from game import enum_types, player
 from game.actions import Action
 
 from ..space import Space
@@ -8,12 +8,14 @@ from ..space import Space
 
 @dataclass(kw_only=True, slots=True)
 class DrawSpace(Space):
-    deck_type: c.DeckType  # DeckType.CONST_DECK_TYPE_CHANCE or DeckType.CONST_DECK_TYPE_CC
+    deck_type: enum_types.DeckType
 
-    def trigger(self) -> Action:
-        if self.deck_type == c.DeckType.CONST_DECK_TYPE_CHANCE:
-            return Action.DRAW_CHANCE_CARD
-        elif self.deck_type == c.DeckType.CONST_DECK_TYPE_CC:
-            return Action.DRAW_CC_CARD
-        else:
+    def __post_init__(self):
+        if not isinstance(self.deck_type, enum_types.DeckType):
             raise ValueError("Unknown deck type.")
+
+    def trigger(self, player: player.Player) -> Action:
+        if self.deck_type == enum_types.DeckType.CHANCE:
+            return Action.DRAW_CHANCE_CARD
+        elif self.deck_type == enum_types.DeckType.CC:
+            return Action.DRAW_CC_CARD

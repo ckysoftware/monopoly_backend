@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from game import enum_types
 from game.actions import Action
 from game.player import Player
 
@@ -8,16 +9,14 @@ from ..space import Space
 
 @dataclass(kw_only=True, slots=True)
 class TaxSpace(Space):
-    TAX_ACTION: Action
+    tax_type: enum_types.TaxType
 
     def __post_init__(self):
-        if not (
-            self.TAX_ACTION == Action.CHARGE_INCOME_TAX
-            or self.TAX_ACTION == Action.CHARGE_LUXARY_TAX
-        ):
-            raise ValueError(
-                "Tax space must have a TAX_ACTION of either CHARGE_INCOME_TAX or CHARGE_LUXARY_TAX"
-            )
+        if not isinstance(self.tax_type, enum_types.TaxType):
+            raise ValueError("Unknown tax type.")
 
-    def trigger(self, _: Player) -> Action:
-        return self.TAX_ACTION
+    def trigger(self, player: Player) -> Action:
+        if self.tax_type == enum_types.TaxType.INCOME:
+            return Action.CHARGE_INCOME_TAX
+        elif self.tax_type == enum_types.TaxType.LUXURY:
+            return Action.CHARGE_LUXURY_TAX
