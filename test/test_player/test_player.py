@@ -32,8 +32,8 @@ def prop_space_simple():
         rent=[2, 10, 30, 90, 160, 250],
         price_of_house=50,
         price_of_hotel=50,
-        CONST_HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
-        CONST_HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
+        HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
         property_set=property_set,
     )
     property_set.add_property(property_space)
