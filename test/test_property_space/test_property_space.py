@@ -256,7 +256,7 @@ def test_trigger_unowned(prop_space_simple, player_simple):
 
 
 def test_trigger_diff_owner(prop_space_diff_owners, player_simple):
-    assert prop_space_diff_owners.trigger(player_simple) == Action.CHARGE_RENT
+    assert prop_space_diff_owners.trigger(player_simple) == Action.PAY_RENT
 
 
 def test_trigger_same_owner(prop_space_diff_owners, player_simple):

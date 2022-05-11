@@ -89,4 +89,4 @@ class PropertySpace(Property):
         elif self.owner_uid == player.uid:
             return Action.NOTHING
         else:  # self.owner_uid != player.uid:
-            return Action.CHARGE_RENT
+            return Action.PAY_RENT

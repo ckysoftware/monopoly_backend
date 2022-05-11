@@ -176,7 +176,7 @@ def test_check_go_pass_true(game_with_players):
 def test_trigger_space(game_with_players):
     game_with_players.players[0].position = 1
     action = game_with_players.trigger_space(player_uid=0)
-    assert action == Action.CHARGE_RENT
+    assert action == Action.PAY_RENT
 
 
 def test_add_player_cash(game_with_players):

@@ -10,10 +10,10 @@ class ChanceCard:
     class for both chance card and community chest card
     """
 
-    name: str
     card_id: int
+    description: str
     action: Action
-    ownable: bool = False  # whether this card can be kept by the player
+    ownable: bool  # whether this card can be kept by the player
 
     def trigger(self) -> Action:
         return self.action
