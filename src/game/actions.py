@@ -12,7 +12,7 @@ class Action(Enum):
 
     # space
     CHARGE_INCOME_TAX = auto()  # the player landed on a income tax space, $200
-    CHARGE_LUXARY_TAX = auto()  # the player landed on a luxary tax space, $100
+    CHARGE_LUXURY_TAX = auto()  # the player landed on a luxury tax space, $100
 
     # charge fee for the bank
     CHARGE_GENERAL_REPAIR_FEE = auto()  # $25 for house, $100 for hotel
