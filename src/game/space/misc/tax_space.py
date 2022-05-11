@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from src.game.actions import Action
-from src.game.player import Player
+from game.actions import Action
+from game.player import Player
 
 from ..space import Space
 

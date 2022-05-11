@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
-from src.game.player import Player
-from src.game.space import Space
+from game.player import Player
+from game.space import Space
 
 from game.actions import Action
 
@@ -9,7 +9,7 @@ from game.actions import Action
 @dataclass(kw_only=True, slots=True)
 class GameMap:
     """
-    This class represents the map of the src.game.
+    This class represents the map of the game.
     """
 
     map_list: list[Space] = field(default_factory=list)

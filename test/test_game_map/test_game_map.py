@@ -1,8 +1,8 @@
 import constants as c
 import pytest
-from src.game.game_map import GameMap
-from src.game.player import Player
-from src.game.space import PropertySpace, PropertySet
+from game.game_map import GameMap
+from game.player import Player
+from game.space import PropertySpace, PropertySet
 
 
 @pytest.fixture

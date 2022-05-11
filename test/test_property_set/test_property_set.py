@@ -1,6 +1,6 @@
 import constants as c
 import pytest
-from src.game.space import PropertySpace, PropertySet
+from game.space import PropertySpace, PropertySet
 
 
 @pytest.fixture

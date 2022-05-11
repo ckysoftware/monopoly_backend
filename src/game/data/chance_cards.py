@@ -1,5 +1,5 @@
 # flake8: noqa
-from src.game.actions import Action
+from game.actions import Action
 
 CONST_CHANCE_CARDS = [
     {
