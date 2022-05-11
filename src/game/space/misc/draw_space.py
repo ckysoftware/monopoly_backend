@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
-from game import enum_types, player
+from game import enum_types
 from game.actions import Action
+from game.player import Player
 
 from ..space import Space
 
@@ -14,7 +15,7 @@ class DrawSpace(Space):
         if not isinstance(self.deck_type, enum_types.DeckType):
             raise ValueError("Unknown deck type.")
 
-    def trigger(self, player: player.Player) -> Action:
+    def trigger(self, player: Player) -> Action:
         if self.deck_type == enum_types.DeckType.CHANCE:
             return Action.DRAW_CHANCE_CARD
         elif self.deck_type == enum_types.DeckType.CC:
