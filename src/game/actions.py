@@ -56,3 +56,7 @@ class Action(Enum):
 
     # trigger checking/action?
     PASS_GO = auto()
+
+    # event
+    DRAW_CHANCE_CARD = auto()
+    DRAW_CC_CARD = auto()
