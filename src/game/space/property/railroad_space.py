@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from game.actions import Action
@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 @dataclass(kw_only=True, slots=True)
 class RailroadSpace(Property):
-    rent: list[int] = field(default_factory=list)
+    rent: list[int]
 
     def compute_rent(self) -> int:
         if self.mortgaged:
