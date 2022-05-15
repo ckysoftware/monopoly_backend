@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from .chance_card import ChanceCard
 
 
-# TODO write test
 @dataclass(kw_only=True, slots=True)
 class Deck:
     """
@@ -25,14 +24,14 @@ class Deck:
         data: A List of dict containging data to initialize ChanceCard. Either cards or data must be provided.
         """
         if cards is not None:
-            shuffled_cards = random.Random(seed).shuffle(cards)
+            random.Random(seed).shuffle(cards)
         elif data is not None:
-            initialized_cards = [ChanceCard(**datum) for datum in data]
-            shuffled_cards = random.Random(seed).shuffle(initialized_cards)
+            cards = [ChanceCard(**datum) for datum in data]
+            random.Random(seed).shuffle(cards)
         else:
             raise ValueError("Either cards or data must be provided.")
 
-        self.cards = deque(shuffled_cards)
+        self.cards = deque(cards)
 
     def append_owned_card(self, card: ChanceCard) -> None:
         """
