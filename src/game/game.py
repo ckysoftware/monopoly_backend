@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 import constants as c
 
 import game.dice as dice
+from game import game_initializer
 from game.actions import Action
 from game.game_map import GameMap
 from game.player import Player
@@ -11,7 +12,7 @@ from game.player import Player
 @dataclass(kw_only=True, slots=True)
 class Game:
     game_map: GameMap
-    players: list[Player] = field(default_factory=list)
+    players: list[Player] = field(default_factory=list)  # sorted by Player.uid
     current_player_uid: int = None  # current pos of the player_order
     _roll_double_counter: (int) = None  # tuple(int, int) to store (uid, double_count)
 
@@ -22,7 +23,10 @@ class Game:
         self.players.append(new_player)
         return new_player.uid
 
-    def initilize_first_player(self) -> dict[int, tuple[int, ...]]:
+    def initilize_first_player(self) -> dict[int, tuple[int, int]]:
+        """
+        returns: dict[player_uid, (roll_1, roll_2)]
+        """
         # NOTE roll dice and return, may be difficult for frontend, probably trigger event -> listen
         roll_result = []  # (sum, player_uid, (dice_1, dice_2))
         roll_max = (0, -1)  # (sum, player_uid)
@@ -36,15 +40,22 @@ class Game:
         self.current_player_uid = roll_max[1]
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
+    # TODO test
+    def initilize_game_map(self) -> None:
+        self.game_map = game_initializer.build_game_map(
+            HOUSE_LIMIT=c.CONST_HOUSE_LIMIT, HOTEL_LIMIT=c.CONST_HOTEL_LIMIT
+        )
+
     # NOTE probably need to break down host into round instance maybe
     # host = trigger game.action, ask -> relay msg
     # game = handle game logic -> apply logic
 
-    # TODO
+    # TODO test
     def next_player(self) -> int:
-        pass
+        self.current_player_uid = (self.current_player_uid + 1) % len(self.players)
+        return self.current_player_uid
 
-    def roll_dice(self) -> (int):
+    def roll_dice(self) -> tuple[int, int]:
         return dice.roll(num_faces=6, num_dice=2)
 
     def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> Action:
