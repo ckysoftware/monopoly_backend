@@ -7,7 +7,7 @@ from game.space import PropertySet, UtilitySpace
 
 @pytest.fixture
 def util_space_simple():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     utility_space = UtilitySpace(
         name="Utility 1",
         price=150,
@@ -19,7 +19,7 @@ def util_space_simple():
 
 @pytest.fixture
 def util_space_monopoly():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     utility_space = UtilitySpace(
         name="Utility 1",
         price=150,
@@ -32,7 +32,7 @@ def util_space_monopoly():
 
 @pytest.fixture
 def util_space_diff_owners():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     util_space_1 = UtilitySpace(
         name="Utility 1",
         price=150,
@@ -59,7 +59,7 @@ def player_simple():
 def test_utility_space_init(util_space_simple):
     assert util_space_simple.name == "Utility 1"
     assert util_space_simple.price == 150
-    assert util_space_simple.property_set.set_id == 0
+    assert util_space_simple.property_set.id == 0
     assert id(util_space_simple.property_set.properties[0]) == id(util_space_simple)
     assert util_space_simple.mortgaged is False
     assert util_space_simple.owner_uid is None

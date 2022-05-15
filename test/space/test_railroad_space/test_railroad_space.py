@@ -7,7 +7,7 @@ from game.space import PropertySet, RailroadSpace
 
 @pytest.fixture
 def rail_space_simple():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     rail_space = RailroadSpace(
         name="Railroad 1",
         price=200,
@@ -20,7 +20,7 @@ def rail_space_simple():
 
 @pytest.fixture
 def rail_space_diff_owners():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     rail_space_1 = RailroadSpace(
         name="Railroad 1",
         price=200,
@@ -50,7 +50,7 @@ def test_rail_space_init(rail_space_simple):
     assert rail_space_simple.name == "Railroad 1"
     assert rail_space_simple.price == 200
     assert rail_space_simple.rent == [25, 50, 100, 200]
-    assert rail_space_simple.property_set.set_id == 0
+    assert rail_space_simple.property_set.id == 0
     assert id(rail_space_simple.property_set.properties[0]) == id(rail_space_simple)
     assert rail_space_simple.mortgaged is False
     assert rail_space_simple.owner_uid is None

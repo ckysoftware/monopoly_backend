@@ -25,7 +25,7 @@ def player_comp():
 
 @pytest.fixture
 def prop_space_simple():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     property_space = PropertySpace(
         name="Property 1",
         price=60,

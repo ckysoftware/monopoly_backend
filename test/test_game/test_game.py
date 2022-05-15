@@ -9,7 +9,7 @@ from game.space import PropertySet, PropertySpace
 
 @pytest.fixture
 def game_init():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     property_space_1 = PropertySpace(
         name="Property 1",
         price=60,
@@ -41,7 +41,7 @@ def game_init():
 
 @pytest.fixture
 def game_with_players():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     property_space_1 = PropertySpace(
         name="Property 1",
         price=60,

@@ -9,7 +9,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 @dataclass(kw_only=True, slots=True)
 class PropertySet:
-    set_id: int
+    id: int
     properties: list[Property] = field(default_factory=list)
     monopoly: bool = False
 

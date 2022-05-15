@@ -7,7 +7,7 @@ from game.space import PropertySpace, PropertySet
 
 @pytest.fixture
 def prop_space_simple():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     property_space = PropertySpace(
         name="Property 1",
         price=60,
@@ -24,7 +24,7 @@ def prop_space_simple():
 
 @pytest.fixture
 def prop_space_monopoly():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     property_space = PropertySpace(
         name="Property 1",
         price=60,
@@ -42,7 +42,7 @@ def prop_space_monopoly():
 
 @pytest.fixture
 def prop_space_diff_owners():
-    property_set = PropertySet(set_id=0)
+    property_set = PropertySet(id=0)
     property_space_1 = PropertySpace(
         name="Property 1",
         price=60,
@@ -82,7 +82,7 @@ def test_property_space_init(prop_space_simple):
     assert prop_space_simple.rent == [2, 10, 30, 90, 160, 250]
     assert prop_space_simple.price_of_house == 50
     assert prop_space_simple.price_of_hotel == 50
-    assert prop_space_simple.property_set.set_id == 0
+    assert prop_space_simple.property_set.id == 0
     assert id(prop_space_simple.property_set.properties[0]) == id(prop_space_simple)
     assert prop_space_simple.no_of_houses == 0
     assert prop_space_simple.no_of_hotels == 0

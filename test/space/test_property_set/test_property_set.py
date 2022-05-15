@@ -5,7 +5,7 @@ from game.space import PropertySpace, PropertySet
 
 @pytest.fixture
 def prop_set_simple():
-    property_set = PropertySet(set_id=2)
+    property_set = PropertySet(id=2)
     property_space = PropertySpace(
         name="Property 1",
         price=60,
@@ -22,7 +22,7 @@ def prop_set_simple():
 
 @pytest.fixture
 def prop_set_monopoly():
-    property_set = PropertySet(set_id=2)
+    property_set = PropertySet(id=2)
     property_space_1 = PropertySpace(
         name="Property 1",
         price=60,
@@ -53,7 +53,7 @@ def prop_set_monopoly():
 
 @pytest.fixture
 def prop_set_four_unowned():
-    property_set = PropertySet(set_id=2)
+    property_set = PropertySet(id=2)
     property_space_1 = PropertySpace(
         name="Property 1",
         price=60,
@@ -102,7 +102,7 @@ def prop_set_four_unowned():
 
 
 def test_property_set_init(prop_set_simple):
-    assert prop_set_simple.set_id == 2
+    assert prop_set_simple.id == 2
     assert len(prop_set_simple.properties) == 1
     assert id(prop_set_simple.properties[0].property_set) == id(prop_set_simple)
     assert prop_set_simple.monopoly is False
