@@ -1,3 +1,4 @@
+# pyright: reportPrivateUsage=false
 import constants as c
 import pytest
 from game.actions import Action
@@ -8,7 +9,7 @@ from game.space import PropertySet, PropertySpace
 
 
 @pytest.fixture
-def game_init() -> tuple[Game, GameMap]:
+def game_map_simple() -> GameMap:
     property_set = PropertySet(id=0)
     property_space_1 = PropertySpace(
         name="Property 1",
@@ -35,51 +36,28 @@ def game_init() -> tuple[Game, GameMap]:
     property_set.add_property(property_space_1)
     property_set.add_property(property_space_2)
     game_map = GameMap(map_list=[property_space_1, property_space_2])
-    game = Game(game_map=game_map)
-    return game, game_map
+    return game_map
 
 
 @pytest.fixture
-def game_with_players() -> Game:
-    property_set = PropertySet(id=0)
-    property_space_1 = PropertySpace(
-        name="Property 1",
-        price=60,
-        rent=[2, 10, 30, 90, 160, 250],
-        price_of_house=50,
-        price_of_hotel=50,
-        HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
-        HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
-        property_set=property_set,
-        owner_uid=1,
-    )
-    property_space_2 = PropertySpace(
-        name="Property 2",
-        price=60,
-        rent=[2, 10, 30, 90, 160, 250],
-        price_of_house=50,
-        price_of_hotel=50,
-        HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
-        HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
-        property_set=property_set,
-        owner_uid=10,
-    )
-    property_set.add_property(property_space_1)
-    property_set.add_property(property_space_2)
-    game_map = GameMap(map_list=[property_space_1, property_space_2])
-    game = Game(game_map=game_map)
-    for i in range(4):
-        new_player = Player(name=f"Player {i + 1}", uid=i, cash=c.CONST_STARTING_CASH)
-        game.players.append(new_player)
+def game_init(game_map_simple: GameMap) -> Game:
+    game = Game(game_map=game_map_simple)
     return game
 
 
-def test_game_init(game_init):
-    game, game_map = game_init
-    assert id(game.game_map) == id(game_map)
-    assert game.players == []
-    assert game.current_player_uid is None
-    assert game._roll_double_counter is None
+@pytest.fixture
+def game_with_players(game_init: Game) -> Game:
+    for i in range(4):
+        new_player = Player(name=f"Player {i + 1}", uid=i, cash=c.CONST_STARTING_CASH)
+        game_init.players.append(new_player)
+    return game_init
+
+
+def test_game_init(game_init: Game, game_map_simple: GameMap):
+    assert id(game_init.game_map) == id(game_map_simple)
+    assert game_init.players == []
+    assert game_init.current_player_uid is None
+    assert game_init._roll_double_counter is None
 
 
 def test_game_add_player(game_with_players: Game):
@@ -93,9 +71,9 @@ def test_game_add_player(game_with_players: Game):
 
 def test_roll_dice(game_with_players: Game):
     for _ in range(100):
-        dice_1, dice_2 = game_with_players.roll_dice()
-        assert dice_1 in list(range(1, 7))
-        assert dice_2 in list(range(1, 7))
+        dice_rolls = game_with_players.roll_dice()
+        for roll in dice_rolls:
+            assert roll in list(range(1, 7))
 
 
 def test_move_player(game_with_players: Game):
@@ -111,13 +89,12 @@ def test_offset_go_pos(game_with_players: Game):
     assert game_with_players.players[0].position == 1
 
 
-def test_initilize_first_player(game_with_players):
-    roll_result = game_with_players.initailize_first_player()
+def test_initilize_first_player(game_with_players: Game):
+    roll_result = game_with_players.initialize_first_player()
 
-    recon_result = []  # reconstruct the order from the roll result
+    recon_result: list[tuple[int, int]] = []  # reconstruct the orders
     for player_uid, dice_rolls in roll_result.items():
-        dice_1, dice_2 = dice_rolls
-        recon_result.append((dice_1 + dice_2, player_uid))
+        recon_result.append((sum(dice_rolls), player_uid))
 
     recon_result.sort(
         key=lambda x: (x[0], -1 * x[1]), reverse=True
@@ -182,10 +159,68 @@ def test_trigger_space(game_with_players: Game):
 def test_add_player_cash(game_with_players: Game):
     new_cash = game_with_players.add_player_cash(player_uid=0, amount=300)
     assert new_cash == c.CONST_STARTING_CASH + 300
-    assert game_with_players.players[0].cash.balance == c.CONST_STARTING_CASH + 300
+    assert game_with_players.players[0].cash == c.CONST_STARTING_CASH + 300
 
 
 def test_sub_player_cash(game_with_players: Game):
     new_cash = game_with_players.sub_player_cash(player_uid=0, amount=600)
     assert new_cash == c.CONST_STARTING_CASH - 600
-    assert game_with_players.players[0].cash.balance == c.CONST_STARTING_CASH - 600
+    assert game_with_players.players[0].cash == c.CONST_STARTING_CASH - 600
+
+
+def test_next_player(game_with_players: Game):
+    game_with_players.initialize_first_player()
+    cur_player = game_with_players.current_player_uid
+    next_player = game_with_players.next_player()
+    assert cur_player is not None
+    assert next_player == (cur_player + 1) % len(game_with_players.players)
+
+
+def test_initialize_game_map(game_init: Game):
+    game_init.initialize_game_map()
+    map_names: list[str] = [
+        "Go",
+        "Mediterranean Avenue",
+        "Community Chest",
+        "Baltic Avenue",
+        "Income Tax",
+        "Reading Railroad",
+        "Oriental Avenue",
+        "Chance",
+        "Vermont Avenue",
+        "Connecticut Avenue",
+        "Jail",
+        "St. Charles Place",
+        "Electric Company",
+        "States Avenue",
+        "Virginia Avenue",
+        "Pennsylvania Railroad",
+        "St. James Place",
+        "Community Chest",
+        "Tennessee Avenue",
+        "New York Avenue",
+        "Free Parking",
+        "Kentucky Avenue",
+        "Chance",
+        "Indiana Avenue",
+        "Illinois Avenue",
+        "B. & O. Railroad",
+        "Atlantic Avenue",
+        "Ventnor Avenue",
+        "Water Works",
+        "Marvin Gardens",
+        "Go To Jail",
+        "Pacific Avenue",
+        "North Carolina Avenue",
+        "Community Chest",
+        "Pennsylvania Avenue",
+        "Short Line",
+        "Chance",
+        "Park Place",
+        "Luxury Tax",
+        "Boardwalk",
+    ]
+    assert game_init.game_map is not None
+    assert len(game_init.game_map.map_list) == 40
+    for i in range(len(map_names)):
+        assert game_init.game_map.map_list[i].name == map_names[i]

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from game.actions import Action
 from game.player import Player
@@ -12,7 +12,7 @@ class GameMap:
     """
 
     map_list: list[Space]
-    size: int = None
+    size: int = field(init=False)
 
     def __post_init__(self):
         self.size = len(self.map_list)

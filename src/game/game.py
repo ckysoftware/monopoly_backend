@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Iterable, Optional
+from typing import Optional
 
 import constants as c
 
@@ -12,7 +12,7 @@ from game.player import Player
 
 @dataclass(kw_only=True, slots=True)
 class Game:
-    game_map: GameMap
+    game_map: Optional[GameMap] = None
     players: list[Player] = field(default_factory=list)  # sorted by Player.uid
     current_player_uid: Optional[int] = None  # current pos of the player_order
     _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
@@ -24,25 +24,27 @@ class Game:
         self.players.append(new_player)
         return new_player.uid
 
-    def initailize_first_player(self) -> dict[int, tuple[int, int]]:
+    def initialize_first_player(self) -> dict[int, tuple[int, ...]]:
         """
         returns: dict[player_uid, (roll_1, roll_2)]
         """
         # NOTE roll dice and return, may be difficult for frontend, probably trigger event -> listen
-        roll_result = []  # (sum, player_uid, (dice_1, dice_2))
+        roll_result: list[
+            tuple[int, int, tuple[int, ...]]
+        ] = []  # (sum, player_uid, (dice_1, dice_2, ...))
         roll_max = (0, -1)  # (sum, player_uid)
         for player in self.players:
-            dice_1, dice_2 = dice.roll(num_faces=6, num_dice=2)
+            dice_rolls = dice.roll(num_faces=6, num_dice=2)
             roll_result.append(
-                (dice_1 + dice_2, player.uid, (dice_1, dice_2))
+                (sum(dice_rolls), player.uid, dice_rolls)
             )  # sum, player_uid, roll_result tuple(int, ...)
-            if dice_1 + dice_2 > roll_max[0]:  # if same value, first player first
-                roll_max = (dice_1 + dice_2, player.uid)
+            if sum(dice_rolls) > roll_max[0]:  # if same value, first player first
+                roll_max = (sum(dice_rolls), player.uid)
         self.current_player_uid = roll_max[1]
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
     # TODO test
-    def initailize_game_map(self) -> None:
+    def initialize_game_map(self) -> None:
         self.game_map = game_initializer.build_game_map(
             HOUSE_LIMIT=c.CONST_HOUSE_LIMIT, HOTEL_LIMIT=c.CONST_HOTEL_LIMIT
         )
@@ -51,12 +53,12 @@ class Game:
     # host = trigger game.action, ask -> relay msg
     # game = handle game logic -> apply logic
 
-    # TODO test
     def next_player(self) -> int:
+        assert self.current_player_uid is not None
         self.current_player_uid = (self.current_player_uid + 1) % len(self.players)
         return self.current_player_uid
 
-    def roll_dice(self) -> Iterable[int]:
+    def roll_dice(self) -> tuple[int, ...]:
         return dice.roll(num_faces=6, num_dice=2)
 
     def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> Action:
@@ -83,16 +85,20 @@ class Game:
         return self.players[player_uid].move(steps)
 
     def check_go_pass(self, player_uid: int) -> Action:
+        if self.game_map is None:
+            raise ValueError("Game map has not been initialized")
         if self.players[player_uid].position >= self.game_map.size:
             return Action.PASS_GO
         else:
             return Action.NOTHING
 
     def offset_go_pos(self, player_uid: int) -> int:
+        assert self.game_map is not None
         new_pos = self.players[player_uid].offset_position(self.game_map.size)
         return new_pos
 
     def trigger_space(self, player_uid: int) -> Action:
+        assert self.game_map is not None
         action = self.game_map.trigger(self.players[player_uid])
         return action
 
