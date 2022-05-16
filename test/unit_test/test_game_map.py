@@ -2,7 +2,7 @@ import constants as c
 import pytest
 from game.game_map import GameMap
 from game.player import Player
-from game.space import PropertySpace, PropertySet
+from game.space import PropertySet, PropertySpace
 
 
 @pytest.fixture

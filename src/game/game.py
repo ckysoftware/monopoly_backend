@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Iterable, Optional
 
 import constants as c
 
@@ -13,8 +14,8 @@ from game.player import Player
 class Game:
     game_map: GameMap
     players: list[Player] = field(default_factory=list)  # sorted by Player.uid
-    current_player_uid: int = None  # current pos of the player_order
-    _roll_double_counter: (int) = None  # tuple(int, int) to store (uid, double_count)
+    current_player_uid: Optional[int] = None  # current pos of the player_order
+    _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
 
     def add_player(self, name: str):
         new_player = Player(
@@ -23,7 +24,7 @@ class Game:
         self.players.append(new_player)
         return new_player.uid
 
-    def initilize_first_player(self) -> dict[int, tuple[int, int]]:
+    def initailize_first_player(self) -> dict[int, tuple[int, int]]:
         """
         returns: dict[player_uid, (roll_1, roll_2)]
         """
@@ -41,7 +42,7 @@ class Game:
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
     # TODO test
-    def initilize_game_map(self) -> None:
+    def initailize_game_map(self) -> None:
         self.game_map = game_initializer.build_game_map(
             HOUSE_LIMIT=c.CONST_HOUSE_LIMIT, HOTEL_LIMIT=c.CONST_HOTEL_LIMIT
         )
@@ -55,7 +56,7 @@ class Game:
         self.current_player_uid = (self.current_player_uid + 1) % len(self.players)
         return self.current_player_uid
 
-    def roll_dice(self) -> tuple[int, int]:
+    def roll_dice(self) -> Iterable[int]:
         return dice.roll(num_faces=6, num_dice=2)
 
     def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> Action:
