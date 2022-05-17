@@ -1,5 +1,7 @@
+import constants as c
 import pytest
 from game import card, data
+from game.player import Player
 
 
 @pytest.fixture
@@ -28,3 +30,9 @@ def cc_cards_deck():
     cc_card_deck = card.Deck(name="Community Chest Cards")
     cc_card_deck.shuffle_add_cards(data=data.CONST_CC_CARDS, seed=9001)
     return cc_card_deck
+
+
+@pytest.fixture
+def player_simple():
+    player = Player(name="Player 1", uid=0, cash=c.CONST_STARTING_CASH)
+    return player

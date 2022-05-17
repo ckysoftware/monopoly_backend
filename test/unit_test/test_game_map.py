@@ -1,20 +1,13 @@
 import constants as c
 import pytest
+from game import player, space
 from game.game_map import GameMap
-from game.player import Player
-from game.space import PropertySet, PropertySpace
-
-
-@pytest.fixture
-def player_simple():
-    player = Player(name="Player 1", uid=0, cash=c.CONST_STARTING_CASH)
-    return player
 
 
 @pytest.fixture
 def prop_spaces():
-    property_set = PropertySet(id=0)
-    property_space_1 = PropertySpace(
+    property_set = space.PropertySet(id=0)
+    property_space_1 = space.PropertySpace(
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -25,7 +18,7 @@ def prop_spaces():
         property_set=property_set,
         owner_uid=1,
     )
-    property_space_2 = PropertySpace(
+    property_space_2 = space.PropertySpace(
         name="Property 2",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -41,14 +34,14 @@ def prop_spaces():
     return [property_space_1, property_space_2]
 
 
-def test_game_map_init(prop_spaces):
+def test_game_map_init(prop_spaces: list[space.Space]):
     game_map = GameMap(map_list=prop_spaces)
     assert id(game_map.map_list[0]) == id(prop_spaces[0])
     assert id(game_map.map_list[1]) == id(prop_spaces[1])
     assert game_map.size == 2
 
 
-def test_game_map_trigger(prop_spaces, player_simple):
+def test_game_map_trigger(prop_spaces: list[space.Space], player_simple: player.Player):
     game_map = GameMap(map_list=prop_spaces)
     player_simple.uid = 1
     player_simple.position = 0

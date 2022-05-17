@@ -11,5 +11,5 @@ playing continues unless they hit Doubles a fourth time in a row, thus going to 
 import random
 
 
-def roll(num_faces: int = 6, num_dice: int = 2) -> (int):
-    return (random.randint(1, num_faces) for _die in range(num_dice))
+def roll(num_faces: int = 6, num_dice: int = 2) -> tuple[int, ...]:
+    return tuple(random.randint(1, num_faces) for _die in range(num_dice))

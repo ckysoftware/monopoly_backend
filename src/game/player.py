@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from game.cash import Cash
-
 if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game.space import PropertySpace
 
@@ -13,14 +11,10 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 class Player:
     name: str
     uid: int
-    cash: Cash | int
-    token: int = None
+    cash: int
+    token: int | None = None
     properties: list[PropertySpace] = field(default_factory=list)
     position: int = 0
-
-    def __post_init__(self):
-        if isinstance(self.cash, int):
-            self.cash = Cash(balance=self.cash)
 
     def add_property(self, property: PropertySpace) -> None:
         self.properties.append(property)
@@ -38,11 +32,11 @@ class Player:
         return self.position
 
     def add_cash(self, amount: int) -> int:
-        self.cash.add(amount)
-        return self.cash.balance
+        self.cash += amount
+        return self.cash
 
     def sub_cash(self, amount: int) -> int:
-        self.cash.sub(amount)
-        return self.cash.balance
+        self.cash -= amount
+        return self.cash
 
     # TODO roll dice and move player, also test for double roll

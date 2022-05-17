@@ -13,7 +13,9 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 @dataclass(kw_only=True, slots=True)
 class UtilitySpace(Property):
-    def compute_rent(self, dice_count) -> int:
+    def compute_rent(self, dice_count: int = 0) -> int:
+        if dice_count <= 0:
+            raise ValueError("Dice count must be positive")
         if self.mortgaged:
             return 0
         elif self.property_set.monopoly:

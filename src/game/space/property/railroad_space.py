@@ -16,6 +16,7 @@ class RailroadSpace(Property):
     rent: list[int]
 
     def compute_rent(self) -> int:
+        assert self.owner_uid is not None
         if self.mortgaged:
             return 0
         owned_stations = self.property_set.count_owned(self.owner_uid)

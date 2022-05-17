@@ -1,6 +1,9 @@
 import random
 from collections import deque
 from dataclasses import dataclass
+from typing import Optional
+
+from game.data.chance_cards import CardData
 
 from .chance_card import ChanceCard
 
@@ -12,10 +15,13 @@ class Deck:
     """
 
     name: str  # chance card or community chest
-    cards: deque[ChanceCard] = None
+    cards: Optional[deque[ChanceCard]] = None
 
     def shuffle_add_cards(
-        self, cards: list[ChanceCard] = None, data: list[dict] = None, seed: int = None
+        self,
+        cards: Optional[list[ChanceCard]] = None,
+        data: Optional[list[CardData]] = None,
+        seed: Optional[int] = None,
     ) -> None:
         """
         Add the cards after shuffling. This should be called before using the deck and after initialization.
@@ -30,16 +36,17 @@ class Deck:
             random.Random(seed).shuffle(cards)
         else:
             raise ValueError("Either cards or data must be provided.")
-
         self.cards = deque(cards)
 
     def append_owned_card(self, card: ChanceCard) -> None:
         """
         After a player played his/her owned card, append it to the deck
         """
+        assert self.cards is not None
         self.cards.append(card)
 
     def draw_card(self) -> ChanceCard:
+        assert self.cards is not None
         drawn_card = self.cards.popleft()
 
         if drawn_card.ownable is False:  # append the card to the end if not ownable

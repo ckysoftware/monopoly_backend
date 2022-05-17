@@ -1,4 +1,3 @@
-# pyright: reportPrivateUsage=false
 import constants as c
 import pytest
 from game.actions import Action
@@ -57,7 +56,7 @@ def test_game_init(game_init: Game, game_map_simple: GameMap):
     assert id(game_init.game_map) == id(game_map_simple)
     assert game_init.players == []
     assert game_init.current_player_uid is None
-    assert game_init._roll_double_counter is None
+    assert game_init._roll_double_counter is None  # pyright: reportPrivateUsage=false
 
 
 def test_game_add_player(game_with_players: Game):

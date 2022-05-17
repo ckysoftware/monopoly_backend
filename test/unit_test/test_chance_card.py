@@ -25,18 +25,18 @@ def chance_card_ownable():
     return ownable_chance_card
 
 
-def test_chance_card_simple_init(chance_card_simple):
+def test_chance_card_simple_init(chance_card_simple: card.ChanceCard):
     assert chance_card_simple.id == 0
     assert chance_card_simple.description == "Advance to Boardwalk"
     assert chance_card_simple.action == Action.SEND_TO_BOARDWLAK
     assert chance_card_simple.ownable is False
 
 
-def test_chance_card_simple_trigger(chance_card_simple):
+def test_chance_card_simple_trigger(chance_card_simple: card.ChanceCard):
     assert chance_card_simple.trigger() == Action.SEND_TO_BOARDWLAK
 
 
-def test_chance_card_ownable_init(chance_card_ownable):
+def test_chance_card_ownable_init(chance_card_ownable: card.ChanceCard):
     assert chance_card_ownable.id == 8
     assert (
         chance_card_ownable.description
@@ -46,5 +46,5 @@ def test_chance_card_ownable_init(chance_card_ownable):
     assert chance_card_ownable.ownable is True
 
 
-def test_chance_card_ownable_trigger(chance_card_ownable):
+def test_chance_card_ownable_trigger(chance_card_ownable: card.ChanceCard):
     assert chance_card_ownable.trigger() == Action.COLLECT_JAIL_CARD

@@ -85,8 +85,7 @@ class Game:
         return self.players[player_uid].move(steps)
 
     def check_go_pass(self, player_uid: int) -> Action:
-        if self.game_map is None:
-            raise ValueError("Game map has not been initialized")
+        assert self.game_map is not None
         if self.players[player_uid].position >= self.game_map.size:
             return Action.PASS_GO
         else:

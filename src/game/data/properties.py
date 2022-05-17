@@ -1,4 +1,29 @@
-CONST_PROPERTY_SPACES = [
+from typing import TypedDict
+
+
+class PropertyData(TypedDict):
+    name: str
+    price: int
+    rent: list[int]
+    price_of_house: int
+    price_of_hotel: int
+    property_set_id: int
+
+
+class RailroadData(TypedDict):
+    name: str
+    price: int
+    rent: list[int]
+    property_set_id: int
+
+
+class UtilityData(TypedDict):
+    name: str
+    price: int
+    property_set_id: int
+
+
+CONST_PROPERTY_SPACES: list[PropertyData] = [
     {
         "name": "Mediterranean Avenue",
         "price": 60,
@@ -177,7 +202,7 @@ CONST_PROPERTY_SPACES = [
     },
 ]
 
-CONST_RAILROAD_SPACES = [
+CONST_RAILROAD_SPACES: list[RailroadData] = [
     {
         "name": "Reading Railroad",
         "price": 200,
@@ -204,7 +229,7 @@ CONST_RAILROAD_SPACES = [
     },
 ]
 
-CONST_UTILITY_SPACES = [
+CONST_UTILITY_SPACES: list[UtilityData] = [
     {
         "name": "Electric Company",
         "price": 150,

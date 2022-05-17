@@ -1,5 +1,4 @@
-from .chance_cards import CONST_CHANCE_CARDS
-from .community_chest_cards import CONST_CC_CARDS
+from .chance_cards import CONST_CHANCE_CARDS, CONST_CC_CARDS
 from .properties import (
     CONST_PROPERTY_SPACES,
     CONST_RAILROAD_SPACES,
