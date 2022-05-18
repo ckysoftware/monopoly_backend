@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 @dataclass(kw_only=True, slots=True)
 class Player:
     name: str
-    uid: int
+    uid: int  # TODO change to id, unless use uuid
     cash: int
     token: int | None = None
     properties: list[PropertySpace] = field(default_factory=list)

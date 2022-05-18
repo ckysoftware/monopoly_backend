@@ -16,6 +16,7 @@ class Game:
     players: list[Player] = field(default_factory=list)  # sorted by Player.uid
     current_player_uid: Optional[int] = None  # current pos of the player_order
     _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
+    # TODO [FUTURE] accept game settings
 
     def add_player(self, name: str):
         new_player = Player(
@@ -43,7 +44,6 @@ class Game:
         self.current_player_uid = roll_max[1]
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
-    # TODO test
     def initialize_game_map(self) -> None:
         self.game_map = game_initializer.build_game_map(
             HOUSE_LIMIT=c.CONST_HOUSE_LIMIT, HOTEL_LIMIT=c.CONST_HOTEL_LIMIT
@@ -108,3 +108,10 @@ class Game:
     def sub_player_cash(self, player_uid: int, amount: int) -> int:
         new_cash = self.players[player_uid].sub_cash(amount)
         return new_cash
+
+    # TODO test this
+    def assign_player_token(self, player_uid: int, token: int) -> None:
+        for player in self.players:
+            if player.token == token:
+                raise ValueError("Token already assigned")
+        self.players[player_uid].assign_token(token)
