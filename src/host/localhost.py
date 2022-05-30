@@ -59,15 +59,15 @@ class LocalHost:
         return dice_rolls
 
     def loop(self):
-        print(f"Current game state: {self.state_dict[self.game_state]}")
+        while True:
+            print(f"Current game state: {self.state_dict[self.game_state]}")
 
-        # TODO add function to handle roll
-        if self.game_state == 0:
-            self._reset_for_next_player()
-        elif self.game_state == 1:
-            self._start_turn()
-            # print(f"Is double: {is_double}")
-        self.loop()
+            # TODO add function to handle roll
+            if self.game_state == 0:
+                self._reset_for_next_player()
+            elif self.game_state == 1:
+                self._start_turn()
+                # print(f"Is double: {is_double}")
 
     def _reset_for_next_player(self) -> None:
         """
@@ -92,6 +92,7 @@ class LocalHost:
             )
             self._send_to_jail(player_uid=player_uid)
             # NOTE exit point maybe
+            return
 
         self._move_player_and_check_go(steps=steps)
 
@@ -113,6 +114,7 @@ class LocalHost:
         elif space_action == Action.SEND_TO_JAIL:
             print(f"Player {player_name}: Step on jail. Send to jail")
             self._send_to_jail(player_uid=player_uid)
+            return
         elif space_action == Action.NOTHING:
             pass
         else:
