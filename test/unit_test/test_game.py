@@ -40,7 +40,8 @@ def game_map_simple() -> GameMap:
 
 @pytest.fixture
 def game_init(game_map_simple: GameMap) -> Game:
-    game = Game(game_map=game_map_simple)
+    game = Game()
+    game.game_map = game_map_simple
     return game
 
 
@@ -55,7 +56,6 @@ def game_with_players(game_init: Game) -> Game:
 def test_game_init(game_init: Game, game_map_simple: GameMap):
     assert id(game_init.game_map) == id(game_map_simple)
     assert game_init.players == []
-    assert game_init.current_player_uid is None
     assert game_init._roll_double_counter is None  # pyright: reportPrivateUsage=false
 
 

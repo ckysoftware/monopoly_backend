@@ -39,4 +39,8 @@ class Player:
         self.cash -= amount
         return self.cash
 
+    # TODO test this
+    def send_to_pos(self, position: int) -> None:
+        self.position = position
+
     # TODO roll dice and move player, also test for double roll

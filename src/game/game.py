@@ -4,7 +4,7 @@ from typing import Optional
 import constants as c
 
 import game.dice as dice
-from game import game_initializer
+from game import data, game_initializer
 from game.actions import Action
 from game.game_map import GameMap
 from game.player import Player
@@ -12,11 +12,24 @@ from game.player import Player
 
 @dataclass(kw_only=True, slots=True)
 class Game:
-    game_map: Optional[GameMap] = None
+    game_map: GameMap = field(init=False)
     players: list[Player] = field(default_factory=list)  # sorted by Player.uid
-    current_player_uid: Optional[int] = None  # current pos of the player_order
+    current_player_uid: int = field(init=False)  # current pos of the player_order
     _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
+    # TODO jail_list with uid and count
     # TODO [FUTURE] accept game settings
+
+    # TODO test
+    def get_current_player(self) -> tuple[str, int]:
+        return (self.players[self.current_player_uid].name, self.current_player_uid)
+
+    # TODO test
+    def get_space_details(self, position: int) -> str:
+        return self.game_map.get_space_name(position)
+
+    # TODO test
+    def _reset_for_next_player(self) -> None:
+        self._roll_double_counter = None
 
     def add_player(self, name: str):
         new_player = Player(
@@ -54,8 +67,9 @@ class Game:
     # game = handle game logic -> apply logic
 
     def next_player(self) -> int:
-        assert self.current_player_uid is not None
+        """Returns the next player uid and reset the game for next player"""
         self.current_player_uid = (self.current_player_uid + 1) % len(self.players)
+        self._reset_for_next_player()
         return self.current_player_uid
 
     def roll_dice(self) -> tuple[int, ...]:
@@ -85,21 +99,23 @@ class Game:
         return self.players[player_uid].move(steps)
 
     def check_go_pass(self, player_uid: int) -> Action:
-        assert self.game_map is not None
         if self.players[player_uid].position >= self.game_map.size:
             return Action.PASS_GO
         else:
             return Action.NOTHING
 
     def offset_go_pos(self, player_uid: int) -> int:
-        assert self.game_map is not None
         new_pos = self.players[player_uid].offset_position(self.game_map.size)
         return new_pos
 
     def trigger_space(self, player_uid: int) -> Action:
-        assert self.game_map is not None
         action = self.game_map.trigger(self.players[player_uid])
         return action
+
+    # TODO test this
+    def add_player_go_cash(self, player_uid: int) -> int:
+        new_cash = self.players[player_uid].add_cash(c.CONST_GO_CASH)
+        return new_cash
 
     def add_player_cash(self, player_uid: int, amount: int) -> int:
         new_cash = self.players[player_uid].add_cash(amount)
@@ -115,3 +131,18 @@ class Game:
             if player.token == token:
                 raise ValueError("Token already assigned")
         self.players[player_uid].assign_token(token)
+
+    # TODO test this
+    def send_to_jail(self, player_uid: int) -> None:
+        self.players[player_uid].send_to_pos(position=data.PositionMap.JAIL)
+
+    # TODO test this
+    def print_map(self) -> None:
+        """Print the map for debug or localhost"""
+        player_pos = {player.position: player.uid for player in self.players}
+        for i in range(self.game_map.size):
+            if i not in player_pos:
+                print("[ ]", end="")
+            else:
+                print(f"[{player_pos[i]}]", end="")
+        print()

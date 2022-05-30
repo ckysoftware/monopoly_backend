@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import TypedDict
 
 
@@ -241,3 +242,17 @@ CONST_UTILITY_SPACES: list[UtilityData] = [
         "property_set_id": 20,
     },
 ]
+
+
+class PositionMap(IntEnum):
+    GO = 0
+    JAIL = 10
+    # C1 = 11
+    # E3 = 24
+    # H2 = 39
+    R1 = 5
+    R2 = 15
+    R3 = 25
+    R4 = 35
+    U1 = 12
+    U2 = 28

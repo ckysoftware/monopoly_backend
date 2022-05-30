@@ -17,6 +17,10 @@ class GameMap:
     def __post_init__(self):
         self.size = len(self.map_list)
 
+    # TODO test this
+    def get_space_name(self, position: int) -> str:
+        return self.map_list[position].name
+
     def trigger(self, player: Player) -> Action:
         """
         This method triggers the card's action and action result.
