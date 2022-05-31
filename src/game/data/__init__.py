@@ -4,6 +4,9 @@ from .properties import (
     CONST_RAILROAD_SPACES,
     CONST_UTILITY_SPACES,
     PositionMap,
+    PropertyData,
+    RailroadData,
+    UtilityData,
 )
 
 __all__ = [
@@ -13,4 +16,7 @@ __all__ = [
     "CONST_RAILROAD_SPACES",
     "CONST_UTILITY_SPACES",
     "PositionMap",
+    "PropertyData",
+    "RailroadData",
+    "UtilityData",
 ]

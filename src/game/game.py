@@ -4,9 +4,9 @@ from typing import Optional
 import constants as c
 
 import game.dice as dice
-from game import data, game_initializer
+from game import data, game_initializer, space
 from game.actions import Action
-from game.game_map import GameMap
+from game.game_map import GameMap, SpaceDetails
 from game.player import Player
 
 
@@ -23,9 +23,37 @@ class Game:
     def get_current_player(self) -> tuple[str, int]:
         return (self.players[self.current_player_uid].name, self.current_player_uid)
 
+    def get_next_player(self, prev_player_uid: int) -> tuple[str, int]:
+        next_player_id = (prev_player_uid + 1) % len(self.players)
+        return (self.players[next_player_id].name, next_player_id)
+
     # TODO test
-    def get_space_details(self, position: int) -> str:
-        return self.game_map.get_space_name(position)
+    def get_player_position(self, player_uid: int) -> int:
+        return self.players[player_uid].position
+
+    # TODO test
+    def get_space_name(
+        self, position: Optional[int] = None, player_uid: Optional[int] = None
+    ) -> str:
+        """Return space name given by either position or player_uid to retrieve his/her position"""
+        if position is not None:
+            return self.game_map.get_space_name(position)
+        elif player_uid is not None:
+            return self.game_map.get_space_name(self.players[player_uid].position)
+        else:
+            raise ValueError("Either position or player_uid must be provided")
+
+    # TODO test
+    def get_space_details(
+        self, position: Optional[int] = None, player_uid: Optional[int] = None
+    ) -> SpaceDetails:
+        """Return space details given by either position or player_uid to retrieve his/her position"""
+        if position is not None:
+            return self.game_map.get_space_details(position)
+        elif player_uid is not None:
+            return self.game_map.get_space_details(self.players[player_uid].position)
+        else:
+            raise ValueError("Either position or player_uid must be provided")
 
     # TODO test
     def _reset_for_next_player(self) -> None:
@@ -68,7 +96,7 @@ class Game:
 
     def next_player(self) -> int:
         """Returns the next player uid and reset the game for next player"""
-        self.current_player_uid = (self.current_player_uid + 1) % len(self.players)
+        _, self.current_player_uid = self.get_next_player(self.current_player_uid)
         self._reset_for_next_player()
         return self.current_player_uid
 
@@ -112,11 +140,6 @@ class Game:
         action = self.game_map.trigger(self.players[player_uid])
         return action
 
-    # TODO test this
-    def add_player_go_cash(self, player_uid: int) -> int:
-        new_cash = self.players[player_uid].add_cash(c.CONST_GO_CASH)
-        return new_cash
-
     def add_player_cash(self, player_uid: int, amount: int) -> int:
         new_cash = self.players[player_uid].add_cash(amount)
         return new_cash
@@ -137,6 +160,43 @@ class Game:
         self.players[player_uid].send_to_pos(position=data.PositionMap.JAIL)
 
     # TODO test this
+    def buy_property(self, player_uid: int, position: Optional[int] = None) -> int:
+        player = self.players[player_uid]
+        if position is None:
+            position = self.get_player_position(player_uid)
+        property_ = self.game_map.map_list[position]
+
+        if not isinstance(property_, space.Property):
+            raise ValueError("Space is not a Property")
+        if property_.owner_uid is not None:
+            raise ValueError("Property is already owned")
+        if player.cash < property_.price:
+            raise ValueError(f"Player {player.name} does not have enough cash")
+
+        new_cash = self._buy_property_transaction(player, property_)
+        return new_cash
+
+    def auction_property(self, position: int) -> list[Player]:
+        property_ = self.game_map.map_list[position]
+
+        if not isinstance(property_, space.Property):
+            raise ValueError("Space is not a Property")
+        if property_.owner_uid is not None:
+            raise ValueError("Property is already owned")
+
+        bidders = self.players.copy()
+        return bidders
+
+    # TODO test this
+    def _buy_property_transaction(
+        self, player: Player, property_: space.Property
+    ) -> int:
+        new_cash = player.sub_cash(property_.price)
+        player.add_property(property_)
+        property_.assign_owner(player.uid)
+        return new_cash
+
+    # TODO probably no need to test this, should only pass data to host
     def print_map(self) -> None:
         """Print the map for debug or localhost"""
         player_pos = {player.position: player.uid for player in self.players}
@@ -146,3 +206,8 @@ class Game:
             else:
                 print(f"[{player_pos[i]}]", end="")
         print()
+
+    # TODO probably no need to test this, should only pass data to host
+    def print_player_info(self) -> None:
+        for player in self.players:
+            print(f"Player {player.name} - {player.position} - {player.cash}")

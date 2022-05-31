@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    from game.space import PropertySpace
+    from game import space
 
 
 @dataclass(kw_only=True, slots=True)
@@ -13,11 +13,11 @@ class Player:
     uid: int  # TODO change to id, unless use uuid
     cash: int
     token: int | None = None
-    properties: list[PropertySpace] = field(default_factory=list)
+    properties: list[space.Property] = field(default_factory=list)
     position: int = 0
 
-    def add_property(self, property: PropertySpace) -> None:
-        self.properties.append(property)
+    def add_property(self, property_: space.Property) -> None:
+        self.properties.append(property_)
 
     def assign_token(self, token: int) -> None:
         self.token = token

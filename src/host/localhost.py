@@ -99,9 +99,7 @@ class LocalHost:
         space_action = self.game.trigger_space(player_uid=player_uid)
         print(f"Player {player_name}: action is {space_action}")
         if space_action == Action.ASK_TO_BUY:
-            ...
-        elif space_action == Action.START_AUCTION:
-            ...
+            self._handle_buy()
         elif space_action == Action.PAY_RENT:
             ...
         elif space_action == Action.DRAW_CHANCE_CARD:
@@ -110,7 +108,7 @@ class LocalHost:
             ...
         elif space_action in (Action.CHARGE_INCOME_TAX, Action.CHARGE_LUXURY_TAX):
             # TODO handle bankrupt
-            self._handle_charge_income_tax(action=space_action)
+            self._handle_charge_tax(action=space_action)
         elif space_action == Action.SEND_TO_JAIL:
             print(f"Player {player_name}: Step on jail. Send to jail")
             self._send_to_jail(player_uid=player_uid)
@@ -126,6 +124,72 @@ class LocalHost:
         else:
             self.game_state = 0
         return
+
+    def _handle_buy(self) -> None:
+        player_name, player_uid = self.game.get_current_player()
+        property_name = self.game.get_space_name(player_uid=player_uid)
+        space_details = self.game.get_space_details(player_uid=player_uid)
+        print(f"Player {player_name}: Landed on property {property_name}.")
+        print(f"Details of the property: \n {space_details}")
+        choice = ""
+        while choice not in ("buy", "auction"):
+            choice = input(
+                "Type 'buy' to buy or 'auction' to auction the property. Input: "
+            ).lower()
+        if choice == "buy":
+            new_cash = self.game.buy_property(player_uid=player_uid)
+            print(
+                f"Player {player_name} bought the property {property_name} for {space_details['price']}."
+            )
+            print(f"Player {player_name}'s new cash balance is {new_cash}")
+        else:
+            self._auction_process(player_uid=player_uid)
+        return
+
+    def _auction_process(self, player_uid: int) -> None:
+        bidders = self.game.auction_property(
+            position=self.game.get_player_position(player_uid)
+        )
+        prop = self.game.get_space_details(player_uid=player_uid)
+        cur_bidder_uid = player_uid
+        cur_bid_price = 0
+        print(f"Auction for property {prop['name']} starts.")
+        while len(bidders) > 1:
+            print(f"Active bidders: {[b.name for b in bidders]}")
+            cur_bidder_name, cur_bidder_uid = self.game.get_next_player(cur_bidder_uid)
+
+            bid_choice = ""
+            while bid_choice not in (
+                "bid 1",
+                "bid 10",
+                "bid 50",
+                "bid 100",
+                "pass",
+            ):
+                print(
+                    f"Current bidder is {cur_bidder_name}. Current bid is {cur_bid_price}."
+                )
+                print("Type 'bid 1' to increment the bid by $1")
+                print("Type 'bid 10' to increment the bid by $10")
+                print("Type 'bid 50' to increment the bid by $50")
+                print("Type 'bid 100' to increment the bid by $100")
+                print("Type 'pass' to pass")
+                bid_choice = input("Input: ").lower()
+
+            if bid_choice[:3] == "bid":
+                bid_increment = int(bid_choice[4:])
+                cur_bid_price += bid_increment
+                print(
+                    f"Player {cur_bidder_name} raised the bid by {bid_increment} to {cur_bid_price}."
+                )
+            else:
+                bidders.pop(cur_bidder_uid)
+                print(f"Player {cur_bidder_name} passed.")
+        # TODO purchase, think about bankrupt
+        winner = bidders[0]
+        print(
+            f"Player {winner.name} won the auction for {prop['name']} at bid price ${cur_bid_price}."
+        )
 
     def _handle_movement(self) -> tuple[Action, int]:
         """
@@ -157,15 +221,17 @@ class LocalHost:
         new_pos = self.game.move_player(player_uid=player_uid, steps=steps)
         go_action = self.game.check_go_pass(player_uid=player_uid)
         if go_action == Action.PASS_GO:
-            new_cash = self.game.add_player_go_cash(player_uid=player_uid)
+            new_cash = self.game.add_player_cash(
+                player_uid=player_uid, amount=c.CONST_GO_CASH
+            )
             print(
                 f"Player {player_name}: Passed GO, receive ${c.CONST_GO_CASH} to ${new_cash}"
             )
             new_pos = self.game.offset_go_pos(player_uid=player_uid)
-        print(f"Player {player_name}: Landed on {self.game.get_space_details(new_pos)}")
+        print(f"Player {player_name}: Landed on {self.game.get_space_name(new_pos)}")
         return new_pos
 
-    def _handle_charge_income_tax(self, action: Action) -> None:
+    def _handle_charge_tax(self, action: Action) -> None:
         player_name, player_uid = self.game.get_current_player()
         if action == Action.CHARGE_INCOME_TAX:
             new_cash = self.game.sub_player_cash(

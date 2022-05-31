@@ -21,6 +21,14 @@ class Property(Space):
         self.owner_uid = player_uid
         self.property_set.update_monopoly()
 
+    @property
+    def mortgage_value(self) -> int:
+        return self.price // 2
+
+    @property
+    def property_set_id(self) -> int:
+        return self.property_set.id
+
     @abstractmethod
     def compute_rent(self) -> int:
         ...
