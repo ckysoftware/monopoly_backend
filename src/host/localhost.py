@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from typing import Optional
 
 import constants as c
-from game import Game
+from game import Game, card
 from game.actions import Action
+from game.positions import Position
 
 from host.user import User
 
@@ -53,7 +54,7 @@ class LocalHost:
                 f"Player {self.game.players[player_uid].name}: dice_1 is {dice_roll[0]}, "
                 + f"dice_2 is {dice_roll[1]}, sum is {dice_roll[0] + dice_roll[1]}"
             )
-        cur_name, _ = self.game.get_current_player()
+        cur_name, _cur_uid = self.game.get_current_player()
         print(f"Player {cur_name} is the first player to play.")
         print()
         return dice_rolls
@@ -74,14 +75,19 @@ class LocalHost:
         Reset for next player
         """
         # TODO need to think about if double roll can be resetted correctly
-        self.game.next_player()
+        self.game.next_player_and_reset()
         self.game_state = 1  # TODO need to think about how to handle jailed player
         self.is_double_roll = False
         print()
 
-    def _send_to_jail(self, player_uid: int) -> None:
-        self.game.send_to_jail(player_uid=player_uid)
+    def _end_turn(self) -> None:
         self.game_state = 0
+
+    def _send_to_jail_and_end_turn(self, player_uid: int) -> None:
+        # TODO send to jail doesnt end turn? check this
+        # probably end turn need ask mortgage, build those...
+        self.game.send_to_jail(player_uid=player_uid)
+        self._end_turn()
 
     def _start_turn(self) -> None:
         player_name, player_uid = self.game.get_current_player()
@@ -90,8 +96,7 @@ class LocalHost:
             print(
                 f"Player {player_name}: Rolled double for three times in a row. Send to jail."
             )
-            self._send_to_jail(player_uid=player_uid)
-            # NOTE exit point maybe
+            self._send_to_jail_and_end_turn(player_uid=player_uid)
             return
 
         self._move_player_and_check_go(steps=steps)
@@ -102,19 +107,17 @@ class LocalHost:
             self._handle_buy()
         elif space_action == Action.PAY_RENT:
             ...
-        elif space_action == Action.DRAW_CHANCE_CARD:
-            ...
-        elif space_action == Action.DRAW_CC_CARD:
+        elif space_action in (Action.DRAW_CHANCE_CARD, Action.DRAW_CC_CARD):
             ...
         elif space_action in (Action.CHARGE_INCOME_TAX, Action.CHARGE_LUXURY_TAX):
             # TODO handle bankrupt
             self._handle_charge_tax(action=space_action)
         elif space_action == Action.SEND_TO_JAIL:
             print(f"Player {player_name}: Step on jail. Send to jail")
-            self._send_to_jail(player_uid=player_uid)
+            self._send_to_jail_and_end_turn(player_uid=player_uid)
             return
         elif space_action == Action.NOTHING:
-            pass
+            pass  # catch Nothing so that a else check can be used next
         else:
             raise ValueError(f"Unknown action for space trigger {space_action}")
 
@@ -122,8 +125,87 @@ class LocalHost:
             print(f"Player {player_name}: Rolled double. There is an extra roll.")
             self._start_turn()
         else:
-            self.game_state = 0
-        return
+            self._end_turn()
+
+    def _handle_draw_card(self, action: Action) -> None:
+        player_name, player_uid = self.game.get_current_player()
+        if action == Action.DRAW_CHANCE_CARD:
+            drawn_card = self.game.draw_chance_card()
+        elif action == Action.DRAW_CC_CARD:
+            drawn_card = self.game.draw_cc_card()
+        else:
+            raise ValueError(f"Unknown action {action} in draw card")
+        print(f"Player {player_name}: Draw {drawn_card}")
+        self._process_chance_card(player_uid=player_uid, drawn_card=drawn_card)
+
+    def _process_chance_card(self, player_uid: int, drawn_card: card.ChanceCard):
+        card_action = drawn_card.trigger()
+
+        match card_action:
+            # chance card
+            case Action.SEND_TO_BOARDWLAK:
+                _new_pos = self._move_player_to_pos(
+                    player_uid, position=Position.BOARDWLAK
+                )
+            case Action.SEND_TO_GO:
+                ...
+            case Action.SEND_TO_ILLINOIS_AVE:
+                ...
+            case Action.SEND_TO_ST_CHARLES_PLACE:
+                ...
+            case Action.SEND_TO_NEAREST_RAILROAD:
+                ...
+            case Action.SEND_TO_NEAREST_UTILITY:
+                ...
+            case Action.COLLECT_DIVIDEND:
+                ...
+            case Action.COLLECT_JAIL_CARD:
+                ...
+            case Action.SEND_BACK_THREE_SPACES:
+                ...
+            case Action.SEND_TO_JAIL:
+                ...
+            case Action.CHARGE_GENERAL_REPAIR_FEE:
+                ...
+            case Action.CHARGE_POOR_TAX:
+                ...
+            case Action.SEND_TO_READING_RAILROAD:
+                ...
+            case Action.PAY_CHAIRMAN_FEE:
+                ...
+            case Action.COLLECT_LOAN:
+                ...
+            # CC card
+            case Action.COLLECT_BANK_ERROR:
+                ...
+            case Action.CHARGE_DOCTOR_FEE:
+                ...
+            case Action.COLLECT_STOCK_SALE:
+                ...
+            case Action.COLLECT_GRAND_OPERA_NIGHT:
+                ...
+            case Action.COLLECT_HOLIDAY_FUND:
+                ...
+            case Action.COLLECT_TAX_REFUND:
+                ...
+            case Action.COLLECT_BIRTHDAY:
+                ...
+            case Action.COLLECT_INSURANCE:
+                ...
+            case Action.CHARGE_HOSPITAL_FEE:
+                ...
+            case Action.CHARGE_SCHOOL_FEE:
+                ...
+            case Action.COLLECT_CONSULTANCY_FEE:
+                ...
+            case Action.CHARGE_STREET_REPAIR_FEE:
+                ...
+            case Action.COLLECT_CONTEST_PRIZE:
+                ...
+            case Action.COLLECT_INHERITANCE:
+                ...
+            case _:
+                raise ValueError(f"Unknown action {card_action} in chance card")
 
     def _handle_buy(self) -> None:
         player_name, player_uid = self.game.get_current_player()
@@ -144,16 +226,15 @@ class LocalHost:
             print(f"Player {player_name}'s new cash balance is {new_cash}")
         else:
             self._auction_process(player_uid=player_uid)
-        return
 
     def _auction_process(self, player_uid: int) -> None:
         bidders = self.game.auction_property(
             position=self.game.get_player_position(player_uid)
         )
-        prop = self.game.get_space_details(player_uid=player_uid)
+        space_details = self.game.get_space_details(player_uid=player_uid)
         cur_bidder_uid = player_uid
         cur_bid_price = 0
-        print(f"Auction for property {prop['name']} starts.")
+        print(f"Auction for property {space_details['name']} starts.")
         while len(bidders) > 1:
             print(f"Active bidders: {[b.name for b in bidders]}")
             cur_bidder_name, cur_bidder_uid = self.game.get_next_player(cur_bidder_uid)
@@ -188,8 +269,15 @@ class LocalHost:
         # TODO purchase, think about bankrupt
         winner = bidders[0]
         print(
-            f"Player {winner.name} won the auction for {prop['name']} at bid price ${cur_bid_price}."
+            f"Player {winner.name} won the auction for {space_details['name']} at bid price ${cur_bid_price}."
         )
+        new_cash = self.game.buy_property_transaction(
+            player=winner, property=self.game.get_property(player_uid=player_uid)
+        )
+        print(
+            f"Player {winner.name} bought the property {space_details['name']} for {cur_bid_price}."
+        )
+        print(f"Player {winner.name}'s new cash balance is {new_cash}")
 
     def _handle_movement(self) -> tuple[Action, int]:
         """
@@ -207,6 +295,10 @@ class LocalHost:
         )
         print(f"Player {player_name}: Rolled {dice_1} and {dice_2}")
         return action, dice_1 + dice_2
+
+    def _move_player_to_pos(self, player_uid: int, position: int) -> int:
+        new_pos = self.game.move_player(player_uid, position=position)
+        return new_pos
 
     def _move_player_and_check_go(
         self, steps: int, player_uid: Optional[int] = None

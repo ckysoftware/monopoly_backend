@@ -134,7 +134,7 @@ def test_check_double_roll_diff_player_incorrect_reset(game_with_players: Game):
     with pytest.raises(
         ValueError, match="Roll double counter has not been resetted correctly"
     ):
-        _ = game_with_players.check_double_roll(player_uid=5, dice_1=1, dice_2=1)
+        _action = game_with_players.check_double_roll(player_uid=5, dice_1=1, dice_2=1)
 
 
 def test_check_go_pass_false(game_with_players: Game):
@@ -170,7 +170,7 @@ def test_sub_player_cash(game_with_players: Game):
 def test_next_player(game_with_players: Game):
     game_with_players.initialize_first_player()
     cur_player = game_with_players.current_player_uid
-    next_player = game_with_players.next_player()
+    next_player = game_with_players.next_player_and_reset()
     assert cur_player is not None
     assert next_player == (cur_player + 1) % len(game_with_players.players)
 

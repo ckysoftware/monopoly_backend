@@ -4,7 +4,7 @@ from typing import Optional
 import constants as c
 
 import game.dice as dice
-from game import data, game_initializer, space
+from game import card, data, game_initializer, space
 from game.actions import Action
 from game.game_map import GameMap, SpaceDetails
 from game.player import Player
@@ -16,6 +16,8 @@ class Game:
     players: list[Player] = field(default_factory=list)  # sorted by Player.uid
     current_player_uid: int = field(init=False)  # current pos of the player_order
     _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
+    cc_deck: card.Deck = field(init=False)
+    chance_deck: card.Deck = field(init=False)
     # TODO jail_list with uid and count
     # TODO [FUTURE] accept game settings
 
@@ -30,6 +32,23 @@ class Game:
     # TODO test
     def get_player_position(self, player_uid: int) -> int:
         return self.players[player_uid].position
+
+    # TODO test
+    def get_property(
+        self, position: Optional[int] = None, player_uid: Optional[int] = None
+    ) -> space.Property:
+        """Return Property given by either position or player_uid to retrieve his/her position"""
+        if position is not None:
+            property_ = self.game_map.map_list[position]
+        elif player_uid is not None:
+            property_ = self.game_map.map_list[self.get_player_position(player_uid)]
+        else:
+            raise ValueError("Either position or player_uid must be provided")
+
+        assert isinstance(
+            property_, space.Property
+        ), f"The space is not a property: {type(property_)}"
+        return property_
 
     # TODO test
     def get_space_name(
@@ -85,18 +104,40 @@ class Game:
         self.current_player_uid = roll_max[1]
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
+    # TODO change this to internal function, public is initialize
     def initialize_game_map(self) -> None:
         self.game_map = game_initializer.build_game_map(
             HOUSE_LIMIT=c.CONST_HOUSE_LIMIT, HOTEL_LIMIT=c.CONST_HOTEL_LIMIT
         )
 
+    # TODO test this
+    def _initialize_deck(self) -> None:
+        """Initialize the deck for chance cards and community chest"""
+        self.cc_deck = card.Deck(name="Community Chest Cards")
+        self.cc_deck.shuffle_add_cards(data=data.CONST_CHANCE_CARDS)
+        self.chance_deck = card.Deck(name="Chance Cards")
+        self.chance_deck.shuffle_add_cards(data=data.CONST_CHANCE_CARDS)
+
+    # TODO test this
+    def draw_chance_card(self) -> card.ChanceCard:
+        return self.chance_deck.draw_card()
+
+    # TODO test this
+    def draw_cc_card(self) -> card.ChanceCard:
+        return self.cc_deck.draw_card()
+
+    # TODO test
+    def initialize(self) -> None:
+        """Public API to initialize the whole game"""
+        ...
+
     # NOTE probably need to break down host into round instance maybe
     # host = trigger game.action, ask -> relay msg
     # game = handle game logic -> apply logic
 
-    def next_player(self) -> int:
+    def next_player_and_reset(self) -> int:
         """Returns the next player uid and reset the game for next player"""
-        _, self.current_player_uid = self.get_next_player(self.current_player_uid)
+        _name, self.current_player_uid = self.get_next_player(self.current_player_uid)
         self._reset_for_next_player()
         return self.current_player_uid
 
@@ -123,8 +164,20 @@ class Game:
             self._roll_double_counter = None
             return Action.NOTHING
 
-    def move_player(self, player_uid: int, steps: int) -> int:
-        return self.players[player_uid].move(steps)
+    def move_player(
+        self,
+        player_uid: int,
+        steps: Optional[int] = None,
+        position: Optional[int] = None,
+    ) -> int:
+        """Move player either by steps or map position"""
+        if position is not None:
+            new_pos = self.players[player_uid].position = position
+        elif steps is not None:
+            new_pos = self.players[player_uid].move(steps)
+        else:
+            raise ValueError("Either steps or position must be provided")
+        return new_pos
 
     def check_go_pass(self, player_uid: int) -> Action:
         if self.players[player_uid].position >= self.game_map.size:
@@ -133,6 +186,7 @@ class Game:
             return Action.NOTHING
 
     def offset_go_pos(self, player_uid: int) -> int:
+        """Offset player's position by the map size after passing Go"""
         new_pos = self.players[player_uid].offset_position(self.game_map.size)
         return new_pos
 
@@ -159,6 +213,8 @@ class Game:
     def send_to_jail(self, player_uid: int) -> None:
         self.players[player_uid].send_to_pos(position=data.PositionMap.JAIL)
 
+    # TODO test this first
+
     # TODO test this
     def buy_property(self, player_uid: int, position: Optional[int] = None) -> int:
         player = self.players[player_uid]
@@ -170,10 +226,10 @@ class Game:
             raise ValueError("Space is not a Property")
         if property_.owner_uid is not None:
             raise ValueError("Property is already owned")
-        if player.cash < property_.price:
-            raise ValueError(f"Player {player.name} does not have enough cash")
+        # if player.cash < property_.price:
+        #     raise ValueError(f"Player {player.name} does not have enough cash")
 
-        new_cash = self._buy_property_transaction(player, property_)
+        new_cash = self.buy_property_transaction(player, property_)
         return new_cash
 
     def auction_property(self, position: int) -> list[Player]:
@@ -188,12 +244,15 @@ class Game:
         return bidders
 
     # TODO test this
-    def _buy_property_transaction(
-        self, player: Player, property_: space.Property
+    def buy_property_transaction(
+        self, player: Player, property: space.Property, price: Optional[int] = None
     ) -> int:
-        new_cash = player.sub_cash(property_.price)
-        player.add_property(property_)
-        property_.assign_owner(player.uid)
+        """Process the purchase transactions. If price is not provided, use the property's price"""
+        if price is None:
+            price = property.price
+        new_cash = player.sub_cash(price)
+        player.add_property(property)
+        property.assign_owner(player.uid)
         return new_cash
 
     # TODO probably no need to test this, should only pass data to host
