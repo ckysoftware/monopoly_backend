@@ -1,7 +1,7 @@
-from enum import IntEnum
+from enum import Enum
 
 
-class Position(IntEnum):
+class Position(Enum):
     """Contains the position of the Space"""
 
     GO = 0
@@ -9,7 +9,7 @@ class Position(IntEnum):
     JAIL = 10
     ST_CHARLES_PLACE = 11
     ILLINOIS_AVE = 24
-    BOARDWLAK = 39
+    BOARDWALK = 39
 
     UTILITIES = [12, 28]
     RAILROADS = [5, 15, 25, 35]

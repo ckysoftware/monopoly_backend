@@ -105,7 +105,7 @@ class Game:
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
     # TODO change this to internal function, public is initialize
-    def initialize_game_map(self) -> None:
+    def _initialize_game_map(self) -> None:
         self.game_map = game_initializer.build_game_map(
             HOUSE_LIMIT=c.CONST_HOUSE_LIMIT, HOTEL_LIMIT=c.CONST_HOTEL_LIMIT
         )
@@ -129,7 +129,8 @@ class Game:
     # TODO test
     def initialize(self) -> None:
         """Public API to initialize the whole game"""
-        ...
+        self._initialize_deck()
+        self._initialize_game_map()
 
     # NOTE probably need to break down host into round instance maybe
     # host = trigger game.action, ask -> relay msg
@@ -226,8 +227,8 @@ class Game:
             raise ValueError("Space is not a Property")
         if property_.owner_uid is not None:
             raise ValueError("Property is already owned")
-        # if player.cash < property_.price:
-        #     raise ValueError(f"Player {player.name} does not have enough cash")
+        if player.cash < property_.price:
+            raise ValueError(f"Player {player.name} does not have enough cash")
 
         new_cash = self.buy_property_transaction(player, property_)
         return new_cash
@@ -242,6 +243,18 @@ class Game:
 
         bidders = self.players.copy()
         return bidders
+
+    # TODO test this
+    def get_player_house_and_hotel_counts(self, player_uid: int) -> tuple[int, int]:
+        """Returns the number of houses and hotels owned by the player (house, hotel)"""
+        player = self.players[player_uid]
+        house_count = 0
+        hotel_count = 0
+        for property_ in player.properties:
+            if isinstance(property_, space.PropertySpace):
+                house_count += property_.no_of_houses
+                hotel_count += property_.no_of_hotels
+        return house_count, hotel_count
 
     # TODO test this
     def buy_property_transaction(

@@ -8,7 +8,7 @@ def chance_card_simple():
     chance_card = card.ChanceCard(
         id=0,
         description="Advance to Boardwalk",
-        action=Action.SEND_TO_BOARDWLAK,
+        action=Action.SEND_TO_BOARDWALK,
         ownable=False,
     )
     return chance_card
@@ -28,12 +28,12 @@ def chance_card_ownable():
 def test_chance_card_simple_init(chance_card_simple: card.ChanceCard):
     assert chance_card_simple.id == 0
     assert chance_card_simple.description == "Advance to Boardwalk"
-    assert chance_card_simple.action == Action.SEND_TO_BOARDWLAK
+    assert chance_card_simple.action == Action.SEND_TO_BOARDWALK
     assert chance_card_simple.ownable is False
 
 
 def test_chance_card_simple_trigger(chance_card_simple: card.ChanceCard):
-    assert chance_card_simple.trigger() == Action.SEND_TO_BOARDWLAK
+    assert chance_card_simple.trigger() == Action.SEND_TO_BOARDWALK
 
 
 def test_chance_card_ownable_init(chance_card_ownable: card.ChanceCard):

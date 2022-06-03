@@ -31,7 +31,7 @@ class Action(Enum):
     # send the player to a location
     SEND_TO_JAIL = auto()
     SEND_TO_GO = auto()
-    SEND_TO_BOARDWLAK = auto()
+    SEND_TO_BOARDWALK = auto()
     SEND_TO_ILLINOIS_AVE = auto()
     SEND_TO_ST_CHARLES_PLACE = auto()
     SEND_TO_NEAREST_RAILROAD = auto()

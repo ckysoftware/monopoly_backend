@@ -44,7 +44,7 @@ class LocalHost:
         )
 
     def start_game(self) -> dict[int, tuple[int, ...]]:
-        self.game.initialize_game_map()
+        self.game.initialize()
         dice_rolls = self.game.initialize_first_player()
         self.game_state = 1
         print("Game started")
@@ -83,24 +83,30 @@ class LocalHost:
     def _end_turn(self) -> None:
         self.game_state = 0
 
-    def _send_to_jail_and_end_turn(self, player_uid: int) -> None:
-        # TODO send to jail doesnt end turn? check this
-        # probably end turn need ask mortgage, build those...
-        self.game.send_to_jail(player_uid=player_uid)
-        self._end_turn()
-
     def _start_turn(self) -> None:
         player_name, player_uid = self.game.get_current_player()
         move_action, steps = self._handle_movement()
+        end_turn = False
         if move_action == Action.SEND_TO_JAIL:
             print(
                 f"Player {player_name}: Rolled double for three times in a row. Send to jail."
             )
-            self._send_to_jail_and_end_turn(player_uid=player_uid)
-            return
+            end_turn = self._send_player(player_uid, position=Position.JAIL)
 
-        self._move_player_and_check_go(steps=steps)
+        if not end_turn:
+            self._move_player_and_check_go(steps=steps)
+            end_turn = self._handle_space_trigger(player_uid=player_uid)
 
+        if not end_turn and move_action == Action.ASK_TO_ROLL:
+            # TODO if called recursively by _handle_space_trigger, need to think again
+            print(f"Player {player_name}: Rolled double. There is an extra roll.")
+            self._start_turn()
+        else:
+            self._end_turn()
+
+    def _handle_space_trigger(self, player_uid: int) -> bool:
+        """Return True if the player turn has ended, False otherwise"""
+        player_name = self.game.players[player_uid].name
         space_action = self.game.trigger_space(player_uid=player_uid)
         print(f"Player {player_name}: action is {space_action}")
         if space_action == Action.ASK_TO_BUY:
@@ -108,26 +114,20 @@ class LocalHost:
         elif space_action == Action.PAY_RENT:
             ...
         elif space_action in (Action.DRAW_CHANCE_CARD, Action.DRAW_CC_CARD):
-            ...
+            return self._handle_draw_card(action=space_action)
         elif space_action in (Action.CHARGE_INCOME_TAX, Action.CHARGE_LUXURY_TAX):
             # TODO handle bankrupt
             self._handle_charge_tax(action=space_action)
         elif space_action == Action.SEND_TO_JAIL:
             print(f"Player {player_name}: Step on jail. Send to jail")
-            self._send_to_jail_and_end_turn(player_uid=player_uid)
-            return
+            return self._send_player(player_uid=player_uid, position=Position.JAIL)
         elif space_action == Action.NOTHING:
             pass  # catch Nothing so that a else check can be used next
         else:
             raise ValueError(f"Unknown action for space trigger {space_action}")
+        return False
 
-        if move_action == Action.ASK_TO_ROLL:
-            print(f"Player {player_name}: Rolled double. There is an extra roll.")
-            self._start_turn()
-        else:
-            self._end_turn()
-
-    def _handle_draw_card(self, action: Action) -> None:
+    def _handle_draw_card(self, action: Action) -> bool:
         player_name, player_uid = self.game.get_current_player()
         if action == Action.DRAW_CHANCE_CARD:
             drawn_card = self.game.draw_chance_card()
@@ -135,77 +135,225 @@ class LocalHost:
             drawn_card = self.game.draw_cc_card()
         else:
             raise ValueError(f"Unknown action {action} in draw card")
-        print(f"Player {player_name}: Draw {drawn_card}")
-        self._process_chance_card(player_uid=player_uid, drawn_card=drawn_card)
+        print(f"Player {player_name}: Drawn {drawn_card.description}")
+        return self._process_chance_card(player_uid=player_uid, drawn_card=drawn_card)
 
-    def _process_chance_card(self, player_uid: int, drawn_card: card.ChanceCard):
+    def _process_chance_card(
+        self, player_uid: int, drawn_card: card.ChanceCard
+    ) -> bool:
+        player_name = self.game.players[player_uid].name
         card_action = drawn_card.trigger()
-
+        end_turn = False
         match card_action:
             # chance card
-            case Action.SEND_TO_BOARDWLAK:
-                _new_pos = self._move_player_to_pos(
-                    player_uid, position=Position.BOARDWLAK
-                )
+            # TODO in sending, also check do Go check, also check other send in other functions
+            case Action.SEND_TO_BOARDWALK:
+                end_turn = self._send_player(player_uid, position=Position.BOARDWALK)
             case Action.SEND_TO_GO:
-                ...
+                end_turn = self._send_player(player_uid, position=Position.GO)
             case Action.SEND_TO_ILLINOIS_AVE:
-                ...
+                end_turn = self._send_player(player_uid, position=Position.ILLINOIS_AVE)
             case Action.SEND_TO_ST_CHARLES_PLACE:
-                ...
+                end_turn = self._send_player(
+                    player_uid, position=Position.ST_CHARLES_PLACE
+                )
             case Action.SEND_TO_NEAREST_RAILROAD:
-                ...
+                end_turn = self._send_player(player_uid, position=Position.RAILROADS)
             case Action.SEND_TO_NEAREST_UTILITY:
-                ...
+                end_turn = self._send_player(player_uid, position=Position.UTILITIES)
             case Action.COLLECT_DIVIDEND:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_DIVIDEND
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_JAIL_CARD:
+                # TODO
                 ...
             case Action.SEND_BACK_THREE_SPACES:
-                ...
+                _ = self.game.move_player(player_uid, steps=-3)
+                end_turn = self._handle_space_trigger(player_uid=player_uid)
             case Action.SEND_TO_JAIL:
-                ...
+                end_turn = self._send_player(player_uid, position=Position.JAIL)
             case Action.CHARGE_GENERAL_REPAIR_FEE:
-                ...
+                house_count, hotel_count = self.game.get_player_house_and_hotel_counts(
+                    player_uid
+                )
+                charge_amount = (
+                    house_count * c.CONST_GENERAL_REPAIR_HOUSE
+                    + hotel_count * c.CONST_GENERAL_REPAIR_HOTEL
+                )
+                print(
+                    f"Charge amount is ${charge_amount} for {house_count} houses and {hotel_count} hotels"
+                )
+                new_cash = self.game.sub_player_cash(player_uid, amount=charge_amount)
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.CHARGE_POOR_TAX:
-                ...
+                new_cash = self.game.sub_player_cash(
+                    player_uid, amount=c.CONST_POOR_TAX
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.SEND_TO_READING_RAILROAD:
-                ...
+                end_turn = self._send_player(
+                    player_uid, position=Position.READING_RAILROAD
+                )
             case Action.PAY_CHAIRMAN_FEE:
-                ...
+                charge_amount = 0
+                for o_player in self.game.players:
+                    if o_player.uid != player_uid:
+                        charge_amount += c.CONST_CHAIRMAN_FEE
+                    new_cash = self.game.add_player_cash(
+                        o_player.uid, amount=c.CONST_CHAIRMAN_FEE
+                    )
+                    print(f"Player {o_player.name}'s new cash balance is ${new_cash}")
+                new_cash = self.game.sub_player_cash(player_uid, amount=charge_amount)
+                print(
+                    f"Charge amount is ${charge_amount} for {charge_amount//c.CONST_CHAIRMAN_FEE} people"
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_LOAN:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_LOAN
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             # CC card
             case Action.COLLECT_BANK_ERROR:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_BANK_ERROR
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.CHARGE_DOCTOR_FEE:
-                ...
+                new_cash = self.game.sub_player_cash(
+                    player_uid, amount=c.CONST_DOCTOR_FEE
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_STOCK_SALE:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_STOCK_SALE
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_GRAND_OPERA_NIGHT:
-                ...
+                receive_amount = 0
+                for o_player in self.game.players:
+                    if o_player.uid != player_uid:
+                        receive_amount += c.CONST_GRAND_OPERA_NIGHT
+                    new_cash = self.game.sub_player_cash(
+                        o_player.uid, amount=c.CONST_GRAND_OPERA_NIGHT
+                    )
+                    print(f"Player {o_player.name}'s new cash balance is ${new_cash}")
+                new_cash = self.game.add_player_cash(player_uid, amount=receive_amount)
+                print(
+                    f"Charge amount is ${receive_amount} for {receive_amount//c.CONST_GRAND_OPERA_NIGHT} people"
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_HOLIDAY_FUND:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_HOLIDAY_FUND
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_TAX_REFUND:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_TAX_REFUND
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_BIRTHDAY:
-                ...
+                receive_amount = 0
+                for o_player in self.game.players:
+                    if o_player.uid != player_uid:
+                        receive_amount += c.CONST_BIRTHDAY
+                    new_cash = self.game.sub_player_cash(
+                        o_player.uid, amount=c.CONST_BIRTHDAY
+                    )
+                    print(f"Player {o_player.name}'s new cash balance is ${new_cash}")
+                new_cash = self.game.add_player_cash(player_uid, amount=receive_amount)
+                print(
+                    f"Charge amount is ${receive_amount} for {receive_amount//c.CONST_BIRTHDAY} people"
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_INSURANCE:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_INSURANCE
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.CHARGE_HOSPITAL_FEE:
-                ...
+                new_cash = self.game.sub_player_cash(
+                    player_uid, amount=c.CONST_HOSPITAL_FEE
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.CHARGE_SCHOOL_FEE:
-                ...
+                new_cash = self.game.sub_player_cash(
+                    player_uid, amount=c.CONST_SCHOOL_FEE
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_CONSULTANCY_FEE:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_CONSULTANCY_FEE
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.CHARGE_STREET_REPAIR_FEE:
-                ...
+                house_count, hotel_count = self.game.get_player_house_and_hotel_counts(
+                    player_uid
+                )
+                charge_amount = (
+                    house_count * c.CONST_STREET_REPAIR_HOUSE
+                    + hotel_count * c.CONST_STREET_REPAIR_HOTEL
+                )
+                print(
+                    f"Charge amount is ${charge_amount} for {house_count} houses and {hotel_count} hotels"
+                )
+                new_cash = self.game.sub_player_cash(player_uid, amount=charge_amount)
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_CONTEST_PRIZE:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_CONTEST_PRIZE
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_INHERITANCE:
-                ...
+                new_cash = self.game.add_player_cash(
+                    player_uid, amount=c.CONST_COLLECT_INHERITANCE
+                )
+                print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case _:
                 raise ValueError(f"Unknown action {card_action} in chance card")
+        return end_turn
+
+    def _send_player(self, player_uid: int, position: Position) -> bool:
+        """Send a player to a position, handle Go check and trigger space.
+        Handles nearest railroad or utility too.
+        Returns True if end turn, False otherwise"""
+        player_name = self.game.players[player_uid].name
+        if position == Position.JAIL:
+            print(f"Player {player_name}: Moves to Jail")
+            _ = self._send_to_jail(player_uid)
+            return True
+
+        if position == Position.RAILROADS or position == Position.UTILITIES:
+            pos_value = self._find_nearest_position(player_uid, position.value)
+        else:
+            pos_value = position.value
+        space_name = self.game.get_space_name(position=pos_value)
+        print(f"Player {player_name}: Moves to {space_name}")
+
+        if self.game.get_player_position(player_uid) > pos_value:
+            new_cash = self.game.add_player_cash(player_uid, amount=c.CONST_GO_CASH)
+            print(
+                f"Player {player_name}: Passed GO, receive ${c.CONST_GO_CASH} to ${new_cash}"
+            )
+
+        _ = self.game.move_player(player_uid, position=pos_value)
+        end_turn = self._handle_space_trigger(player_uid=player_uid)
+        return end_turn
+
+    def _find_nearest_position(self, player_pos: int, search_pos: list[int]) -> int:
+        """Find the nearest position from the player's current position."""
+        for pos in search_pos:
+            if player_pos < pos:
+                return pos
+        return search_pos[0]  # returns the first one after passing Go
+
+    def _send_to_jail(self, player_uid: int) -> None:
+        # TODO send to jail doesnt end turn? check this
+        # probably end turn need ask mortgage, build house those...
+        self.game.send_to_jail(player_uid=player_uid)
 
     def _handle_buy(self) -> None:
         player_name, player_uid = self.game.get_current_player()
@@ -225,9 +373,9 @@ class LocalHost:
             )
             print(f"Player {player_name}'s new cash balance is {new_cash}")
         else:
-            self._auction_process(player_uid=player_uid)
+            self._process_auction(player_uid=player_uid)
 
-    def _auction_process(self, player_uid: int) -> None:
+    def _process_auction(self, player_uid: int) -> None:
         bidders = self.game.auction_property(
             position=self.game.get_player_position(player_uid)
         )
@@ -295,10 +443,6 @@ class LocalHost:
         )
         print(f"Player {player_name}: Rolled {dice_1} and {dice_2}")
         return action, dice_1 + dice_2
-
-    def _move_player_to_pos(self, player_uid: int, position: int) -> int:
-        new_pos = self.game.move_player(player_uid, position=position)
-        return new_pos
 
     def _move_player_and_check_go(
         self, steps: int, player_uid: Optional[int] = None

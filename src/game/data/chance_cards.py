@@ -15,7 +15,7 @@ CONST_CHANCE_CARDS: list[CardData] = [
     {
         "id": 0,
         "description": "Advance to Boardwalk.",
-        "action": Action.SEND_TO_BOARDWLAK,
+        "action": Action.SEND_TO_BOARDWALK,
         "ownable": False,
     },
     {

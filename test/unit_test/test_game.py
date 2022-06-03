@@ -176,7 +176,7 @@ def test_next_player(game_with_players: Game):
 
 
 def test_initialize_game_map(game_init: Game):
-    game_init.initialize_game_map()
+    game_init._initialize_game_map()
     map_names: list[str] = [
         "Go",
         "Mediterranean Avenue",
