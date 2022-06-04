@@ -1,6 +1,6 @@
 import random
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from game.data.chance_cards import CardData
@@ -15,7 +15,7 @@ class Deck:
     """
 
     name: str  # chance card or community chest
-    cards: Optional[deque[ChanceCard]] = None
+    cards: deque[ChanceCard] = field(init=False)
 
     def shuffle_add_cards(
         self,

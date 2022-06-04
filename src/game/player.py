@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game import space
@@ -22,8 +22,14 @@ class Player:
     def assign_token(self, token: int) -> None:
         self.token = token
 
-    def move(self, steps: int) -> int:
-        self.position += steps
+    def move(self, position: Optional[int] = None, steps: Optional[int] = None) -> int:
+        """Move player either by steps or map position"""
+        if position is not None:
+            self.position = position
+        elif steps is not None:
+            self.position += steps
+        else:
+            raise ValueError("Either steps or position must be provided")
         return self.position
 
     def offset_position(self, offset: int) -> int:
@@ -38,9 +44,3 @@ class Player:
     def sub_cash(self, amount: int) -> int:
         self.cash -= amount
         return self.cash
-
-    # TODO test this
-    def send_to_pos(self, position: int) -> None:
-        self.position = position
-
-    # TODO roll dice and move player, also test for double roll

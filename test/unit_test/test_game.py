@@ -53,19 +53,73 @@ def game_with_players(game_init: Game) -> Game:
     return game_init
 
 
-def test_game_init(game_init: Game, game_map_simple: GameMap):
-    assert id(game_init.game_map) == id(game_map_simple)
-    assert game_init.players == []
-    assert game_init._roll_double_counter is None  # pyright: reportPrivateUsage=false
+def fn_test_initialize_deck(
+    game: Game, cc_card_list: set[int], chance_card_list: set[int]
+):
+    assert len(chance_card_list) == len(game.chance_deck.cards)
+    assert len(cc_card_list) == len(game.cc_deck.cards)
+    for chance_card in game.chance_deck.cards:
+        assert chance_card.id in chance_card_list
+    for cc_card in game.cc_deck.cards:
+        assert cc_card.id in cc_card_list
 
 
-def test_game_add_player(game_with_players: Game):
-    game_with_players.add_player(name="Testing Player")
-    assert len(game_with_players.players) == 5
+def fn_test_initialize_game_map(game: Game, map_list: list[str]):
+    assert game.game_map is not None
+    assert len(game.game_map.map_list) == 40
+    for i in range(len(map_list)):
+        assert game.game_map.map_list[i].name == map_list[i]
 
-    player = game_with_players.players[-1]
-    assert player.name == "Testing Player"
-    assert player.uid == 4
+
+class TestGameInitialization:
+    def test_game_init(self, game_init: Game, game_map_simple: GameMap):
+        assert id(game_init.game_map) == id(game_map_simple)
+        assert game_init.players == []
+        assert (
+            game_init._roll_double_counter is None
+        )  # pyright: reportPrivateUsage=false
+
+    def test_game_add_player(self, game_with_players: Game):
+        game_with_players.add_player(name="Testing Player")
+        assert len(game_with_players.players) == 5
+
+        player = game_with_players.players[-1]
+        assert player.name == "Testing Player"
+        assert player.uid == 4
+
+    def test_initialize_game_map(self, game_init: Game, map_list: list[str]):
+        game_init._initialize_game_map()
+        fn_test_initialize_game_map(game_init, map_list)
+
+    def test_initialize_deck(
+        self, game_init: Game, chance_card_list: set[int], cc_card_list: set[int]
+    ):
+        game_init._initialize_deck()
+        fn_test_initialize_deck(game_init, cc_card_list, chance_card_list)
+
+    def test_initialize(
+        self,
+        game_init: Game,
+        map_list: list[str],
+        cc_card_list: set[int],
+        chance_card_list: set[int],
+    ):
+        game_init.initialize()
+        fn_test_initialize_game_map(game_init, map_list)
+        fn_test_initialize_deck(game_init, cc_card_list, chance_card_list)
+
+    def test_initialize_first_player(self, game_with_players: Game):
+        roll_result = game_with_players.initialize_first_player()
+
+        recon_result: list[tuple[int, int]] = []  # reconstruct the orders
+        for player_uid, dice_rolls in roll_result.items():
+            recon_result.append((sum(dice_rolls), player_uid))
+
+        recon_result.sort(
+            key=lambda x: (x[0], -1 * x[1]), reverse=True
+        )  # smaller uid first
+        first_player = recon_result[0][1]
+        assert first_player == game_with_players.current_player_uid
 
 
 def test_roll_dice(game_with_players: Game):
@@ -75,66 +129,69 @@ def test_roll_dice(game_with_players: Game):
             assert roll in list(range(1, 7))
 
 
-def test_move_player(game_with_players: Game):
-    new_pos = game_with_players.move_player(player_uid=0, steps=8)
-    assert new_pos == 8
-    assert game_with_players.players[0].position == 8
+class TestMovePlayer:
+    def test_move_player_by_steps(self, game_with_players: Game):
+        new_pos = game_with_players.move_player(player_uid=0, steps=8)
+        assert new_pos == 8
+        assert game_with_players.players[0].position == 8
+
+    def test_move_player_by_position(self, game_with_players: Game):
+        new_pos = game_with_players.move_player(player_uid=0, position=15)
+        assert new_pos == 15
+        assert game_with_players.players[0].position == 15
+
+    def test_move_player_no_args(self, game_with_players: Game):
+        with pytest.raises(
+            ValueError, match=("Either steps or position must be provided")
+        ):
+            _ = game_with_players.move_player(player_uid=0)
+
+    def test_move_player_both_args(self, game_with_players: Game):
+        new_pos = game_with_players.move_player(0, 20, 1)
+        assert new_pos == 1
+        assert game_with_players.players[0].position == 1
+
+    def test_offset_go_pos(self, game_with_players: Game):
+        new_pos = game_with_players.move_player(player_uid=0, steps=3)
+        new_pos = game_with_players.offset_go_pos(player_uid=0)
+        assert new_pos == 1
+        assert game_with_players.players[0].position == 1
 
 
-def test_offset_go_pos(game_with_players: Game):
-    new_pos = game_with_players.move_player(player_uid=0, steps=3)
-    new_pos = game_with_players.offset_go_pos(player_uid=0)
-    assert new_pos == 1
-    assert game_with_players.players[0].position == 1
+class TestDoubleRoll:
+    def test_check_double_roll_with_none(self, game_with_players: Game):
+        action = game_with_players.check_double_roll(player_uid=2, dice_1=5, dice_2=5)
+        assert action is Action.ASK_TO_ROLL
+        assert game_with_players._roll_double_counter == (2, 1)
 
+    def test_check_double_roll_with_one_count(self, game_with_players: Game):
+        game_with_players._roll_double_counter = (2, 1)
+        action = game_with_players.check_double_roll(player_uid=2, dice_1=1, dice_2=1)
+        assert action is Action.ASK_TO_ROLL
+        assert game_with_players._roll_double_counter == (2, 2)
 
-def test_initilize_first_player(game_with_players: Game):
-    roll_result = game_with_players.initialize_first_player()
+    def test_check_double_roll_over_limit(self, game_with_players: Game):
+        game_with_players._roll_double_counter = (2, 2)
+        action = game_with_players.check_double_roll(player_uid=2, dice_1=3, dice_2=3)
+        assert action is Action.SEND_TO_JAIL
+        assert game_with_players._roll_double_counter is None
 
-    recon_result: list[tuple[int, int]] = []  # reconstruct the orders
-    for player_uid, dice_rolls in roll_result.items():
-        recon_result.append((sum(dice_rolls), player_uid))
+    def test_check_double_roll_not_double_reset(self, game_with_players: Game):
+        game_with_players._roll_double_counter = (2, 1)
+        action = game_with_players.check_double_roll(player_uid=2, dice_1=1, dice_2=3)
+        assert action is Action.NOTHING
+        assert game_with_players._roll_double_counter is None
 
-    recon_result.sort(
-        key=lambda x: (x[0], -1 * x[1]), reverse=True
-    )  # smaller uid first
-    first_player = recon_result[0][1]
-    assert first_player == game_with_players.current_player_uid
-
-
-def test_check_double_roll_with_none(game_with_players: Game):
-    action = game_with_players.check_double_roll(player_uid=2, dice_1=5, dice_2=5)
-    assert action is Action.ASK_TO_ROLL
-    assert game_with_players._roll_double_counter == (2, 1)
-
-
-def test_check_double_roll_with_one_count(game_with_players: Game):
-    game_with_players._roll_double_counter = (2, 1)
-    action = game_with_players.check_double_roll(player_uid=2, dice_1=1, dice_2=1)
-    assert action is Action.ASK_TO_ROLL
-    assert game_with_players._roll_double_counter == (2, 2)
-
-
-def test_check_double_roll_over_limit(game_with_players: Game):
-    game_with_players._roll_double_counter = (2, 2)
-    action = game_with_players.check_double_roll(player_uid=2, dice_1=3, dice_2=3)
-    assert action is Action.SEND_TO_JAIL
-    assert game_with_players._roll_double_counter is None
-
-
-def test_check_double_roll_not_double_reset(game_with_players: Game):
-    game_with_players._roll_double_counter = (2, 1)
-    action = game_with_players.check_double_roll(player_uid=2, dice_1=1, dice_2=3)
-    assert action is Action.NOTHING
-    assert game_with_players._roll_double_counter is None
-
-
-def test_check_double_roll_diff_player_incorrect_reset(game_with_players: Game):
-    game_with_players._roll_double_counter = (2, 1)
-    with pytest.raises(
-        ValueError, match="Roll double counter has not been resetted correctly"
+    def test_check_double_roll_diff_player_incorrect_reset(
+        self, game_with_players: Game
     ):
-        _action = game_with_players.check_double_roll(player_uid=5, dice_1=1, dice_2=1)
+        game_with_players._roll_double_counter = (2, 1)
+        with pytest.raises(
+            ValueError, match="Roll double counter has not been resetted correctly"
+        ):
+            _action = game_with_players.check_double_roll(
+                player_uid=5, dice_1=1, dice_2=1
+            )
 
 
 def test_check_go_pass_false(game_with_players: Game):
@@ -167,59 +224,19 @@ def test_sub_player_cash(game_with_players: Game):
     assert game_with_players.players[0].cash == c.CONST_STARTING_CASH - 600
 
 
+class TestGetInfo:
+    def test_get_current_player(self, game_with_players: Game):
+        game_with_players.current_player_uid = 1
+        assert game_with_players.get_current_player() == ("Player 2", 1)
+
+    def test_get_player_position(self, game_with_players: Game):
+        game_with_players.players[1].position = 10
+        assert game_with_players.get_player_position(player_uid=1) == 10
+
+
 def test_next_player(game_with_players: Game):
     game_with_players.initialize_first_player()
     cur_player = game_with_players.current_player_uid
     next_player = game_with_players.next_player_and_reset()
     assert cur_player is not None
     assert next_player == (cur_player + 1) % len(game_with_players.players)
-
-
-def test_initialize_game_map(game_init: Game):
-    game_init._initialize_game_map()
-    map_names: list[str] = [
-        "Go",
-        "Mediterranean Avenue",
-        "Community Chest",
-        "Baltic Avenue",
-        "Income Tax",
-        "Reading Railroad",
-        "Oriental Avenue",
-        "Chance",
-        "Vermont Avenue",
-        "Connecticut Avenue",
-        "Jail",
-        "St. Charles Place",
-        "Electric Company",
-        "States Avenue",
-        "Virginia Avenue",
-        "Pennsylvania Railroad",
-        "St. James Place",
-        "Community Chest",
-        "Tennessee Avenue",
-        "New York Avenue",
-        "Free Parking",
-        "Kentucky Avenue",
-        "Chance",
-        "Indiana Avenue",
-        "Illinois Avenue",
-        "B. & O. Railroad",
-        "Atlantic Avenue",
-        "Ventnor Avenue",
-        "Water Works",
-        "Marvin Gardens",
-        "Go To Jail",
-        "Pacific Avenue",
-        "North Carolina Avenue",
-        "Community Chest",
-        "Pennsylvania Avenue",
-        "Short Line",
-        "Chance",
-        "Park Place",
-        "Luxury Tax",
-        "Boardwalk",
-    ]
-    assert game_init.game_map is not None
-    assert len(game_init.game_map.map_list) == 40
-    for i in range(len(map_names)):
-        assert game_init.game_map.map_list[i].name == map_names[i]

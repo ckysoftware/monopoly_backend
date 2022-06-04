@@ -344,16 +344,18 @@ class LocalHost:
         return end_turn
 
     def _find_nearest_position(self, player_pos: int, search_pos: list[int]) -> int:
-        """Find the nearest position from the player's current position."""
+        """Find the nearest position from search_pos that is ahead of the
+        player's current position."""
         for pos in search_pos:
             if player_pos < pos:
                 return pos
         return search_pos[0]  # returns the first one after passing Go
 
     def _send_to_jail(self, player_uid: int) -> None:
-        # TODO send to jail doesnt end turn? check this
+        # TODO probably should remove this... seems send_player can handle this
+        # send to jail doesnt end turn? check this
         # probably end turn need ask mortgage, build house those...
-        self.game.send_to_jail(player_uid=player_uid)
+        self.game.move_player(player_uid=player_uid, position=Position.JAIL.value)
 
     def _handle_buy(self) -> None:
         player_name, player_uid = self.game.get_current_player()

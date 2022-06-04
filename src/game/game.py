@@ -18,10 +18,10 @@ class Game:
     _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
     cc_deck: card.Deck = field(init=False)
     chance_deck: card.Deck = field(init=False)
+    # TODO handle out of the game players
     # TODO jail_list with uid and count
     # TODO [FUTURE] accept game settings
 
-    # TODO test
     def get_current_player(self) -> tuple[str, int]:
         return (self.players[self.current_player_uid].name, self.current_player_uid)
 
@@ -29,7 +29,6 @@ class Game:
         next_player_id = (prev_player_uid + 1) % len(self.players)
         return (self.players[next_player_id].name, next_player_id)
 
-    # TODO test
     def get_player_position(self, player_uid: int) -> int:
         return self.players[player_uid].position
 
@@ -50,10 +49,10 @@ class Game:
         ), f"The space is not a property: {type(property_)}"
         return property_
 
-    # TODO test
+    # NOTE be careful with this, it's not tested
     def get_space_name(
         self, position: Optional[int] = None, player_uid: Optional[int] = None
-    ) -> str:
+    ) -> str:  # pragma: no cover
         """Return space name given by either position or player_uid to retrieve his/her position"""
         if position is not None:
             return self.game_map.get_space_name(position)
@@ -62,10 +61,10 @@ class Game:
         else:
             raise ValueError("Either position or player_uid must be provided")
 
-    # TODO test
+    # NOTE be careful with this, it's not tested
     def get_space_details(
         self, position: Optional[int] = None, player_uid: Optional[int] = None
-    ) -> SpaceDetails:
+    ) -> SpaceDetails:  # pragma: no cover
         """Return space details given by either position or player_uid to retrieve his/her position"""
         if position is not None:
             return self.game_map.get_space_details(position)
@@ -104,19 +103,22 @@ class Game:
         self.current_player_uid = roll_max[1]
         return {x[1]: x[2] for x in roll_result}  # for frontend to show dice result
 
-    # TODO change this to internal function, public is initialize
     def _initialize_game_map(self) -> None:
         self.game_map = game_initializer.build_game_map(
             HOUSE_LIMIT=c.CONST_HOUSE_LIMIT, HOTEL_LIMIT=c.CONST_HOTEL_LIMIT
         )
 
-    # TODO test this
     def _initialize_deck(self) -> None:
         """Initialize the deck for chance cards and community chest"""
         self.cc_deck = card.Deck(name="Community Chest Cards")
-        self.cc_deck.shuffle_add_cards(data=data.CONST_CHANCE_CARDS)
+        self.cc_deck.shuffle_add_cards(data=data.CONST_CC_CARDS)
         self.chance_deck = card.Deck(name="Chance Cards")
         self.chance_deck.shuffle_add_cards(data=data.CONST_CHANCE_CARDS)
+
+    def initialize(self) -> None:
+        """Public API to initialize the whole game"""
+        self._initialize_deck()
+        self._initialize_game_map()
 
     # TODO test this
     def draw_chance_card(self) -> card.ChanceCard:
@@ -125,12 +127,6 @@ class Game:
     # TODO test this
     def draw_cc_card(self) -> card.ChanceCard:
         return self.cc_deck.draw_card()
-
-    # TODO test
-    def initialize(self) -> None:
-        """Public API to initialize the whole game"""
-        self._initialize_deck()
-        self._initialize_game_map()
 
     # NOTE probably need to break down host into round instance maybe
     # host = trigger game.action, ask -> relay msg
@@ -173,9 +169,9 @@ class Game:
     ) -> int:
         """Move player either by steps or map position"""
         if position is not None:
-            new_pos = self.players[player_uid].position = position
+            new_pos = self.players[player_uid].move(position=position)
         elif steps is not None:
-            new_pos = self.players[player_uid].move(steps)
+            new_pos = self.players[player_uid].move(steps=steps)
         else:
             raise ValueError("Either steps or position must be provided")
         return new_pos
@@ -211,12 +207,6 @@ class Game:
         self.players[player_uid].assign_token(token)
 
     # TODO test this
-    def send_to_jail(self, player_uid: int) -> None:
-        self.players[player_uid].send_to_pos(position=data.PositionMap.JAIL)
-
-    # TODO test this first
-
-    # TODO test this
     def buy_property(self, player_uid: int, position: Optional[int] = None) -> int:
         player = self.players[player_uid]
         if position is None:
@@ -233,6 +223,7 @@ class Game:
         new_cash = self.buy_property_transaction(player, property_)
         return new_cash
 
+    # TODO test this
     def auction_property(self, position: int) -> list[Player]:
         property_ = self.game_map.map_list[position]
 
@@ -268,8 +259,8 @@ class Game:
         property.assign_owner(player.uid)
         return new_cash
 
-    # TODO probably no need to test this, should only pass data to host
-    def print_map(self) -> None:
+    # NOTE be careful no test
+    def print_map(self) -> None:  # pragma: no cover
         """Print the map for debug or localhost"""
         player_pos = {player.position: player.uid for player in self.players}
         for i in range(self.game_map.size):
@@ -279,7 +270,7 @@ class Game:
                 print(f"[{player_pos[i]}]", end="")
         print()
 
-    # TODO probably no need to test this, should only pass data to host
-    def print_player_info(self) -> None:
+    # NOTE be careful no test
+    def print_player_info(self) -> None:  # pragma: no cover
         for player in self.players:
             print(f"Player {player.name} - {player.position} - {player.cash}")
