@@ -1,6 +1,3 @@
-from telnetlib import GA
-from typing import Optional
-
 import constants as c
 import pytest
 from game import card, space

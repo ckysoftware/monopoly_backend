@@ -182,14 +182,12 @@ class Game:
         new_cash = self.players[player_uid].sub_cash(amount)
         return new_cash
 
-    # TODO test this
     def assign_player_token(self, player_uid: int, token: int) -> None:
         for player in self.players:
             if player.token == token:
                 raise ValueError("Token is already assigned")
         self.players[player_uid].assign_token(token)
 
-    # TODO test this
     def buy_property(self, player_uid: int, position: Optional[int] = None) -> int:
         player = self.players[player_uid]
         if position is None:
@@ -206,7 +204,6 @@ class Game:
         new_cash = self.buy_property_transaction(player, property_)
         return new_cash
 
-    # TODO test this
     def auction_property(self, position: int) -> list[Player]:
         """Returns the bidders (active players). Raise error if the property is not auctionable"""
         property_ = self.game_map.map_list[position]
@@ -219,7 +216,6 @@ class Game:
         bidders = self.players.copy()
         return bidders
 
-    # TODO test this
     def buy_property_transaction(
         self, player: Player, property: space.Property, price: Optional[int] = None
     ) -> int:
@@ -231,7 +227,6 @@ class Game:
         property.assign_owner(player.uid)
         return new_cash
 
-    # TODO test
     def get_property(
         self, position: Optional[int] = None, player_uid: Optional[int] = None
     ) -> space.Property:
@@ -248,7 +243,6 @@ class Game:
         assert isinstance(property_, space.Property)
         return property_
 
-    # TODO test this
     def get_player_house_and_hotel_counts(self, player_uid: int) -> tuple[int, int]:
         """Returns the number of houses and hotels owned by the player (house, hotel)"""
         player = self.players[player_uid]
