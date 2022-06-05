@@ -32,23 +32,6 @@ class Game:
     def get_player_position(self, player_uid: int) -> int:
         return self.players[player_uid].position
 
-    # TODO test
-    def get_property(
-        self, position: Optional[int] = None, player_uid: Optional[int] = None
-    ) -> space.Property:
-        """Return Property given by either position or player_uid to retrieve his/her position"""
-        if position is not None:
-            property_ = self.game_map.map_list[position]
-        elif player_uid is not None:
-            property_ = self.game_map.map_list[self.get_player_position(player_uid)]
-        else:
-            raise ValueError("Either position or player_uid must be provided")
-
-        assert isinstance(
-            property_, space.Property
-        ), f"The space is not a property: {type(property_)}"
-        return property_
-
     # NOTE be careful with this, it's not tested
     def get_space_name(
         self, position: Optional[int] = None, player_uid: Optional[int] = None
@@ -203,7 +186,7 @@ class Game:
     def assign_player_token(self, player_uid: int, token: int) -> None:
         for player in self.players:
             if player.token == token:
-                raise ValueError("Token already assigned")
+                raise ValueError("Token is already assigned")
         self.players[player_uid].assign_token(token)
 
     # TODO test this
@@ -214,7 +197,7 @@ class Game:
         property_ = self.game_map.map_list[position]
 
         if not isinstance(property_, space.Property):
-            raise ValueError("Space is not a Property")
+            raise ValueError(f"Space is not a Property: {type(property_)}")
         if property_.owner_uid is not None:
             raise ValueError("Property is already owned")
         if player.cash < property_.price:
@@ -225,27 +208,16 @@ class Game:
 
     # TODO test this
     def auction_property(self, position: int) -> list[Player]:
+        """Returns the bidders (active players). Raise error if the property is not auctionable"""
         property_ = self.game_map.map_list[position]
 
         if not isinstance(property_, space.Property):
-            raise ValueError("Space is not a Property")
+            raise ValueError(f"Space is not a Property: {type(property_)}")
         if property_.owner_uid is not None:
             raise ValueError("Property is already owned")
 
         bidders = self.players.copy()
         return bidders
-
-    # TODO test this
-    def get_player_house_and_hotel_counts(self, player_uid: int) -> tuple[int, int]:
-        """Returns the number of houses and hotels owned by the player (house, hotel)"""
-        player = self.players[player_uid]
-        house_count = 0
-        hotel_count = 0
-        for property_ in player.properties:
-            if isinstance(property_, space.PropertySpace):
-                house_count += property_.no_of_houses
-                hotel_count += property_.no_of_hotels
-        return house_count, hotel_count
 
     # TODO test this
     def buy_property_transaction(
@@ -258,6 +230,35 @@ class Game:
         player.add_property(property)
         property.assign_owner(player.uid)
         return new_cash
+
+    # TODO test
+    def get_property(
+        self, position: Optional[int] = None, player_uid: Optional[int] = None
+    ) -> space.Property:
+        """Return Property given by either position or player_uid to retrieve his/her position"""
+        if position is not None:
+            property_ = self.game_map.map_list[position]
+        elif player_uid is not None:
+            property_ = self.game_map.map_list[self.get_player_position(player_uid)]
+        else:
+            raise ValueError("Either position or player_uid must be provided")
+
+        if not isinstance(property_, space.Property):
+            raise ValueError(f"Space is not a Property: {type(property_)}")
+        assert isinstance(property_, space.Property)
+        return property_
+
+    # TODO test this
+    def get_player_house_and_hotel_counts(self, player_uid: int) -> tuple[int, int]:
+        """Returns the number of houses and hotels owned by the player (house, hotel)"""
+        player = self.players[player_uid]
+        house_count = 0
+        hotel_count = 0
+        for property_ in player.properties:
+            if isinstance(property_, space.PropertySpace):
+                house_count += property_.no_of_houses
+                hotel_count += property_.no_of_hotels
+        return house_count, hotel_count
 
     # NOTE be careful no test
     def print_map(self) -> None:  # pragma: no cover
