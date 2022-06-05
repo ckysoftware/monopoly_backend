@@ -219,6 +219,7 @@ class Game:
     def buy_property_transaction(
         self, player: Player, property: space.Property, price: Optional[int] = None
     ) -> int:
+        # TODO test monopoly after buying, also no monopoly check
         """Process the purchase transactions. If price is not provided, use the property's price"""
         if price is None:
             price = property.price

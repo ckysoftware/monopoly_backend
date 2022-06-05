@@ -1,6 +1,9 @@
 import constants as c
+import host
 import pytest
-from game import card, data
+from game import card, data, space
+from game.game import Game
+from game.game_map import GameMap
 from game.player import Player
 
 
@@ -36,6 +39,87 @@ def cc_cards_deck() -> card.Deck:
 def player_simple() -> Player:
     player = Player(name="Player 1", uid=0, cash=c.CONST_STARTING_CASH)
     return player
+
+
+@pytest.fixture
+def game_map_simple() -> GameMap:
+    property_set = space.PropertySet(id=0)
+    property_space_1 = space.PropertySpace(
+        name="Property 1",
+        price=60,
+        rent=[2, 10, 30, 90, 160, 250],
+        price_of_house=50,
+        price_of_hotel=50,
+        HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
+        property_set=property_set,
+        owner_uid=1,
+    )
+    property_space_2 = space.PropertySpace(
+        name="Property 2",
+        price=60,
+        rent=[2, 10, 30, 90, 160, 250],
+        price_of_house=50,
+        price_of_hotel=50,
+        HOUSE_LIMIT=c.CONST_HOUSE_LIMIT,
+        HOTEL_LIMIT=c.CONST_HOTEL_LIMIT,
+        property_set=property_set,
+        owner_uid=10,
+    )
+    property_set.add_property(property_space_1)
+    property_set.add_property(property_space_2)
+    game_map = GameMap(map_list=[property_space_1, property_space_2])
+    return game_map
+
+
+@pytest.fixture
+def game_init(game_map_simple: GameMap) -> Game:
+    game = Game()
+    game.game_map = game_map_simple
+    return game
+
+
+@pytest.fixture
+def game_with_players(game_init: Game) -> Game:
+    for i in range(4):
+        new_player = Player(name=f"Player {i + 1}", uid=i, cash=c.CONST_STARTING_CASH)
+        game_init.players.append(new_player)
+    return game_init
+
+
+@pytest.fixture
+def game_beginning(game_with_players: Game) -> Game:
+    game_with_players.initialize_first_player()
+    game_with_players.initialize()
+    return game_with_players
+
+
+@pytest.fixture
+def game_middle(game_beginning: Game) -> Game:
+    for player in game_beginning.players:
+        player.position = player.uid + 5
+        player.cash += player.position * 10 * (-1) ** player.uid
+
+    monopoly_properties = [
+        game_beginning.game_map.map_list[1],
+        game_beginning.game_map.map_list[3],
+    ]
+    assert isinstance(monopoly_properties[0], space.PropertySpace)
+    assert isinstance(monopoly_properties[1], space.PropertySpace)
+    game_beginning.players[1].add_property(monopoly_properties[0])
+    game_beginning.players[1].add_property(monopoly_properties[1])
+    monopoly_properties[0].assign_owner(1)
+    monopoly_properties[1].assign_owner(1)
+
+    monopoly_properties[0].no_of_houses = 4
+    monopoly_properties[1].no_of_hotels = 1
+
+    return game_beginning
+
+
+@pytest.fixture
+def users_simple() -> list[host.User]:
+    return [host.User(name=f"User {i + 1}", room_uid="9001") for i in range(4)]
 
 
 @pytest.fixture

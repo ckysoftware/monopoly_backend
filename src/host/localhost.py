@@ -10,7 +10,7 @@ from host.user import User
 
 
 # HACK
-def generate_state_dict() -> dict[int, str]:
+def generate_state_dict() -> dict[int, str]:  # pragma: no cover
     data = {
         0: "Next player",
         1: "Waiting for roll",
@@ -106,26 +106,27 @@ class LocalHost:
 
     def _handle_space_trigger(self, player_uid: int) -> bool:
         """Return True if the player turn has ended, False otherwise"""
+        end_turn = False
         player_name = self.game.players[player_uid].name
         space_action = self.game.trigger_space(player_uid=player_uid)
         print(f"Player {player_name}: action is {space_action}")
         if space_action == Action.ASK_TO_BUY:
-            self._handle_buy()
+            self._handle_buy(player_uid=player_uid)
         elif space_action == Action.PAY_RENT:
             ...
         elif space_action in (Action.DRAW_CHANCE_CARD, Action.DRAW_CC_CARD):
-            return self._handle_draw_card(action=space_action)
+            end_turn = self._handle_draw_card(action=space_action)
         elif space_action in (Action.CHARGE_INCOME_TAX, Action.CHARGE_LUXURY_TAX):
             # TODO handle bankrupt
             self._handle_charge_tax(action=space_action)
         elif space_action == Action.SEND_TO_JAIL:
             print(f"Player {player_name}: Step on jail. Send to jail")
-            return self._send_player(player_uid=player_uid, position=Position.JAIL)
+            end_turn = self._send_player(player_uid=player_uid, position=Position.JAIL)
         elif space_action == Action.NOTHING:
             pass  # catch Nothing so that a else check can be used next
         else:
-            raise ValueError(f"Unknown action for space trigger {space_action}")
-        return False
+            raise ValueError(f"Unknown trigger {space_action}")  # pragma: no cover
+        return end_turn
 
     def _handle_draw_card(self, action: Action) -> bool:
         player_name, player_uid = self.game.get_current_player()
@@ -201,10 +202,12 @@ class LocalHost:
                 for o_player in self.game.players:
                     if o_player.uid != player_uid:
                         charge_amount += c.CONST_CHAIRMAN_FEE
-                    new_cash = self.game.add_player_cash(
-                        o_player.uid, amount=c.CONST_CHAIRMAN_FEE
-                    )
-                    print(f"Player {o_player.name}'s new cash balance is ${new_cash}")
+                        new_cash = self.game.add_player_cash(
+                            o_player.uid, amount=c.CONST_CHAIRMAN_FEE
+                        )
+                        print(
+                            f"Player {o_player.name}'s new cash balance is ${new_cash}"
+                        )
                 new_cash = self.game.sub_player_cash(player_uid, amount=charge_amount)
                 print(
                     f"Charge amount is ${charge_amount} for {charge_amount//c.CONST_CHAIRMAN_FEE} people"
@@ -236,10 +239,12 @@ class LocalHost:
                 for o_player in self.game.players:
                     if o_player.uid != player_uid:
                         receive_amount += c.CONST_GRAND_OPERA_NIGHT
-                    new_cash = self.game.sub_player_cash(
-                        o_player.uid, amount=c.CONST_GRAND_OPERA_NIGHT
-                    )
-                    print(f"Player {o_player.name}'s new cash balance is ${new_cash}")
+                        new_cash = self.game.sub_player_cash(
+                            o_player.uid, amount=c.CONST_GRAND_OPERA_NIGHT
+                        )
+                        print(
+                            f"Player {o_player.name}'s new cash balance is ${new_cash}"
+                        )
                 new_cash = self.game.add_player_cash(player_uid, amount=receive_amount)
                 print(
                     f"Charge amount is ${receive_amount} for {receive_amount//c.CONST_GRAND_OPERA_NIGHT} people"
@@ -260,10 +265,12 @@ class LocalHost:
                 for o_player in self.game.players:
                     if o_player.uid != player_uid:
                         receive_amount += c.CONST_BIRTHDAY
-                    new_cash = self.game.sub_player_cash(
-                        o_player.uid, amount=c.CONST_BIRTHDAY
-                    )
-                    print(f"Player {o_player.name}'s new cash balance is ${new_cash}")
+                        new_cash = self.game.sub_player_cash(
+                            o_player.uid, amount=c.CONST_BIRTHDAY
+                        )
+                        print(
+                            f"Player {o_player.name}'s new cash balance is ${new_cash}"
+                        )
                 new_cash = self.game.add_player_cash(player_uid, amount=receive_amount)
                 print(
                     f"Charge amount is ${receive_amount} for {receive_amount//c.CONST_BIRTHDAY} people"
@@ -312,7 +319,7 @@ class LocalHost:
                     player_uid, amount=c.CONST_COLLECT_INHERITANCE
                 )
                 print(f"Player {player_name}'s new cash balance is ${new_cash}")
-            case _:
+            case _:  # pragma: no cover
                 raise ValueError(f"Unknown action {card_action} in chance card")
         return end_turn
 
@@ -321,19 +328,20 @@ class LocalHost:
         Handles nearest railroad or utility too.
         Returns True if end turn, False otherwise"""
         player_name = self.game.players[player_uid].name
+        player_pos = self.game.players[player_uid].position
         if position == Position.JAIL:
             print(f"Player {player_name}: Moves to Jail")
             _ = self._send_to_jail(player_uid)
             return True
 
         if position == Position.RAILROADS or position == Position.UTILITIES:
-            pos_value = self._find_nearest_position(player_uid, position.value)
+            pos_value = self._find_nearest_position(player_pos, position.value)
         else:
             pos_value = position.value
         space_name = self.game.get_space_name(position=pos_value)
         print(f"Player {player_name}: Moves to {space_name}")
 
-        if self.game.get_player_position(player_uid) > pos_value:
+        if player_pos >= pos_value:
             new_cash = self.game.add_player_cash(player_uid, amount=c.CONST_GO_CASH)
             print(
                 f"Player {player_name}: Passed GO, receive ${c.CONST_GO_CASH} to ${new_cash}"
@@ -347,6 +355,7 @@ class LocalHost:
         """Find the nearest position from search_pos that is ahead of the
         player's current position."""
         for pos in search_pos:
+            assert pos != player_pos  # pragma: no cover
             if player_pos < pos:
                 return pos
         return search_pos[0]  # returns the first one after passing Go
@@ -357,8 +366,13 @@ class LocalHost:
         # probably end turn need ask mortgage, build house those...
         self.game.move_player(player_uid=player_uid, position=Position.JAIL.value)
 
-    def _handle_buy(self) -> None:
-        player_name, player_uid = self.game.get_current_player()
+    def _handle_buy(self, player_uid: Optional[int] = None) -> None:
+        """Handle buy or auction for the player_uid.
+        If player_uid is None, then get the current player of the game."""
+        if player_uid is None:
+            player_name, player_uid = self.game.get_current_player()
+        else:
+            player_name = self.game.players[player_uid].name
         property_name = self.game.get_space_name(player_uid=player_uid)
         space_details = self.game.get_space_details(player_uid=player_uid)
         print(f"Player {player_name}: Landed on property {property_name}.")
