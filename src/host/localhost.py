@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 import constants as c
 from game import Game, card
@@ -94,7 +93,7 @@ class LocalHost:
             end_turn = self._send_player(player_uid, position=Position.JAIL)
 
         if not end_turn:
-            self._move_player_and_check_go(steps=steps)
+            self._move_player_and_check_go(player_uid=player_uid, steps=steps)
             end_turn = self._handle_space_trigger(player_uid=player_uid)
 
         if not end_turn and move_action == Action.ASK_TO_ROLL:
@@ -115,10 +114,12 @@ class LocalHost:
         elif space_action == Action.PAY_RENT:
             ...
         elif space_action in (Action.DRAW_CHANCE_CARD, Action.DRAW_CC_CARD):
-            end_turn = self._handle_draw_card(action=space_action)
+            end_turn = self._handle_draw_card(
+                player_uid=player_uid, action=space_action
+            )
         elif space_action in (Action.CHARGE_INCOME_TAX, Action.CHARGE_LUXURY_TAX):
             # TODO handle bankrupt
-            self._handle_charge_tax(action=space_action)
+            self._handle_charge_tax(player_uid=player_uid, action=space_action)
         elif space_action == Action.SEND_TO_JAIL:
             print(f"Player {player_name}: Step on jail. Send to jail")
             end_turn = self._send_player(player_uid=player_uid, position=Position.JAIL)
@@ -128,14 +129,18 @@ class LocalHost:
             raise ValueError(f"Unknown trigger {space_action}")  # pragma: no cover
         return end_turn
 
-    def _handle_draw_card(self, action: Action) -> bool:
-        player_name, player_uid = self.game.get_current_player()
+    def _handle_draw_card(
+        self,
+        player_uid: int,
+        action: Action,
+    ) -> bool:
+        player_name = self.game.players[player_uid].name
         if action == Action.DRAW_CHANCE_CARD:
             drawn_card = self.game.draw_chance_card()
         elif action == Action.DRAW_CC_CARD:
             drawn_card = self.game.draw_cc_card()
         else:
-            raise ValueError(f"Unknown action {action} in draw card")
+            raise ValueError(f"Unknown action {action} in draw")  # pragma: no cover
         print(f"Player {player_name}: Drawn {drawn_card.description}")
         return self._process_chance_card(player_uid=player_uid, drawn_card=drawn_card)
 
@@ -355,7 +360,7 @@ class LocalHost:
         """Find the nearest position from search_pos that is ahead of the
         player's current position."""
         for pos in search_pos:
-            assert pos != player_pos  # pragma: no cover
+            assert pos != player_pos, "Impossible for this case"  # pragma: no cover
             if player_pos < pos:
                 return pos
         return search_pos[0]  # returns the first one after passing Go
@@ -366,13 +371,10 @@ class LocalHost:
         # probably end turn need ask mortgage, build house those...
         self.game.move_player(player_uid=player_uid, position=Position.JAIL.value)
 
-    def _handle_buy(self, player_uid: Optional[int] = None) -> None:
+    def _handle_buy(self, player_uid: int) -> None:
         """Handle buy or auction for the player_uid.
         If player_uid is None, then get the current player of the game."""
-        if player_uid is None:
-            player_name, player_uid = self.game.get_current_player()
-        else:
-            player_name = self.game.players[player_uid].name
+        player_name = self.game.players[player_uid].name
         property_name = self.game.get_space_name(player_uid=player_uid)
         space_details = self.game.get_space_details(player_uid=player_uid)
         print(f"Player {player_name}: Landed on property {property_name}.")
@@ -460,13 +462,8 @@ class LocalHost:
         print(f"Player {player_name}: Rolled {dice_1} and {dice_2}")
         return action, dice_1 + dice_2
 
-    def _move_player_and_check_go(
-        self, steps: int, player_uid: Optional[int] = None
-    ) -> int:
-        if player_uid is None:
-            player_name, player_uid = self.game.get_current_player()
-        else:
-            player_name = self.game.players[player_uid].name
+    def _move_player_and_check_go(self, player_uid: int, steps: int) -> int:
+        player_name = self.game.players[player_uid].name
 
         print(f"Player {player_name}: Move forward {steps} steps.")
 
@@ -483,8 +480,12 @@ class LocalHost:
         print(f"Player {player_name}: Landed on {self.game.get_space_name(new_pos)}")
         return new_pos
 
-    def _handle_charge_tax(self, action: Action) -> None:
-        player_name, player_uid = self.game.get_current_player()
+    def _handle_charge_tax(
+        self,
+        player_uid: int,
+        action: Action,
+    ) -> None:
+        player_name = self.game.players[player_uid].name
         if action == Action.CHARGE_INCOME_TAX:
             new_cash = self.game.sub_player_cash(
                 player_uid=player_uid, amount=c.CONST_INCOME_TAX

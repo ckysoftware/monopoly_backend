@@ -56,7 +56,6 @@ class Game:
         else:
             raise ValueError("Either position or player_uid must be provided")
 
-    # TODO test
     def _reset_for_next_player(self) -> None:
         self._roll_double_counter = None
 

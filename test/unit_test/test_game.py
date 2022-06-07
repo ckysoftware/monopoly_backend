@@ -40,15 +40,17 @@ class TestGameInitialization:
         assert player.name == "Testing Player"
         assert player.uid == 4
 
-    def test_initialize_game_map(self, game_init: Game, map_list: list[str]):
-        game_init._initialize_game_map()
-        fn_test_initialize_game_map(game_init, map_list)
+    # NOTE try not to test non public method
+    # def test_initialize_game_map(self, game_init: Game, map_list: list[str]):
+    #     game_init._initialize_game_map()
+    #     fn_test_initialize_game_map(game_init, map_list)
 
-    def test_initialize_deck(
-        self, game_init: Game, chance_card_list: set[int], cc_card_list: set[int]
-    ):
-        game_init._initialize_deck()
-        fn_test_initialize_deck(game_init, cc_card_list, chance_card_list)
+    # NOTE try not to test non public method
+    # def test_initialize_deck(
+    #     self, game_init: Game, chance_card_list: set[int], cc_card_list: set[int]
+    # ):
+    #     game_init._initialize_deck()
+    #     fn_test_initialize_deck(game_init, cc_card_list, chance_card_list)
 
     def test_initialize(
         self,
