@@ -255,13 +255,34 @@ class TestGetInfo:
         with pytest.raises(ValueError, match=r"Space is not a Property: .*"):
             _ = game_middle.get_property(position=4)
 
+    def test_get_player_cash(self, game_middle: Game):
+        for player in game_middle.players:
+            assert player.cash == game_middle.get_player_cash(player.uid)
 
-def test_next_player(game_with_players: Game):
-    game_with_players.initialize_first_player()
-    cur_player = game_with_players.current_player_uid
-    next_player = game_with_players.next_player_and_reset()
-    assert cur_player is not None
-    assert next_player == (cur_player + 1) % len(game_with_players.players)
+    def test_get_rent_info_property_space(self, game_middle: Game):
+        game_middle.players[0].position = 3
+        payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=10000)
+        assert payee_uid == 1
+        assert rent == 450
+
+    def test_get_rent_info_utility_space(self, game_middle: Game):
+        game_middle.players[0].position = 12
+        game_middle.players[1].add_property(game_middle.get_property(position=12))
+        game_middle.get_property(position=12).assign_owner(1)
+
+        payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=12)
+        assert payee_uid == 1
+        assert rent == 12 * 4
+
+    def test_get_rent_info_unowned(self, game_middle: Game):
+        game_middle.players[0].position = 39
+        with pytest.raises(ValueError, match=r"Player does not need to pay rent"):
+            _, _ = game_middle.get_pay_rent_info(0, dice_count=12)
+
+    def test_get_rent_info_self_owned(self, game_middle: Game):
+        game_middle.players[1].position = 39
+        with pytest.raises(ValueError, match=r"Player does not need to pay rent"):
+            _, _ = game_middle.get_pay_rent_info(1, dice_count=12)
 
 
 class TestAssignToken:
@@ -341,7 +362,9 @@ class TestPropertyTransactions:
 
     def test_auction_property(self, game_middle: Game):
         bidders = game_middle.auction_property(8)
-        assert bidders == game_middle.players
+        assert bidders[0] == game_middle.get_next_player(game_middle.current_player_uid)
+        while len(bidders) > 0:
+            assert bidders.popleft() in game_middle.players
 
     def test_auction_property_not_property(self, game_middle: Game):
         with pytest.raises(ValueError, match=r"Space is not a Property: .*"):
@@ -350,3 +373,30 @@ class TestPropertyTransactions:
     def test_auction_property_owned(self, game_middle: Game):
         with pytest.raises(ValueError, match="Property is already owned"):
             _ = game_middle.auction_property(3)
+
+
+class TestPayRent:
+    def test_pay_rent(self, game_middle: Game):
+        game_middle.players[0].position = 3
+        old_cash_payer = game_middle.players[0].cash
+        old_cash_payee = game_middle.players[1].cash
+        payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=10)
+
+        new_cash_payer, new_cash_payee = game_middle.pay_rent(0, payee_uid, rent=rent)
+        assert new_cash_payer == game_middle.players[0].cash == old_cash_payer - 450
+        assert new_cash_payee == game_middle.players[1].cash == old_cash_payee + 450
+
+    def test_pay_rent_not_enough_cash(self, game_middle: Game):
+        game_middle.players[0].position = 3
+        game_middle.players[0].cash = 100
+        payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=10)
+        with pytest.raises(ValueError, match=r"Player .* does not have enough cash$"):
+            _, _ = game_middle.pay_rent(0, payee_uid, rent=rent)
+
+
+def test_next_player(game_with_players: Game):
+    game_with_players.initialize_first_player()
+    cur_player = game_with_players.current_player_uid
+    next_player = game_with_players.next_player_and_reset()
+    assert cur_player is not None
+    assert next_player.uid == (cur_player + 1) % len(game_with_players.players)

@@ -1,3 +1,4 @@
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -25,9 +26,9 @@ class Game:
     def get_current_player(self) -> tuple[str, int]:
         return (self.players[self.current_player_uid].name, self.current_player_uid)
 
-    def get_next_player(self, prev_player_uid: int) -> tuple[str, int]:
+    def get_next_player(self, prev_player_uid: int) -> Player:
         next_player_id = (prev_player_uid + 1) % len(self.players)
-        return (self.players[next_player_id].name, next_player_id)
+        return self.players[next_player_id]
 
     def get_player_position(self, player_uid: int) -> int:
         return self.players[player_uid].position
@@ -114,11 +115,11 @@ class Game:
     # host = trigger game.action, ask -> relay msg
     # game = handle game logic -> apply logic
 
-    def next_player_and_reset(self) -> int:
+    def next_player_and_reset(self) -> Player:
         """Returns the next player uid and reset the game for next player"""
-        _name, self.current_player_uid = self.get_next_player(self.current_player_uid)
+        next_player = self.get_next_player(self.current_player_uid)
         self._reset_for_next_player()
-        return self.current_player_uid
+        return next_player
 
     def roll_dice(self) -> tuple[int, ...]:
         return dice.roll(num_faces=6, num_dice=2)
@@ -203,8 +204,9 @@ class Game:
         new_cash = self.buy_property_transaction(player, property_)
         return new_cash
 
-    def auction_property(self, position: int) -> list[Player]:
-        """Returns the bidders (active players). Raise error if the property is not auctionable"""
+    def auction_property(self, position: int) -> deque[Player]:
+        """Returns the bidders (active players). The first bidder is the next player.
+        Raise error if the property is not auctionable"""
         property_ = self.game_map.map_list[position]
 
         if not isinstance(property_, space.Property):
@@ -212,7 +214,10 @@ class Game:
         if property_.owner_uid is not None:
             raise ValueError("Property is already owned")
 
-        bidders = self.players.copy()
+        bidders = deque(self.players)
+        # rotate the deque until the next player is at the leftmost position
+        while bidders[0] != self.get_next_player(self.current_player_uid):
+            bidders.rotate(-1)
         return bidders
 
     def buy_property_transaction(
@@ -226,6 +231,16 @@ class Game:
         player.add_property(property)
         property.assign_owner(player.uid)
         return new_cash
+
+    def pay_rent(self, player_uid: int, payee_uid: int, rent: int) -> tuple[int, int]:
+        """Pay rent to the payee_uid. Raise error if the player_uid
+        does not have enough cash.
+        Returns (new_cash of player_uid, new_cash of payee_uid)"""
+        if self.players[player_uid].cash < rent:
+            raise ValueError(f"Player uid {player_uid} does not have enough cash")
+        new_cash_payer = self.sub_player_cash(player_uid, rent)
+        new_cash_payee = self.add_player_cash(payee_uid, rent)
+        return new_cash_payer, new_cash_payee
 
     def get_property(
         self, position: Optional[int] = None, player_uid: Optional[int] = None
@@ -253,6 +268,21 @@ class Game:
                 house_count += property_.no_of_houses
                 hotel_count += property_.no_of_hotels
         return house_count, hotel_count
+
+    def get_pay_rent_info(self, player_uid: int, dice_count: int) -> tuple[int, int]:
+        """Returns the uid and the rent amount  to pay rent to using
+        the position of the arg player_uid"""
+        property_ = self.get_property(player_uid=player_uid)
+        if property_.owner_uid is None or property_.owner_uid == player_uid:
+            raise ValueError("Player does not need to pay rent")
+        if isinstance(property_, space.UtilitySpace):
+            rent = property_.compute_rent(dice_count=dice_count)
+        else:
+            rent = property_.compute_rent()
+        return property_.owner_uid, rent
+
+    def get_player_cash(self, player_uid: int) -> int:
+        return self.players[player_uid].cash
 
     # NOTE be careful no test
     def print_map(self) -> None:  # pragma: no cover

@@ -16,6 +16,9 @@ class Player:
     properties: list[space.Property] = field(default_factory=list)
     position: int = 0
 
+    def __eq__(self, other: Player):
+        return self.uid == other.uid
+
     def add_property(self, property_: space.Property) -> None:
         self.properties.append(property_)
 

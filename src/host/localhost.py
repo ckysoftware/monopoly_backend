@@ -84,7 +84,7 @@ class LocalHost:
 
     def _start_turn(self) -> None:
         player_name, player_uid = self.game.get_current_player()
-        move_action, steps = self._handle_movement()
+        move_action, steps = self._handle_dice_roll(player_uid=player_uid)
         end_turn = False
         if move_action == Action.SEND_TO_JAIL:
             print(
@@ -124,7 +124,7 @@ class LocalHost:
             print(f"Player {player_name}: Step on jail. Send to jail")
             end_turn = self._send_player(player_uid=player_uid, position=Position.JAIL)
         elif space_action == Action.NOTHING:
-            pass  # catch Nothing so that a else check can be used next
+            pass  # catch Nothing so that an else check can be used next
         else:
             raise ValueError(f"Unknown trigger {space_action}")  # pragma: no cover
         return end_turn
@@ -391,19 +391,50 @@ class LocalHost:
             )
             print(f"Player {player_name}'s new cash balance is {new_cash}")
         else:
-            self._process_auction(player_uid=player_uid)
+            self._handle_auction(player_uid=player_uid)
 
-    def _process_auction(self, player_uid: int) -> None:
+    def _handle_pay_rent(self, player_uid: int, dice_count: int) -> None:
+        """Handle pay rent for the player_uid."""
+        player_name = self.game.players[player_uid].name
+        payee_uid, rent = self.game.get_pay_rent_info(
+            player_uid=player_uid, dice_count=dice_count
+        )
+        payee_name = self.game.players[payee_uid].name
+        print(
+            f"Player {player_name} needs to pay rent to Player {payee_name} for ${rent}"
+        )
+        if self.game.get_player_cash(player_uid) < rent:
+            # _handle_not_enough_cash_to_player(player_uid=player_uid)
+            ...
+        else:
+            new_cash_payer, new_cash_payee = self.game.pay_rent(
+                player_uid, payee_uid, rent
+            )
+            print(f"Player {player_name}'s new cash balance is ${new_cash_payer}.")
+            print(f"Player {payee_name}'s new cash balance is ${new_cash_payee}")
+
+    def _handle_not_enough_cash_to_player(self, player_uid: int):
+        # TODO
+        """handle the case when the player_uid does not have enough cash to pay
+        to other player"""
+        ...
+
+    def _handle_not_enough_cash_to_bank(self, player_uid: int):
+        # TODO
+        """handle the case when the player_uid does not have enough cash to pay
+        to the bank"""
+        ...
+
+    def _handle_auction(self, player_uid: int) -> None:
         bidders = self.game.auction_property(
             position=self.game.get_player_position(player_uid)
         )
         space_details = self.game.get_space_details(player_uid=player_uid)
-        cur_bidder_uid = player_uid
         cur_bid_price = 0
         print(f"Auction for property {space_details['name']} starts.")
         while len(bidders) > 1:
             print(f"Active bidders: {[b.name for b in bidders]}")
-            cur_bidder_name, cur_bidder_uid = self.game.get_next_player(cur_bidder_uid)
+            cur_bidder = bidders[0]
 
             bid_choice = ""
             while bid_choice not in (
@@ -414,7 +445,7 @@ class LocalHost:
                 "pass",
             ):
                 print(
-                    f"Current bidder is {cur_bidder_name}. Current bid is {cur_bid_price}."
+                    f"Current bidder is {cur_bidder.name}. Current bid is {cur_bid_price}."
                 )
                 print("Type 'bid 1' to increment the bid by $1")
                 print("Type 'bid 10' to increment the bid by $10")
@@ -427,30 +458,33 @@ class LocalHost:
                 bid_increment = int(bid_choice[4:])
                 cur_bid_price += bid_increment
                 print(
-                    f"Player {cur_bidder_name} raised the bid by {bid_increment} to {cur_bid_price}."
+                    f"Player {cur_bidder.name} raised the bid by {bid_increment} to {cur_bid_price}."
                 )
+                bidders.rotate(-1)
             else:
-                bidders.pop(cur_bidder_uid)
-                print(f"Player {cur_bidder_name} passed.")
+                print(f"Player {cur_bidder.name} passed.")
+                bidders.popleft()
         # TODO purchase, think about bankrupt
         winner = bidders[0]
         print(
             f"Player {winner.name} won the auction for {space_details['name']} at bid price ${cur_bid_price}."
         )
         new_cash = self.game.buy_property_transaction(
-            player=winner, property=self.game.get_property(player_uid=player_uid)
+            player=winner,
+            property=self.game.get_property(player_uid=player_uid),
+            price=cur_bid_price,
         )
         print(
             f"Player {winner.name} bought the property {space_details['name']} for {cur_bid_price}."
         )
         print(f"Player {winner.name}'s new cash balance is {new_cash}")
 
-    def _handle_movement(self) -> tuple[Action, int]:
+    def _handle_dice_roll(self, player_uid: int) -> tuple[Action, int]:
         """
         Returns Action (double_roll, jail or nothing) and steps
         """
         self.game.print_map()
-        player_name, player_uid = self.game.get_current_player()
+        player_name = self.game.players[player_uid].name
         input(
             f"Player {player_name}: Waiting for player to roll the dice... Press Enter to roll..."
         )

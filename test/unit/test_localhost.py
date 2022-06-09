@@ -60,7 +60,8 @@ def patch_input(
     """monkey patch the bultin input() with responses as input"""
     if isinstance(responses, str):
         responses = [responses]
-    func: Callable[[str], str] = lambda _prompt: next(iter(responses))
+    iter_response = iter(responses)
+    func: Callable[[str], str] = lambda _prompt: next(iter_response)
     monkeypatch.setattr("builtins.input", func)
 
 
@@ -128,6 +129,193 @@ class TestSpaceTrigger:
         end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
         assert end_turn is False
         assert fake_player.cash == 1500 - c.CONST_LUXURY_TAX
+
+
+class TestAuction:
+    def set_up(self):
+        ...
+
+    def test_except_starter_all_pass(
+        self,
+        localhost_fake_player: host.LocalHost,
+        fake_player: Player,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        fake_player.position = 39
+        localhost_fake_player.game.current_player_uid = 0
+        property_ = localhost_fake_player.game.game_map.map_list[39]
+
+        patch_input(["auction", "pass", "pass", "pass", "bid 50"], monkeypatch)
+        localhost_fake_player._handle_buy(player_uid=0)
+
+        assert fake_player.cash == 1500 - 0
+        assert property_ in fake_player.properties and len(fake_player.properties) == 1
+
+    def test_after_some_others_wins(
+        self,
+        localhost_fake_player: host.LocalHost,
+        fake_player: Player,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        fake_player.position = 39
+        localhost_fake_player.game.current_player_uid = 0
+        property_ = localhost_fake_player.game.game_map.map_list[39]
+
+        patch_input(
+            [
+                "auction",
+                "bid 50",  # 1
+                "bid 50",  # 2
+                "pass",  # 3
+                "bid 10",  # fake
+                "bid 50",  # 1
+                "bid 10",  # 2
+                "bid 50",  # fake
+                "pass",  # 1
+                "bid 10",  # 2
+                "bid 50",  # fake
+                "bid 1",  # 2
+                "pass",  # fake
+            ],
+            monkeypatch,
+        )
+        old_cash = localhost_fake_player.game.players[2].cash
+        localhost_fake_player._handle_buy(player_uid=0)
+        winner = localhost_fake_player.game.players[2]
+        assert fake_player.cash == 1500
+        assert winner.cash == old_cash - 281
+        assert property_ in winner.properties and len(winner.properties) == 1
+
+    def test_after_some_starter_win(
+        self,
+        localhost_fake_player: host.LocalHost,
+        fake_player: Player,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        fake_player.position = 39
+        localhost_fake_player.game.current_player_uid = 0
+        property_ = localhost_fake_player.game.game_map.map_list[39]
+
+        patch_input(
+            [
+                "auction",
+                "bid 50",  # 1
+                "bid 50",  # 2
+                "pass",  # 3
+                "bid 10",  # fake
+                "bid 50",  # 1
+                "bid 10",  # 2
+                "bid 50",  # fake
+                "pass",  # 1
+                "bid 10",  # 2
+                "bid 50",  # fake
+                "bid 1",  # 2
+                "bid 1",  # fake
+                "pass",
+            ],
+            monkeypatch,
+        )
+        localhost_fake_player._handle_buy(player_uid=0)
+        assert fake_player.cash == 1500 - 282
+        assert property_ in fake_player.properties and len(fake_player.properties) == 1
+
+    def test_winner_not_enough_money(self):
+        # TODO later for handling bankrupt
+        ...
+
+
+class TestStartTurn:
+    def set_up(
+        self,
+        responses: Iterable[str],
+        dice_rolls: Iterable[tuple[int, int]],
+        localhost: host.LocalHost,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        """patch builtin input and dice_roll with responses and dice_rolls as return values
+        Current player of the game is also set to 0 (fake_player)"""
+        localhost.game.current_player_uid = 0
+        patch_input(responses, monkeypatch)
+
+        iter_dice_roll = iter(dice_rolls)
+        patched_dice: Callable[[Game], tuple[int, int]] = lambda _: next(iter_dice_roll)
+        monkeypatch.setattr(Game, "roll_dice", patched_dice)
+
+    def test_two_double_normal_buy(
+        self,
+        localhost_fake_player: host.LocalHost,
+        fake_player: Player,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        self.set_up(
+            responses=["", "buy", "", "buy", "", "buy"],
+            dice_rolls=[(3, 3), (4, 4), (1, 4)],
+            localhost=localhost_fake_player,
+            monkeypatch=monkeypatch,
+        )
+        fake_player.position = 0
+        localhost_fake_player._start_turn()
+        assert fake_player.position == 19
+        assert fake_player.cash == 1500 - 100 - 160 - 200  # Oriental, Virginia, NY
+        assert (
+            localhost_fake_player.game.game_map.map_list[6] in fake_player.properties
+            and localhost_fake_player.game.game_map.map_list[14]
+            in fake_player.properties
+            and localhost_fake_player.game.game_map.map_list[19]
+            in fake_player.properties
+            and len(fake_player.properties) == 3
+        )
+        assert localhost_fake_player.game._roll_double_counter is None
+
+    def test_three_double_send_to_jail(
+        self,
+        localhost_fake_player: host.LocalHost,
+        fake_player: Player,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        self.set_up(
+            responses=["", "buy", "", "buy", ""],
+            dice_rolls=[(3, 3), (4, 4), (2, 2)],
+            localhost=localhost_fake_player,
+            monkeypatch=monkeypatch,
+        )
+        fake_player.position = 0
+        localhost_fake_player._start_turn()
+        assert fake_player.cash == 1500 - 100 - 160  # Oriental, Virginia
+        assert fake_player.position == Position.JAIL.value
+        assert (
+            localhost_fake_player.game.game_map.map_list[6] in fake_player.properties
+            and localhost_fake_player.game.game_map.map_list[14]
+            in fake_player.properties
+            and localhost_fake_player.game.game_map.map_list[18]
+            not in fake_player.properties
+            and len(fake_player.properties) == 2
+        )
+        assert localhost_fake_player.game._roll_double_counter is None
+
+    def test_one_double_pass_go_and_buy(
+        self,
+        localhost_fake_player: host.LocalHost,
+        fake_player: Player,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        self.set_up(
+            responses=["", "buy", "", "buy"],
+            dice_rolls=[(4, 4), (6, 2)],
+            localhost=localhost_fake_player,
+            monkeypatch=monkeypatch,
+        )
+        fake_player.position = 38
+        localhost_fake_player._start_turn()
+        assert fake_player.cash == 1500 - 100 - 160 + c.CONST_GO_CASH
+        assert fake_player.position == 6 + 8
+        assert (
+            localhost_fake_player.game.game_map.map_list[6] in fake_player.properties
+            and localhost_fake_player.game.game_map.map_list[14]
+            in fake_player.properties
+            and len(fake_player.properties) == 2
+        )
+        assert localhost_fake_player.game._roll_double_counter is None
 
 
 @pytest.mark.parametrize("chance_pos", [7, 22, 36])
@@ -419,3 +607,50 @@ class TestSpaceTriggerDrawChanceCard:
 
         assert end_turn is False
         assert player.cash == old_cash - house_fee * 4 - hotel_fee * 1
+
+
+# class TestMovement:
+#     def set_up(
+#         self,
+#         responses: list[str],
+#         dice_rolls: tuple[int, int],
+#         monkeypatch: pytest.MonkeyPatch,
+#     ):
+#         """patch builtin input fn and dice_roll to return a specificed dice_rolls"""
+#         patch_input(responses, monkeypatch)
+#         patched_dice: Callable[[Game], tuple[int, int]] = lambda _: dice_rolls
+#         monkeypatch.setattr(Game, "roll_dice", patched_dice)
+
+#     def test_handle_dice_roll_normal(
+#         self, localhost_begin: host.LocalHost, monkeypatch: pytest.MonkeyPatch
+#     ):
+#         self.set_up([""], (1, 3), monkeypatch)
+
+#         action, steps = localhost_begin._handle_dice_roll(player_uid=0)
+
+#         assert action == Action.NOTHING
+#         assert steps == 4
+
+#     def test_handle_dice_roll_double(
+#         self, localhost_begin: host.LocalHost, monkeypatch: pytest.MonkeyPatch
+#     ):
+#         self.set_up(["", "", ""], (3, 3), monkeypatch)
+
+#         action, steps = localhost_begin._handle_dice_roll(player_uid=0)
+
+#         assert action == Action.ASK_TO_ROLL
+#         assert steps == 6
+
+#     def test_handle_dice_roll_three_double_to_jail(
+#         self, localhost_begin: host.LocalHost, monkeypatch: pytest.MonkeyPatch
+#     ):
+#         self.set_up(["", "", ""], (3, 3), monkeypatch)
+#         action, steps = localhost_begin._handle_dice_roll(player_uid=0)
+#         assert action == Action.ASK_TO_ROLL
+#         assert steps == 6
+#         action, steps = localhost_begin._handle_dice_roll(player_uid=0)
+#         assert action == Action.ASK_TO_ROLL
+#         assert steps == 6
+#         action, steps = localhost_begin._handle_dice_roll(player_uid=0)
+#         assert action == Action.SEND_TO_JAIL
+#         assert steps == 6
