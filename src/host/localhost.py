@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 import constants as c
 from game import Game, card
@@ -24,7 +25,8 @@ class LocalHost:
     game_state: int
     game: Game
     state_dict: dict[int, str]
-    is_double_roll: bool
+    is_double_roll: bool  # TODO probably can remove this?
+    dice_rolls: Optional[tuple[int, int]]
 
     def __init__(self, users: list[User]) -> None:
         self.game = Game()
@@ -32,6 +34,7 @@ class LocalHost:
         self.player_to_user = {}
         self.user_to_player = {}
         self.is_double_roll = False
+        self.dice_rolls = None
         for user in users:
             player_uid = self.game.add_player(user.name)
             self.player_to_user[player_uid] = user.uid
@@ -81,6 +84,7 @@ class LocalHost:
 
     def _end_turn(self) -> None:
         self.game_state = 0
+        self.dice_rolls = None
 
     def _start_turn(self) -> None:
         player_name, player_uid = self.game.get_current_player()
@@ -112,7 +116,7 @@ class LocalHost:
         if space_action == Action.ASK_TO_BUY:
             self._handle_buy(player_uid=player_uid)
         elif space_action == Action.PAY_RENT:
-            ...
+            self._handle_pay_rent(player_uid=player_uid)
         elif space_action in (Action.DRAW_CHANCE_CARD, Action.DRAW_CC_CARD):
             end_turn = self._handle_draw_card(
                 player_uid=player_uid, action=space_action
@@ -393,11 +397,14 @@ class LocalHost:
         else:
             self._handle_auction(player_uid=player_uid)
 
-    def _handle_pay_rent(self, player_uid: int, dice_count: int) -> None:
+    def _handle_pay_rent(self, player_uid: int) -> None:
         """Handle pay rent for the player_uid."""
+        if self.dice_rolls is None:
+            raise ValueError("Dice rolls is None")
+
         player_name = self.game.players[player_uid].name
         payee_uid, rent = self.game.get_pay_rent_info(
-            player_uid=player_uid, dice_count=dice_count
+            player_uid=player_uid, dice_count=sum(self.dice_rolls)
         )
         payee_name = self.game.players[payee_uid].name
         print(
@@ -405,9 +412,9 @@ class LocalHost:
         )
         if self.game.get_player_cash(player_uid) < rent:
             # _handle_not_enough_cash_to_player(player_uid=player_uid)
-            ...
+            raise NotImplementedError
         else:
-            new_cash_payer, new_cash_payee = self.game.pay_rent(
+            new_cash_payer, new_cash_payee = self.game.transfer_cash(
                 player_uid, payee_uid, rent
             )
             print(f"Player {player_name}'s new cash balance is ${new_cash_payer}.")
@@ -481,7 +488,8 @@ class LocalHost:
 
     def _handle_dice_roll(self, player_uid: int) -> tuple[Action, int]:
         """
-        Returns Action (double_roll, jail or nothing) and steps
+        Returns Action (double_roll, jail or nothing) and steps.
+        Set attribute dice_rolls.
         """
         self.game.print_map()
         player_name = self.game.players[player_uid].name
@@ -494,6 +502,7 @@ class LocalHost:
             player_uid=player_uid, dice_1=dice_1, dice_2=dice_2
         )
         print(f"Player {player_name}: Rolled {dice_1} and {dice_2}")
+        self.dice_rolls = (dice_1, dice_2)
         return action, dice_1 + dice_2
 
     def _move_player_and_check_go(self, player_uid: int, steps: int) -> int:

@@ -36,10 +36,10 @@ def localhost_middle(
 
 @pytest.fixture
 def localhost_fake_player(
-    localhost_begin: host.LocalHost, fake_player: Player
+    localhost_middle: host.LocalHost, fake_player: Player
 ) -> host.LocalHost:
-    localhost_begin.game.players[0] = fake_player
-    return localhost_begin
+    localhost_middle.game.players[0] = fake_player
+    return localhost_middle
 
 
 @pytest.fixture
@@ -129,6 +129,43 @@ class TestSpaceTrigger:
         end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
         assert end_turn is False
         assert fake_player.cash == 1500 - c.CONST_LUXURY_TAX
+
+    def test_space_trigger_pay_rent(
+        self, localhost_fake_player: host.LocalHost, fake_player: Player
+    ):
+        fake_player.position = 3
+        localhost_fake_player.dice_rolls = (3, 3)
+        payee_old_cash = localhost_fake_player.game.players[1].cash
+
+        end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
+        assert end_turn is False
+        assert fake_player.cash == 1500 - 450
+        assert localhost_fake_player.game.players[1].cash == payee_old_cash + 450
+
+    def test_space_trigger_pay_rent_utility(
+        self, localhost_fake_player: host.LocalHost, fake_player: Player
+    ):
+        fake_player.position = 28  # water works
+        localhost_fake_player.game.buy_property(player_uid=1, position=28)
+        localhost_fake_player.dice_rolls = (5, 5)
+        payee_old_cash = localhost_fake_player.game.players[1].cash
+
+        end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
+        assert end_turn is False
+        assert fake_player.cash == 1500 - 4 * 10
+        assert localhost_fake_player.game.players[1].cash == payee_old_cash + 4 * 10
+
+    def test_space_trigger_pay_rent_not_enough_money(
+        self, localhost_fake_player: host.LocalHost, fake_player: Player
+    ):
+        ...
+
+    def test_space_trigger_pay_rent_no_dice_rolls(
+        self, localhost_fake_player: host.LocalHost, fake_player: Player
+    ):
+        fake_player.position = 3
+        with pytest.raises(ValueError, match="Dice rolls is None"):
+            _end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
 
 
 class TestAuction:
@@ -556,12 +593,13 @@ class TestSpaceTriggerDrawChanceCard:
         monkeypatch: pytest.MonkeyPatch,
     ):
         self.set_up(fake_player, chance_pos, chance_card, action, monkeypatch)
+        old_cash = [player.cash for player in localhost_fake_player.game.players]
 
         end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
 
         for o_player in localhost_fake_player.game.players:
             if o_player.uid != fake_player.uid:
-                assert o_player.cash == c.CONST_STARTING_CASH - amount
+                assert o_player.cash == old_cash[o_player.uid] - amount
         amount = amount * (len(localhost_fake_player.game.players) - 1)
 
         assert end_turn is False

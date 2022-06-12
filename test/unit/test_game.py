@@ -382,7 +382,7 @@ class TestPayRent:
         old_cash_payee = game_middle.players[1].cash
         payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=10)
 
-        new_cash_payer, new_cash_payee = game_middle.pay_rent(0, payee_uid, rent=rent)
+        new_cash_payer, new_cash_payee = game_middle.transfer_cash(0, payee_uid, amount=rent)
         assert new_cash_payer == game_middle.players[0].cash == old_cash_payer - 450
         assert new_cash_payee == game_middle.players[1].cash == old_cash_payee + 450
 
@@ -391,7 +391,7 @@ class TestPayRent:
         game_middle.players[0].cash = 100
         payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=10)
         with pytest.raises(ValueError, match=r"Player .* does not have enough cash$"):
-            _, _ = game_middle.pay_rent(0, payee_uid, rent=rent)
+            _, _ = game_middle.transfer_cash(0, payee_uid, amount=rent)
 
 
 def test_next_player(game_with_players: Game):

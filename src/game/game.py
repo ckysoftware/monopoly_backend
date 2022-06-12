@@ -232,14 +232,14 @@ class Game:
         property.assign_owner(player.uid)
         return new_cash
 
-    def pay_rent(self, player_uid: int, payee_uid: int, rent: int) -> tuple[int, int]:
-        """Pay rent to the payee_uid. Raise error if the player_uid
+    def transfer_cash(self, player_uid: int, payee_uid: int, amount: int) -> tuple[int, int]:
+        """Transfer amount to the payee_uid. Raise error if the player_uid
         does not have enough cash.
         Returns (new_cash of player_uid, new_cash of payee_uid)"""
-        if self.players[player_uid].cash < rent:
+        if self.players[player_uid].cash < amount:
             raise ValueError(f"Player uid {player_uid} does not have enough cash")
-        new_cash_payer = self.sub_player_cash(player_uid, rent)
-        new_cash_payee = self.add_player_cash(payee_uid, rent)
+        new_cash_payer = self.sub_player_cash(player_uid, amount)
+        new_cash_payee = self.add_player_cash(payee_uid, amount)
         return new_cash_payer, new_cash_payee
 
     def get_property(
