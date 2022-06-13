@@ -1,6 +1,7 @@
 import constants as c
 import pytest
-from game import space
+from game import card, space
+from game.actions import Action
 from game.player import Player
 
 
@@ -42,6 +43,7 @@ def test_player_init(
     assert player_simple.properties == []
     assert player_simple.cash == c.CONST_STARTING_CASH
     assert player_simple.position == 0
+    assert len(player_simple.jail_cards) == 0
 
     assert player_comp.name == "Player 2"
     assert player_comp.uid == 1
@@ -49,6 +51,7 @@ def test_player_init(
     assert player_comp.properties == [prop_space_simple]
     assert player_comp.cash == 3000
     assert player_comp.position == 10
+    assert len(player_comp.jail_cards) == 0
 
 
 def test_assign_token(player_simple: Player, player_comp: Player):
@@ -111,3 +114,32 @@ def test_offset_position(player_comp: Player):
     pos = player_comp.offset_position(10)
     assert pos == 25
     assert player_comp.position == 25
+
+
+def test_add_jail_card(player_simple: Player):
+    jail_card = card.ChanceCard(
+        id=1,
+        description="pytest jail break card",
+        action=Action.COLLECT_JAIL_CARD,
+        ownable=True,
+    )
+    player_simple.add_jail_card(jail_card)
+    assert player_simple.jail_cards[0] is jail_card
+    assert player_simple.get_num_jail_cards() == 1
+
+
+def test_use_jail_card(player_simple: Player):
+    jail_card = card.ChanceCard(
+        id=1,
+        description="pytest jail break card",
+        action=Action.COLLECT_JAIL_CARD,
+        ownable=True,
+    )
+    player_simple.add_jail_card(jail_card)
+    assert player_simple.use_jail_card() is jail_card
+    assert player_simple.get_num_jail_cards() == 0
+
+
+def test_use_jail_card_no_card(player_simple: Player):
+    with pytest.raises(ValueError, match="No jail cards available"):
+        _ = player_simple.use_jail_card()

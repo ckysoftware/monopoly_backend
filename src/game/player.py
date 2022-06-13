@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional
 
+from game import card
+
 if TYPE_CHECKING:  # Only imports the below statements during type checking
     from game import space
 
@@ -15,6 +17,7 @@ class Player:
     token: int | None = None
     properties: list[space.Property] = field(default_factory=list)
     position: int = 0
+    jail_cards: list[card.ChanceCard] = field(default_factory=list)
 
     def __eq__(self, other: Player):
         return self.uid == other.uid
@@ -47,3 +50,14 @@ class Player:
     def sub_cash(self, amount: int) -> int:
         self.cash -= amount
         return self.cash
+
+    def add_jail_card(self, jail_card: card.ChanceCard) -> None:
+        self.jail_cards.append(jail_card)
+
+    def use_jail_card(self) -> card.ChanceCard:
+        if len(self.jail_cards) == 0:
+            raise ValueError("No jail cards available")
+        return self.jail_cards.pop(0)
+
+    def get_num_jail_cards(self) -> int:
+        return len(self.jail_cards)
