@@ -182,6 +182,12 @@ class Game:
         new_cash = self.players[player_uid].sub_cash(amount)
         return new_cash
 
+    def add_player_jail_card(self, player_uid: int, jail_card: card.ChanceCard) -> None:
+        self.players[player_uid].add_jail_card(jail_card)
+
+    def use_player_jail_card(self, player_uid: int) -> card.ChanceCard:
+        return self.players[player_uid].use_jail_card()
+
     def assign_player_token(self, player_uid: int, token: int) -> None:
         for player in self.players:
             if player.token == token:
@@ -232,7 +238,9 @@ class Game:
         property.assign_owner(player.uid)
         return new_cash
 
-    def transfer_cash(self, player_uid: int, payee_uid: int, amount: int) -> tuple[int, int]:
+    def transfer_cash(
+        self, player_uid: int, payee_uid: int, amount: int
+    ) -> tuple[int, int]:
         """Transfer amount to the payee_uid. Raise error if the player_uid
         does not have enough cash.
         Returns (new_cash of player_uid, new_cash of payee_uid)"""
@@ -283,6 +291,9 @@ class Game:
 
     def get_player_cash(self, player_uid: int) -> int:
         return self.players[player_uid].cash
+
+    def get_player_jail_card_ids(self, player_uid: int) -> list[int]:
+        return self.players[player_uid].get_jail_card_ids()
 
     # NOTE be careful no test
     def print_map(self) -> None:  # pragma: no cover

@@ -2,6 +2,7 @@ import constants as c
 import host
 import pytest
 from game import card, data, space
+from game.actions import Action
 from game.game import Game
 from game.game_map import GameMap
 from game.player import Player
@@ -115,6 +116,16 @@ def game_middle(game_beginning: Game) -> Game:
     monopoly_properties[1].no_of_hotels = 1
 
     return game_beginning
+
+
+@pytest.fixture
+def fake_jail_card() -> card.ChanceCard:
+    return card.ChanceCard(
+        id=1,
+        description="pytest Fake Jail Card",
+        action=Action.COLLECT_JAIL_CARD,
+        ownable=True,
+    )
 
 
 @pytest.fixture

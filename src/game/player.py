@@ -59,5 +59,5 @@ class Player:
             raise ValueError("No jail cards available")
         return self.jail_cards.pop(0)
 
-    def get_num_jail_cards(self) -> int:
-        return len(self.jail_cards)
+    def get_jail_card_ids(self) -> list[int]:
+        return [card.id for card in self.jail_cards]

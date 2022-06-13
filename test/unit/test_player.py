@@ -1,7 +1,6 @@
 import constants as c
 import pytest
 from game import card, space
-from game.actions import Action
 from game.player import Player
 
 
@@ -116,28 +115,16 @@ def test_offset_position(player_comp: Player):
     assert player_comp.position == 25
 
 
-def test_add_jail_card(player_simple: Player):
-    jail_card = card.ChanceCard(
-        id=1,
-        description="pytest jail break card",
-        action=Action.COLLECT_JAIL_CARD,
-        ownable=True,
-    )
-    player_simple.add_jail_card(jail_card)
-    assert player_simple.jail_cards[0] is jail_card
-    assert player_simple.get_num_jail_cards() == 1
+def test_add_jail_card(player_simple: Player, fake_jail_card: card.ChanceCard):
+    player_simple.add_jail_card(fake_jail_card)
+    assert player_simple.jail_cards[0] is fake_jail_card
+    assert player_simple.get_jail_card_ids() == [1]
 
 
-def test_use_jail_card(player_simple: Player):
-    jail_card = card.ChanceCard(
-        id=1,
-        description="pytest jail break card",
-        action=Action.COLLECT_JAIL_CARD,
-        ownable=True,
-    )
-    player_simple.add_jail_card(jail_card)
-    assert player_simple.use_jail_card() is jail_card
-    assert player_simple.get_num_jail_cards() == 0
+def test_use_jail_card(player_simple: Player, fake_jail_card: card.ChanceCard):
+    player_simple.add_jail_card(fake_jail_card)
+    assert player_simple.use_jail_card() is fake_jail_card
+    assert len(player_simple.get_jail_card_ids()) == 0
 
 
 def test_use_jail_card_no_card(player_simple: Player):

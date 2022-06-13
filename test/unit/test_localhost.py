@@ -43,7 +43,7 @@ def localhost_fake_player(
 
 
 @pytest.fixture
-def chance_card() -> card.ChanceCard:
+def fake_chance_card() -> card.ChanceCard:
     return card.ChanceCard(
         id=9001, description="pytest", action=Action.NOTHING, ownable=False
     )
@@ -363,14 +363,14 @@ class TestSpaceTriggerDrawChanceCard:
         self,
         fake_player: Player,
         chance_pos: int,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         action: Action,
         monkeypatch: pytest.MonkeyPatch,
     ):
         """change player position to chance pos, monkey patch the drawn card to specific action"""
-        chance_card.action = action
+        fake_chance_card.action = action
         fake_player.position = chance_pos
-        func: Callable[[Game], card.ChanceCard] = lambda _: chance_card
+        func: Callable[[Game], card.ChanceCard] = lambda _: fake_chance_card
         monkeypatch.setattr(Game, "draw_chance_card", func)
 
     @pytest.mark.parametrize(
@@ -393,14 +393,14 @@ class TestSpaceTriggerDrawChanceCard:
     def test_chance_card_send_to_property_buy(
         self,
         localhost_fake_player: host.LocalHost,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         monkeypatch: pytest.MonkeyPatch,
         fake_player: Player,
         chance_pos: int,
         action: Action,
         position: Position,
     ):
-        self.set_up(fake_player, chance_pos, chance_card, action, monkeypatch)
+        self.set_up(fake_player, chance_pos, fake_chance_card, action, monkeypatch)
 
         go_cash_offset = 200 if chance_pos >= position.value else 0
         property_ = localhost_fake_player.game.game_map.map_list[position.value]
@@ -420,13 +420,13 @@ class TestSpaceTriggerDrawChanceCard:
     def test_chance_card_send_to_nearest_xxx(
         self,
         localhost_fake_player: host.LocalHost,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         monkeypatch: pytest.MonkeyPatch,
         fake_player: Player,
         action: Action,
         chance_pos: int,
     ):
-        self.set_up(fake_player, chance_pos, chance_card, action, monkeypatch)
+        self.set_up(fake_player, chance_pos, fake_chance_card, action, monkeypatch)
 
         # test different chance space positions
         match chance_pos, action:
@@ -460,7 +460,7 @@ class TestSpaceTriggerDrawChanceCard:
     def test_chance_card_send_back_three(
         self,
         localhost_fake_player: host.LocalHost,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         monkeypatch: pytest.MonkeyPatch,
         fake_player: Player,
         chance_pos: int,
@@ -468,7 +468,7 @@ class TestSpaceTriggerDrawChanceCard:
         self.set_up(
             fake_player,
             chance_pos,
-            chance_card,
+            fake_chance_card,
             Action.SEND_BACK_THREE_SPACES,
             monkeypatch,
         )
@@ -508,13 +508,13 @@ class TestSpaceTriggerDrawChanceCard:
     def test_chance_card_send_to_go(
         self,
         localhost_fake_player: host.LocalHost,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         fake_player: Player,
         monkeypatch: pytest.MonkeyPatch,
         chance_pos: int,
     ):
         self.set_up(
-            fake_player, chance_pos, chance_card, Action.SEND_TO_GO, monkeypatch
+            fake_player, chance_pos, fake_chance_card, Action.SEND_TO_GO, monkeypatch
         )
 
         end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
@@ -525,13 +525,13 @@ class TestSpaceTriggerDrawChanceCard:
     def test_chance_send_to_jail(
         self,
         localhost_fake_player: host.LocalHost,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         fake_player: Player,
         monkeypatch: pytest.MonkeyPatch,
         chance_pos: int,
     ):
         self.set_up(
-            fake_player, chance_pos, chance_card, Action.SEND_TO_JAIL, monkeypatch
+            fake_player, chance_pos, fake_chance_card, Action.SEND_TO_JAIL, monkeypatch
         )
 
         end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
@@ -561,14 +561,14 @@ class TestSpaceTriggerDrawChanceCard:
     def test_chance_collect_or_charge_cash(
         self,
         localhost_fake_player: host.LocalHost,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         fake_player: Player,
         action: Action,
         amount: int,
         chance_pos: int,
         monkeypatch: pytest.MonkeyPatch,
     ):
-        self.set_up(fake_player, chance_pos, chance_card, action, monkeypatch)
+        self.set_up(fake_player, chance_pos, fake_chance_card, action, monkeypatch)
 
         end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
         assert end_turn is False
@@ -585,14 +585,14 @@ class TestSpaceTriggerDrawChanceCard:
     def test_chance_collect_or_charge_players(
         self,
         localhost_fake_player: host.LocalHost,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         fake_player: Player,
         action: Action,
         amount: int,
         chance_pos: int,
         monkeypatch: pytest.MonkeyPatch,
     ):
-        self.set_up(fake_player, chance_pos, chance_card, action, monkeypatch)
+        self.set_up(fake_player, chance_pos, fake_chance_card, action, monkeypatch)
         old_cash = [player.cash for player in localhost_fake_player.game.players]
 
         end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
@@ -623,7 +623,7 @@ class TestSpaceTriggerDrawChanceCard:
     def test_chance_charge_repair(
         self,
         localhost_middle: host.LocalHost,
-        chance_card: card.ChanceCard,
+        fake_chance_card: card.ChanceCard,
         action: Action,
         house_fee: int,
         hotel_fee: int,
@@ -633,7 +633,7 @@ class TestSpaceTriggerDrawChanceCard:
         self.set_up(
             localhost_middle.game.players[1],
             chance_pos,
-            chance_card,
+            fake_chance_card,
             action,
             monkeypatch,
         )
@@ -646,7 +646,29 @@ class TestSpaceTriggerDrawChanceCard:
         assert end_turn is False
         assert player.cash == old_cash - house_fee * 4 - hotel_fee * 1
 
+    def test_chance_collect_jail_card(
+        self,
+        localhost_middle: host.LocalHost,
+        fake_chance_card: card.ChanceCard,
+        chance_pos: int,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        self.set_up(
+            localhost_middle.game.players[1],
+            chance_pos,
+            fake_chance_card,
+            Action.COLLECT_JAIL_CARD,
+            monkeypatch,
+        )
+        player = localhost_middle.game.players[1]
+        end_turn = localhost_middle._handle_space_trigger(player_uid=1)
 
+        assert end_turn is False
+        assert localhost_middle.game.get_player_jail_card_ids(player.uid) == [9001]
+
+
+# NOTE i think the following tests are moved to somewhere else?
+# Or they are duplicate of other modules tests
 # class TestMovement:
 #     def set_up(
 #         self,

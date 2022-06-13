@@ -177,8 +177,15 @@ class LocalHost:
                 )
                 print(f"Player {player_name}'s new cash balance is ${new_cash}")
             case Action.COLLECT_JAIL_CARD:
-                # TODO
-                ...
+                self.game.add_player_jail_card(
+                    player_uid=player_uid, jail_card=drawn_card
+                )
+                jail_card_ids = self.game.get_player_jail_card_ids(
+                    player_uid=player_uid
+                )
+                print(
+                    f"Player {player_name} has {len(jail_card_ids)} Get out of Jail Free cards"
+                )
             case Action.SEND_BACK_THREE_SPACES:
                 _ = self.game.move_player(player_uid, steps=-3)
                 end_turn = self._handle_space_trigger(player_uid=player_uid)
