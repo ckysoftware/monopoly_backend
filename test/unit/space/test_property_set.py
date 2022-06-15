@@ -90,45 +90,76 @@ def test_property_set_empty(prop_set_monopoly: space.PropertySet):
     assert prop_set_monopoly.monopoly is False
 
 
-def test_property_set_update_is_monopoly(prop_set_monopoly: space.PropertySet):
-    prop_set_monopoly.monopoly = False
-    prop_set_monopoly.update_monopoly()
-    assert prop_set_monopoly.monopoly is True
+class TestPropertySetUpdateMonopoly:
+    def test_property_set_update_is_monopoly(
+        self, prop_set_monopoly: space.PropertySet
+    ):
+        prop_set_monopoly.monopoly = False
+        prop_set_monopoly.update_monopoly()
+        assert prop_set_monopoly.monopoly is True
+
+    def test_property_set_update_not_monopoly(
+        self, prop_set_monopoly: space.PropertySet
+    ):
+        prop_set_monopoly.properties[0].owner_uid = 0
+        prop_set_monopoly.update_monopoly()
+        assert prop_set_monopoly.monopoly is False
+
+    def test_property_set_update_monopoly_has_unowned(
+        self, prop_set_monopoly: space.PropertySet
+    ):
+        prop_set_monopoly.properties[-1].owner_uid = None
+        prop_set_monopoly.update_monopoly()
+        assert prop_set_monopoly.monopoly is False
 
 
-def test_property_set_update_not_monopoly(prop_set_monopoly: space.PropertySet):
-    prop_set_monopoly.properties[0].owner_uid = 0
-    prop_set_monopoly.update_monopoly()
-    assert prop_set_monopoly.monopoly is False
+class TestPropertySetCountOwner:
+    def test_property_set_count_owner_unowned(
+        self, prop_set_four_unowned: space.PropertySet
+    ):
+        assert prop_set_four_unowned.count_owned(1) == 0
+
+    def test_property_set_count_owner_one_with_unowned(
+        self,
+        prop_set_four_unowned: space.PropertySet,
+    ):
+        prop_set_four_unowned.properties[2].owner_uid = 1
+        assert prop_set_four_unowned.count_owned(1) == 1
+
+    def test_property_set_count_owner_unowned_with_other_owned(
+        self,
+        prop_set_four_unowned: space.PropertySet,
+    ):
+        prop_set_four_unowned.properties[2].owner_uid = 1
+        prop_set_four_unowned.properties[3].owner_uid = 10
+        assert prop_set_four_unowned.count_owned(5) == 0
+
+    def test_property_set_count_owner_three_owned(
+        self, prop_set_four_unowned: space.PropertySet
+    ):
+        prop_set_four_unowned.properties[0].owner_uid = 1
+        prop_set_four_unowned.properties[2].owner_uid = 1
+        prop_set_four_unowned.properties[3].owner_uid = 1
+        assert prop_set_four_unowned.count_owned(1) == 3
 
 
-def test_property_set_update_monopoly_has_unowned(prop_set_monopoly: space.PropertySet):
-    prop_set_monopoly.properties[-1].owner_uid = None
-    prop_set_monopoly.update_monopoly()
-    assert prop_set_monopoly.monopoly is False
+class TestPropertySetCountHouseAndHotels:
+    def test_property_set_count_houses_and_hotels_not_monopoly(
+        self, prop_set_monopoly: space.PropertySet
+    ):
+        prop_set_monopoly.monopoly = False
+        property_ = prop_set_monopoly.properties[0]
+        assert isinstance(property_, space.PropertySpace)
+        property_.no_of_houses = 1
+        assert prop_set_monopoly.count_houses_and_hotels() == (0, 0)
 
-
-def test_property_set_count_owner_unowned(prop_set_four_unowned: space.PropertySet):
-    assert prop_set_four_unowned.count_owned(1) == 0
-
-
-def test_property_set_count_owner_one_with_unowned(
-    prop_set_four_unowned: space.PropertySet,
-):
-    prop_set_four_unowned.properties[2].owner_uid = 1
-    assert prop_set_four_unowned.count_owned(1) == 1
-
-
-def test_property_set_count_owner_unowned_with_other_owned(
-    prop_set_four_unowned: space.PropertySet,
-):
-    prop_set_four_unowned.properties[2].owner_uid = 1
-    prop_set_four_unowned.properties[3].owner_uid = 10
-    assert prop_set_four_unowned.count_owned(5) == 0
-
-
-def test_property_set_count_owner_three_owned(prop_set_four_unowned: space.PropertySet):
-    prop_set_four_unowned.properties[0].owner_uid = 1
-    prop_set_four_unowned.properties[2].owner_uid = 1
-    prop_set_four_unowned.properties[3].owner_uid = 1
-    assert prop_set_four_unowned.count_owned(1) == 3
+    def test_property_set_count_houses_and_hotels(
+        self, prop_set_monopoly: space.PropertySet
+    ):
+        property_0 = prop_set_monopoly.properties[0]
+        property_1 = prop_set_monopoly.properties[1]
+        assert isinstance(property_0, space.PropertySpace)
+        assert isinstance(property_1, space.PropertySpace)
+        property_0.no_of_houses = 3
+        property_1.no_of_hotels = 1
+        assert prop_set_monopoly.count_houses_and_hotels() == (3, 1)

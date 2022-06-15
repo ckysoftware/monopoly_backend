@@ -36,21 +36,17 @@ class PropertySpace(Property):
         else:
             return self.rent[0]
 
-    # TODO check this later:
-    """Before an improved property can be mortgaged,
-    all the Houses and Hotels on all the properties of its color-group
-    must be sold back to the Bank"""
-
-    def mortgage(self) -> None:
+    def mortgage(self) -> int:
+        """Return the amount of cash to receive"""
+        no_of_houses, no_of_hotels = self.property_set.count_houses_and_hotels()
         if self.mortgaged:
             raise ValueError("Property is already mortgaged")
         elif self.owner_uid is None:
             raise ValueError("Property has no owner")
+        elif no_of_houses != 0 or no_of_hotels != 0:
+            raise ValueError("Property set has houses or hotels")
         self.mortgaged = True
-
-    # TODO remove mortgage
-    def unmortgage(self) -> None:
-        pass
+        return self.mortgage_value
 
     # TODO need to evenly add house, need to check
     def add_house(self) -> None:

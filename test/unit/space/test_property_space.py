@@ -71,19 +71,22 @@ def test_property_space_init(prop_space_simple: space.PropertySpace):
     assert prop_space_simple.owner_uid is None
 
 
-def test_assign_owner(prop_space_simple: space.PropertySpace):
-    prop_space_simple.assign_owner(2)
-    assert prop_space_simple.owner_uid == 2
+class TestAssignOwner:
+    def test_assign_owner(self, prop_space_simple: space.PropertySpace):
+        prop_space_simple.assign_owner(2)
+        assert prop_space_simple.owner_uid == 2
 
+    def test_assign_owner_not_monopoly(
+        self, prop_space_diff_owners: space.PropertySpace
+    ):
+        prop_space_diff_owners.assign_owner(2)
+        assert prop_space_diff_owners.property_set.monopoly is False
 
-def test_assign_owner_not_monopoly(prop_space_diff_owners: space.PropertySpace):
-    prop_space_diff_owners.assign_owner(2)
-    assert prop_space_diff_owners.property_set.monopoly is False
-
-
-def test_assign_owner_is_monopoly(prop_space_diff_owners: space.PropertySpace):
-    prop_space_diff_owners.assign_owner(10)
-    assert prop_space_diff_owners.property_set.monopoly is True
+    def test_assign_owner_is_monopoly(
+        self, prop_space_diff_owners: space.PropertySpace
+    ):
+        prop_space_diff_owners.assign_owner(10)
+        assert prop_space_diff_owners.property_set.monopoly is True
 
 
 class TestComputeRent:
@@ -165,8 +168,9 @@ class TestComputeRent:
 
 class TestMortgage:
     def test_mortgage(self, prop_space_diff_owners: space.PropertySpace):
-        prop_space_diff_owners.mortgage()
+        mortgage_value = prop_space_diff_owners.mortgage()
         assert prop_space_diff_owners.mortgaged is True
+        assert mortgage_value == prop_space_diff_owners.mortgage_value
 
     def test_mortgage_again(self, prop_space_diff_owners: space.PropertySpace):
         prop_space_diff_owners.mortgage()
@@ -177,7 +181,37 @@ class TestMortgage:
         with pytest.raises(ValueError, match="Property has no owner"):
             prop_space_simple.mortgage()
 
-    def test_mortgage_value(self, prop_space_simple: space.PropertySpace):
+    def test_mortgage_this_property_has_house_or_hotel(
+        self, prop_space_diff_owners: space.PropertySpace
+    ):
+        prop_space_diff_owners.property_set.properties[1].assign_owner(1)
+        prop_space_diff_owners.no_of_hotels = 1
+        with pytest.raises(ValueError, match="Property set has houses or hotels"):
+            prop_space_diff_owners.mortgage()
+
+    def test_mortgage_other_properties_have_house_or_hotel(
+        self, prop_space_diff_owners: space.PropertySpace
+    ):
+        other_property = prop_space_diff_owners.property_set.properties[1]
+        assert isinstance(other_property, space.PropertySpace)
+        other_property.assign_owner(1)
+        other_property.add_house()
+        with pytest.raises(ValueError, match="Property set has houses or hotels"):
+            prop_space_diff_owners.mortgage()
+
+    def test_unmortgage(self, prop_space_diff_owners: space.PropertySpace):
+        mortgage_value = prop_space_diff_owners.mortgage()
+        unmortgage_value = prop_space_diff_owners.unmortgage()
+        assert unmortgage_value == mortgage_value * 1.1
+        assert isinstance(unmortgage_value, int)
+
+    def test_unmortgage_not_mortgaged(
+        self, prop_space_diff_owners: space.PropertySpace
+    ):
+        with pytest.raises(ValueError, match="Property is not mortgaged"):
+            _unmortgage_value = prop_space_diff_owners.unmortgage()
+
+    def test_get_mortgage_value(self, prop_space_simple: space.PropertySpace):
         assert prop_space_simple.mortgage_value == prop_space_simple.price // 2
 
 

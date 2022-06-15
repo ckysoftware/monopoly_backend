@@ -29,18 +29,23 @@ class Property(Space):
     def property_set_id(self) -> int:
         return self.property_set.id
 
+    def mortgage(self) -> int:  # NOTE probably need to return action/event
+        if self.mortgaged:
+            raise ValueError("Property is already mortgaged")
+        elif self.owner_uid is None:
+            raise ValueError("Property has no owner")
+
+        self.mortgaged = True
+        return self.mortgage_value
+
+    def unmortgage(self) -> int:  # NOTE probably need to return action/event
+        if not self.mortgaged:
+            raise ValueError("Property is not mortgaged")
+
+        self.mortgaged = False
+        assert self.mortgage_value % 10 == 0, "Mortgage value is not a multiple of 10"
+        return int(self.mortgage_value * 1.1)  # 10% interest
+
     @abstractmethod
     def compute_rent(self) -> int:
-        ...
-
-    # TODO may need to return money
-    # NOTE probably can use default for utility_space, railroad_space, and only override property_space
-    @abstractmethod
-    def mortgage(self) -> None:  # NOTE probably need to return action/event
-        ...
-
-    # TODO may need to return money
-    # NOTE probably can use default for utility_space, railroad_space, and only override property_space
-    @abstractmethod
-    def unmortgage(self) -> None:  # NOTE probably need to return action/event
         ...

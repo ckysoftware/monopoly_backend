@@ -23,17 +23,6 @@ class UtilitySpace(Property):
         else:
             return dice_count * 4
 
-    def mortgage(self) -> None:
-        if self.mortgaged:
-            raise ValueError("Property is already mortgaged")
-        elif self.owner_uid is None:
-            raise ValueError("Property has no owner")
-        self.mortgaged = True
-
-    # TODO unmortgage
-    def unmortgage(self) -> None:
-        pass
-
     def trigger(self, player: Player) -> Action:
         if self.owner_uid is None:
             return Action.ASK_TO_BUY
