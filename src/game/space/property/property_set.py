@@ -42,7 +42,7 @@ class PropertySet:
 
     def count_houses_and_hotels(self) -> tuple[int, int]:
         """
-        Return the number of houses and hotels of properties
+        Return the number of houses and hotels of all properties in the set
         """
         if not self.monopoly:
             return (0, 0)
@@ -54,3 +54,34 @@ class PropertySet:
             no_of_houses += property_.no_of_houses
             no_of_hotels += property_.no_of_hotels
         return no_of_houses, no_of_hotels
+
+    def check_evenly_add_house_or_hotel(self, house_count: int) -> bool:
+        """Check if a house or hotel can be remove based on the current house_count.
+        Return true if it can, false otherwise"""
+        return self._check_even_house_or_hotel(house_count, ops="add")
+
+    def check_evenly_remove_house(self, house_count: int) -> bool:
+        """Check if a house can be remove based on the current house_count.
+        Return true if it can, false otherwise"""
+        return self._check_even_house_or_hotel(house_count, ops="remove")
+
+    def _check_even_house_or_hotel(self, house_count: int, ops: str) -> bool:
+        """Check if a house can be add or remove based on the current house_count.
+        ops is either 'add' or 'remove' to denote the operation to be checked.
+        Return true if it can, false otherwise"""
+        if not self.monopoly:
+            return False
+
+        assert ops in ("add", "remove")
+        diff_offset = -1 if ops == "add" else 1
+
+        for property_ in self.properties:
+            assert isinstance(property_, space.PropertySpace)
+            house_diff = (
+                house_count
+                - property_.no_of_houses
+                - property_.no_of_hotels * (property_.HOUSE_LIMIT + 1)
+            )
+            if not (house_diff == 0 or house_diff == diff_offset):
+                return False
+        return True

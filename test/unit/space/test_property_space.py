@@ -57,6 +57,12 @@ def prop_space_diff_owners():
     return property_space_1
 
 
+@pytest.fixture
+def prop_space_multi_monopoly(prop_space_diff_owners: space.PropertySpace):
+    prop_space_diff_owners.property_set.properties[1].assign_owner(1)
+    return prop_space_diff_owners
+
+
 def test_property_space_init(prop_space_simple: space.PropertySpace):
     assert prop_space_simple.name == "Property 1"
     assert prop_space_simple.price == 60
@@ -234,47 +240,140 @@ class TestBuildHouseOrHotel:
         with pytest.raises(ValueError, match="Property is mortgaged"):
             prop_space_monopoly.add_house()
 
-    def test_add_hotel(self, prop_space_simple: space.PropertySpace):
-        prop_space_simple.no_of_houses = c.CONST_HOUSE_LIMIT
-        prop_space_simple.add_hotel()
-        assert prop_space_simple.no_of_hotels == 1
-        assert prop_space_simple.no_of_houses == 0
+    def test_add_house_same_num(self, prop_space_multi_monopoly: space.PropertySpace):
+        prop_space_multi_monopoly.add_house()
+        assert prop_space_multi_monopoly.no_of_houses == 1
 
-    def test_add_hotel_full_hotel(self, prop_space_simple: space.PropertySpace):
-        prop_space_simple.no_of_hotels = c.CONST_HOTEL_LIMIT
+    def test_add_house_one_less(self, prop_space_multi_monopoly: space.PropertySpace):
+        prop_space_multi_monopoly.property_set.properties[
+            1
+        ].no_of_houses = 1  # pyright: reportGeneralTypeIssues=false
+        prop_space_multi_monopoly.add_house()
+        assert prop_space_multi_monopoly.no_of_houses == 1
+
+    def test_add_house_one_more(self, prop_space_multi_monopoly: space.PropertySpace):
+        prop_space_multi_monopoly.no_of_houses = 1
+        with pytest.raises(
+            ValueError, match="Houses are not evenly distributed in the property set"
+        ):
+            prop_space_multi_monopoly.add_house()
+
+    def test_add_hotel_in_monopoly(self, prop_space_monopoly: space.PropertySpace):
+        prop_space_monopoly.no_of_houses = prop_space_monopoly.HOUSE_LIMIT
+        prop_space_monopoly.add_hotel()
+        assert prop_space_monopoly.no_of_hotels == 1
+        assert prop_space_monopoly.no_of_houses == 0
+
+    def test_add_hotel_not_monopoly(self, prop_space_simple: space.PropertySpace):
+        prop_space_simple.no_of_houses = prop_space_simple.HOUSE_LIMIT
+        with pytest.raises(ValueError, match="Property is not in monopoly"):
+            prop_space_simple.add_hotel()
+
+    def test_add_hotel_full_hotel(self, prop_space_monopoly: space.PropertySpace):
+        prop_space_monopoly.no_of_hotels = c.CONST_HOTEL_LIMIT
         with pytest.raises(ValueError, match="Hotel limit reached"):
-            prop_space_simple.add_hotel()
+            prop_space_monopoly.add_hotel()
 
-    def test_add_hotel_not_enough_houses(self, prop_space_simple: space.PropertySpace):
-        prop_space_simple.no_of_houses = c.CONST_HOUSE_LIMIT - 1
+    def test_add_hotel_not_enough_houses(
+        self, prop_space_monopoly: space.PropertySpace
+    ):
+        prop_space_monopoly.no_of_houses = c.CONST_HOUSE_LIMIT - 1
         with pytest.raises(ValueError, match="Not enough houses"):
-            prop_space_simple.add_hotel()
+            prop_space_monopoly.add_hotel()
 
-    def test_add_hotel_mortgaged(self, prop_space_simple: space.PropertySpace):
-        prop_space_simple.mortgaged = True
+    def test_add_hotel_mortgaged(self, prop_space_monopoly: space.PropertySpace):
+        prop_space_monopoly.mortgaged = True
         with pytest.raises(ValueError, match="Property is mortgaged"):
-            prop_space_simple.add_hotel()
+            prop_space_monopoly.add_hotel()
 
-    def test_remove_house(self, prop_space_simple: space.PropertySpace):
-        prop_space_simple.no_of_houses = 1
-        prop_space_simple.remove_house()
-        assert prop_space_simple.no_of_houses == 0
+    def test_add_hotel_same_num(self, prop_space_multi_monopoly: space.PropertySpace):
+        for property_ in prop_space_multi_monopoly.property_set.properties:
+            assert isinstance(property_, space.PropertySpace)
+            property_.no_of_houses = property_.HOUSE_LIMIT
+        prop_space_multi_monopoly.add_hotel()
+        assert prop_space_multi_monopoly.no_of_hotels == 1
 
-    def test_remove_house_empty(self, prop_space_simple: space.PropertySpace):
-        prop_space_simple.no_of_houses = 0
+    def test_add_hotel_one_less(self, prop_space_multi_monopoly: space.PropertySpace):
+        prop_space_multi_monopoly.property_set.properties[
+            1
+        ].no_of_hotels = 1  # pyright: reportGeneralTypeIssues=false
+        prop_space_multi_monopoly.no_of_houses = prop_space_multi_monopoly.HOUSE_LIMIT
+        prop_space_multi_monopoly.add_hotel()
+        assert prop_space_multi_monopoly.no_of_hotels == 1
+
+    def test_add_hotel_one_more(self, prop_space_multi_monopoly: space.PropertySpace):
+        prop_space_multi_monopoly.property_set.properties[1].no_of_houses = (
+            prop_space_multi_monopoly.HOUSE_LIMIT - 1
+        )  # pyright: reportGeneralTypeIssues=false
+        prop_space_multi_monopoly.no_of_houses = prop_space_multi_monopoly.HOUSE_LIMIT
+        with pytest.raises(
+            ValueError, match="Houses are not evenly distributed in the property set"
+        ):
+            prop_space_multi_monopoly.add_hotel()
+
+    def test_remove_house(self, prop_space_monopoly: space.PropertySpace):
+        prop_space_monopoly.no_of_houses = 1
+        prop_space_monopoly.remove_house()
+        assert prop_space_monopoly.no_of_houses == 0
+
+    def test_remove_house_empty(self, prop_space_monopoly: space.PropertySpace):
+        prop_space_monopoly.no_of_houses = 0
         with pytest.raises(ValueError, match="No houses to remove"):
-            prop_space_simple.remove_house()
+            prop_space_monopoly.remove_house()
 
-    def test_remove_hotel(self, prop_space_simple: space.PropertySpace):
-        prop_space_simple.no_of_hotels = 1
-        prop_space_simple.remove_hotel()
-        assert prop_space_simple.no_of_hotels == 0
-        assert prop_space_simple.no_of_houses == c.CONST_HOUSE_LIMIT
+    def test_remove_house_same_num(
+        self, prop_space_multi_monopoly: space.PropertySpace
+    ):
+        for property_ in prop_space_multi_monopoly.property_set.properties:
+            assert isinstance(property_, space.PropertySpace)
+            property_.no_of_houses = 1
+        prop_space_multi_monopoly.remove_house()
+        assert prop_space_multi_monopoly.no_of_houses == 0
 
-    def test_remove_hotel_empty(self, prop_space_simple: space.PropertySpace):
-        prop_space_simple.no_of_hotels = 0
+    def test_remove_house_one_less_with_hotel(
+        self, prop_space_multi_monopoly: space.PropertySpace
+    ):
+        prop_space_multi_monopoly.property_set.properties[
+            1
+        ].no_of_hotels = 1  # pyright: reportGeneralTypeIssues=false
+        prop_space_multi_monopoly.no_of_houses = prop_space_multi_monopoly.HOUSE_LIMIT
+        with pytest.raises(
+            ValueError, match="Houses are not evenly distributed in the property set"
+        ):
+            prop_space_multi_monopoly.remove_house()
+
+    def test_remove_house_one_less_without_hotel(
+        self, prop_space_multi_monopoly: space.PropertySpace
+    ):
+        prop_space_multi_monopoly.property_set.properties[
+            1
+        ].no_of_houses = 3  # pyright: reportGeneralTypeIssues=false
+        prop_space_multi_monopoly.no_of_houses = 2
+        with pytest.raises(
+            ValueError, match="Houses are not evenly distributed in the property set"
+        ):
+            prop_space_multi_monopoly.remove_house()
+
+    def test_remove_house_one_more(
+        self, prop_space_multi_monopoly: space.PropertySpace
+    ):
+        prop_space_multi_monopoly.property_set.properties[
+            1
+        ].no_of_houses = 2  # pyright: reportGeneralTypeIssues=false
+        prop_space_multi_monopoly.no_of_houses = 3
+        prop_space_multi_monopoly.remove_house()
+        assert prop_space_multi_monopoly.no_of_houses == 2
+
+    def test_remove_hotel(self, prop_space_monopoly: space.PropertySpace):
+        prop_space_monopoly.no_of_hotels = 1
+        prop_space_monopoly.remove_hotel()
+        assert prop_space_monopoly.no_of_hotels == 0
+        assert prop_space_monopoly.no_of_houses == c.CONST_HOUSE_LIMIT
+
+    def test_remove_hotel_empty(self, prop_space_monopoly: space.PropertySpace):
+        prop_space_monopoly.no_of_hotels = 0
         with pytest.raises(ValueError, match="No hotels to remove"):
-            prop_space_simple.remove_hotel()
+            prop_space_monopoly.remove_hotel()
 
 
 class TestTrigger:

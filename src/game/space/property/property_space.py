@@ -56,6 +56,8 @@ class PropertySpace(Property):
             raise ValueError("House limit reached")
         if not self.property_set.monopoly:
             raise ValueError("Property is not in monopoly")
+        if not self.property_set.check_evenly_add_house_or_hotel(self.no_of_houses):
+            raise ValueError("Houses are not evenly distributed in the property set")
         self.no_of_houses += 1
 
     def add_hotel(self) -> None:
@@ -65,15 +67,22 @@ class PropertySpace(Property):
             raise ValueError("Hotel limit reached")
         if self.no_of_houses != self.HOUSE_LIMIT:
             raise ValueError("Not enough houses")
+        if not self.property_set.monopoly:
+            raise ValueError("Property is not in monopoly")
+        if not self.property_set.check_evenly_add_house_or_hotel(self.no_of_houses):
+            raise ValueError("Houses are not evenly distributed in the property set")
         self.no_of_houses = 0
         self.no_of_hotels = 1
 
     def remove_house(self) -> None:
         if self.no_of_houses == 0:
             raise ValueError("No houses to remove")
+        if not self.property_set.check_evenly_remove_house(self.no_of_houses):
+            raise ValueError("Houses are not evenly distributed in the property set")
         self.no_of_houses -= 1
 
     def remove_hotel(self) -> None:
+        # No need to check evenly remove hotel because it must be true
         if self.no_of_hotels == 0:
             raise ValueError("No hotels to remove")
         self.no_of_hotels = 0
