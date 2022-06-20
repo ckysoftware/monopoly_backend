@@ -48,7 +48,6 @@ class PropertySpace(Property):
         self.mortgaged = True
         return self.mortgage_value
 
-    # TODO need to evenly add house, need to check
     def add_house(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is mortgaged")
