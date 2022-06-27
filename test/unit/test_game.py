@@ -2,6 +2,7 @@ import constants as c
 import pytest
 from game import card, space
 from game.actions import Action
+from game.enum_types import DeckType
 from game.game import Game
 from game.game_map import GameMap
 
@@ -402,14 +403,52 @@ class TestJailCard:
     ):
         game_middle.add_player_jail_card(player_uid=0, jail_card=fake_jail_card)
         assert game_middle.players[0].jail_cards[0] is fake_jail_card
-        assert game_middle.get_player_jail_card_ids(0) == [1]
+        assert game_middle.get_player_jail_card_ids(0) == [8]
 
-    def test_use_player_jail_card(
-        self, game_middle: Game, fake_jail_card: card.ChanceCard
+    @pytest.mark.parametrize(
+        ["card_id", "chance_offset", "cc_offset"], [(8, 1, 0), (104, 0, 1)]
+    )
+    def test_use_player_jail_card_default(
+        self,
+        game_middle: Game,
+        fake_jail_card: card.ChanceCard,
+        card_id: int,
+        chance_offset: int,
+        cc_offset: int,
     ):
+        fake_jail_card.id = card_id
         game_middle.add_player_jail_card(player_uid=0, jail_card=fake_jail_card)
+        start_chance_count = len(game_middle.chance_deck.cards)
+        start_cc_count = len(game_middle.cc_deck.cards)
         assert game_middle.use_player_jail_card(player_uid=0) is fake_jail_card
         assert len(game_middle.get_player_jail_card_ids(0)) == 0
+        assert len(game_middle.chance_deck.cards) == start_chance_count + chance_offset
+        assert len(game_middle.cc_deck.cards) == start_cc_count + cc_offset
+
+    @pytest.mark.parametrize(
+        ["card_id", "deck_type", "chance_offset", "cc_offset"],
+        [(8, DeckType.CHANCE, 1, 0), (104, DeckType.CC, 0, 1)],
+    )
+    def test_use_player_jail_card_with_cc_deck_type(
+        self,
+        game_middle: Game,
+        fake_jail_card: card.ChanceCard,
+        card_id: int,
+        deck_type: DeckType,
+        chance_offset: int,
+        cc_offset: int,
+    ):
+        fake_jail_card.id = card_id
+        game_middle.add_player_jail_card(player_uid=0, jail_card=fake_jail_card)
+        start_chance_count = len(game_middle.chance_deck.cards)
+        start_cc_count = len(game_middle.cc_deck.cards)
+        assert (
+            game_middle.use_player_jail_card(player_uid=0, deck_type=deck_type)
+            is fake_jail_card
+        )
+        assert len(game_middle.get_player_jail_card_ids(0)) == 0
+        assert len(game_middle.chance_deck.cards) == start_chance_count + chance_offset
+        assert len(game_middle.cc_deck.cards) == start_cc_count + cc_offset
 
 
 def test_next_player(game_with_players: Game):

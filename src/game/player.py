@@ -18,6 +18,7 @@ class Player:
     properties: list[space.Property] = field(default_factory=list)
     position: int = 0
     jail_cards: list[card.ChanceCard] = field(default_factory=list)
+    jail_turns: int | None = None
 
     def __eq__(self, other: Player):
         return self.uid == other.uid
@@ -54,10 +55,17 @@ class Player:
     def add_jail_card(self, jail_card: card.ChanceCard) -> None:
         self.jail_cards.append(jail_card)
 
-    def use_jail_card(self) -> card.ChanceCard:
+    # TODO test new parameters
+    def use_jail_card(self, card_id: Optional[int] = None) -> card.ChanceCard:
         if len(self.jail_cards) == 0:
             raise ValueError("No jail cards available")
-        return self.jail_cards.pop(0)
+        if card_id is None:
+            return self.jail_cards.pop(0)
+        else:
+            for idx, jail_card in enumerate(self.jail_cards):
+                if card_id == jail_card.id:
+                    return self.jail_cards.pop(idx)
+            raise ValueError(f"Jail card {card_id} not found")
 
     def get_jail_card_ids(self) -> list[int]:
         return [card.id for card in self.jail_cards]

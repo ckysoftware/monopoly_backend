@@ -4,6 +4,7 @@ from typing import Optional
 import constants as c
 from game import Game, card
 from game.actions import Action
+from game.enum_types import DeckType
 from game.positions import Position
 
 from host.user import User
@@ -88,6 +89,10 @@ class LocalHost:
 
     def _start_turn(self) -> None:
         player_name, player_uid = self.game.get_current_player()
+        player_jail_turns = self.game.get_player_jail_turns(player_uid)
+        if player_jail_turns:
+            self._handle_in_jail(player_uid=player_uid, jail_turns=player_jail_turns)
+        # TODO probably need a else here or if check on return handle jail
         move_action, steps = self._handle_dice_roll(player_uid=player_uid)
         end_turn = False
         if move_action == Action.SEND_TO_JAIL:
@@ -106,6 +111,34 @@ class LocalHost:
             self._start_turn()
         else:
             self._end_turn()
+
+    def _handle_in_jail(self, player_uid: int, jail_turns: int):
+        player_name = self.game.players[player_uid].name
+        jail_card_ids = self.game.get_player_jail_card_ids(player_uid)
+        # TODO handle trade for jail card right after the turn starts
+        if len(jail_card_ids) > 0:
+            print(
+                f"Player {player_name}: You have {len(jail_card_ids)} GET OUT OF JAIL FREE cards."
+            )
+            while (choice := input("Do you want to use one of them? (y/n)")) not in (
+                "y",
+                "n",
+            ):
+                pass
+            if choice == "y":
+                if len(jail_card_ids) > 1:
+                    while (
+                        card_in := input(
+                            "Do you want to use the one from Chance or Community Chest? (c/cc)"
+                        )
+                    ) not in ("c", "cc"):
+                        ...
+                    deck_type = DeckType.CHANCE if card_in == "c" else DeckType.CC
+                    _card = self.game.use_player_jail_card(
+                        player_uid, deck_type=deck_type
+                    )
+        # TODO unfinished, pay fine before throwing, throw, add jail turns, if > 3 force fine
+        self._handle_dice_roll(player_uid=player_uid)
 
     def _handle_space_trigger(self, player_uid: int) -> bool:
         """Return True if the player turn has ended, False otherwise"""

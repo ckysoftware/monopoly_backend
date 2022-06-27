@@ -121,8 +121,18 @@ def game_middle(game_beginning: Game) -> Game:
 @pytest.fixture
 def fake_jail_card() -> card.ChanceCard:
     return card.ChanceCard(
-        id=1,
+        id=8,
         description="pytest Fake Jail Card",
+        action=Action.COLLECT_JAIL_CARD,
+        ownable=True,
+    )
+
+
+@pytest.fixture
+def fake_jail_card_cc() -> card.ChanceCard:
+    return card.ChanceCard(
+        id=104,
+        description="pytest Fake Jail Card for CC deck",
         action=Action.COLLECT_JAIL_CARD,
         ownable=True,
     )

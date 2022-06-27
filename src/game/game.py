@@ -7,6 +7,7 @@ import constants as c
 import game.dice as dice
 from game import card, data, game_initializer, space
 from game.actions import Action
+from game.enum_types import DeckType
 from game.game_map import GameMap, SpaceDetails
 from game.player import Player
 
@@ -185,8 +186,29 @@ class Game:
     def add_player_jail_card(self, player_uid: int, jail_card: card.ChanceCard) -> None:
         self.players[player_uid].add_jail_card(jail_card)
 
-    def use_player_jail_card(self, player_uid: int) -> card.ChanceCard:
-        return self.players[player_uid].use_jail_card()
+    # TODO test the deck after this, should add this card back
+    def use_player_jail_card(
+        self, player_uid: int, deck_type: Optional[DeckType] = None
+    ) -> card.ChanceCard:
+        if deck_type is None:
+            card = self.players[player_uid].use_jail_card()
+            if card.id == 8:
+                deck = self.chance_deck
+            elif card.id == 104:
+                deck = self.cc_deck
+            else:  # pragma: no cover
+                raise ValueError(f"Unknown deck type for jail card {card.id}")
+        else:
+            if deck_type == DeckType.CHANCE:
+                card_id, deck = 8, self.chance_deck  # card_id for chance jail card
+            elif deck_type == DeckType.CC:
+                card_id, deck = 104, self.cc_deck  # card_id for cc jail card
+            else:  # pragma: no cover
+                raise ValueError(f"Unknown deck type {deck_type} for jail card")
+            card = self.players[player_uid].use_jail_card(card_id=card_id)
+
+        deck.append_owned_card(card)
+        return card
 
     def assign_player_token(self, player_uid: int, token: int) -> None:
         for player in self.players:
@@ -294,6 +316,9 @@ class Game:
 
     def get_player_jail_card_ids(self, player_uid: int) -> list[int]:
         return self.players[player_uid].get_jail_card_ids()
+
+    def get_player_jail_turns(self, player_uid: int) -> Optional[int]:
+        return self.players[player_uid].jail_turns
 
     # NOTE be careful no test
     def print_map(self) -> None:  # pragma: no cover
