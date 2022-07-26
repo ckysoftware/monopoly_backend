@@ -125,7 +125,12 @@ class Game:
     def roll_dice(self) -> tuple[int, ...]:
         return dice.roll(num_faces=6, num_dice=2)
 
-    def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> Action:
+    def check_double_roll(
+        self, dice_1: int, dice_2: int, player_uid: Optional[int] = None
+    ) -> Action:
+        if player_uid is None:
+            player_uid = self.current_player_uid
+
         if dice_1 == dice_2:
             if self._roll_double_counter is None:  # 1st roll
                 self._roll_double_counter = (player_uid, 1)
@@ -147,11 +152,13 @@ class Game:
 
     def move_player(
         self,
-        player_uid: int,
+        player_uid: Optional[int] = None,
         steps: Optional[int] = None,
         position: Optional[int] = None,
     ) -> int:
         """Move player either by steps or map position"""
+        if player_uid is None:
+            player_uid = self.current_player_uid
         if position is not None:
             new_pos = self.players[player_uid].move(position=position)
         elif steps is not None:
@@ -335,3 +342,8 @@ class Game:
     def print_player_info(self) -> None:  # pragma: no cover
         for player in self.players:
             print(f"Player {player.name} - {player.position} - {player.cash}")
+
+    def check_in_jail(self, player_id: Optional[int] = None) -> bool:
+        if player_id is None:
+            player_id = self.current_player_uid
+        return self.players[player_id].jail_turns is not None
