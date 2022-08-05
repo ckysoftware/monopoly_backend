@@ -1,3 +1,5 @@
+import controller
+import model
 import pygame
 from event import Event, EventType, LocalPublisher, Topic
 
@@ -59,27 +61,44 @@ def main():
     animator = view.Animator()
     animator.set_screen(screen)
     animator.set_background_sprites(background_sprites)
-    animator.set_foreground_sprites(background_sprites)
+    animator.set_foreground_sprites(foreground_sprites)
 
-    topic = Topic("game")
+    game_model = model.GameModel(local=True)
+    game_controller = controller.GameController(game_model)
 
-    listener = view.Listener(animator=animator)
-    listener.assign_player_tokens({0: token_1, 1: token_2})
+    game_view_topic = Topic("game_view")
+    view_listener = view.ViewListener(animator=animator)
+    view_listener.set_player_tokens(
+        {token_1.user_id: token_1, token_2.user_id: token_2}
+    )
+    game_view_topic.register_subscriber(view_listener)
+    game_model.register_publisher_topic(game_view_topic)
 
-    topic.register_subscriber(listener)
-
-    publisher = LocalPublisher()
-    publisher.register_topic(topic)
+    view_controller_topic = Topic("view_controller")
+    controller_listener = controller.ControllerListener(game_controller)
+    view_controller_topic.register_subscriber(controller_listener)
+    view_controller_publisher = LocalPublisher()
+    view_controller_publisher.register_topic(view_controller_topic)
 
     # screen.add_drawable(board)
     # screen.add_drawable(player_board)
 
     current_token = token_1
-    loc = 0
 
     background_sprites.draw(screen.surface)
     foreground_sprites.draw(screen.surface)
-    cur_player_id = 0
+
+    view_controller_publisher.publish(
+        Event(EventType.V_ADD_PLAYER, {"user_ids": [token_1.user_id, token_2.user_id]})
+    )
+    view_controller_publisher.publish(
+        Event(EventType.V_ASSIGN_TOKEN, {"user_id": token_1.user_id, "token": 1})
+    )
+    view_controller_publisher.publish(
+        Event(EventType.V_ASSIGN_TOKEN, {"user_id": token_2.user_id, "token": 2})
+    )
+    view_controller_publisher.publish(Event(EventType.V_START_GAME, {}))
+
     while True:
         clock.tick(FPS)
         # print(pygame.mouse.get_pos())
@@ -97,43 +116,20 @@ def main():
                     current_token.rect.move_ip(-200, 0)
                 elif event.key == pygame.K_d:
                     current_token.rect.move_ip(200, 0)
-                # elif event.key == pygame.K_1:
-                #     current_token = token_1
-                # elif event.key == pygame.K_2:
-                #     current_token = token_2
-                elif event.key == pygame.K_q:
-                    loc += 1
-                    foreground_sprites.update(loc)
-                elif event.key == pygame.K_e:
-                    loc -= 1
-                    foreground_sprites.update(loc)
-                elif event.key == pygame.K_z:
-                    cur_player_id = 0
-                elif event.key == pygame.K_x:
-                    cur_player_id = 1
                 elif event.key == pygame.K_1:
-                    publisher.publish(
-                        Event(
-                            EventType.move, {"player_id": cur_player_id, "position": 1}
-                        )
-                    )
+                    current_token = token_1
                 elif event.key == pygame.K_2:
-                    publisher.publish(
+                    current_token = token_2
+                elif event.key == pygame.K_g:
+                    view_controller_publisher.publish(
                         Event(
-                            EventType.move, {"player_id": cur_player_id, "position": 2}
+                            EventType.V_ROLL_AND_MOVE,
+                            {"user_id": current_token.user_id},
                         )
                     )
-                elif event.key == pygame.K_3:
-                    publisher.publish(
-                        Event(
-                            EventType.move, {"player_id": cur_player_id, "position": 3}
-                        )
-                    )
-                elif event.key == pygame.K_4:
-                    publisher.publish(
-                        Event(
-                            EventType.move, {"player_id": cur_player_id, "position": 4}
-                        )
+                elif event.key == pygame.K_z:
+                    view_controller_publisher.publish(
+                        Event(EventType.V_END_TURN, {"user_id": current_token.user_id})
                     )
 
         # screen.fill(BLACK)

@@ -3,13 +3,26 @@ from dataclasses import dataclass
 import model
 
 
-@dataclass(kw_only=True, slots=True)
+@dataclass(slots=True)
 class GameController:
-    # token_view: view.PlayerToken
     game_model: model.GameModel
+
+    def add_players(self, user_ids: list[str]) -> dict[str, int]:
+        return self.game_model.add_players(user_ids)
 
     def roll_dice(self):
         ...
 
-    def move_player(self, position: int):
-        ...
+    def start_game(self):
+        self.game_model.start_game()
+
+    def assign_player_token(self, player_id: int, token: int) -> None:
+        self.game_model.assign_player_token(player_id, token)
+
+    def roll_and_move(self, player_id: int) -> None:
+        self.game_model._handle_roll_and_move(
+            player_id
+        )  # pyright: reportPrivateUsage=false
+
+    def end_turn(self, player_id: int) -> None:
+        self.game_model.end_turn(player_id)

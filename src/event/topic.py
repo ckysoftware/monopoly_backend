@@ -6,7 +6,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Protocol
 
-from event import Event, EventType
+from event import Event
 
 
 class Subscriber(Protocol):
@@ -42,7 +42,7 @@ class Topic:
         while True:
             # print("loop")
             if len(self.events) > 0:
-                print("remaining events:", len(self.events))
+                print(f"Topic {self.name} - remaining events:", len(self.events))
                 event = self.events.popleft()
                 task_list = [
                     subscriber.listen(event) for subscriber in self.subscribers
@@ -50,7 +50,7 @@ class Topic:
                 results = await asyncio.gather(*task_list, return_exceptions=True)
                 for idx, res in enumerate(results):
                     if isinstance(res, Exception):
-                        print(f"Error in subscriber {idx}: {res}")
+                        print(f"Topic {self.name} - Error in subscriber {idx}: {res}")
             time.sleep(0.1)
 
         # asyncio.set_event_loop(loop)
@@ -79,22 +79,22 @@ class LocalPublisher(Publisher):
         self.topic.publish(event)
 
 
-async def main():
-    print("START")
-    topic = Topic("test")
-    # topic.register_subscriber(1)
-    # topic.register_subscriber(2)
-    publisher = LocalPublisher()
-    print("YOLO")
-    publisher.register_topic(topic)
+# async def main():
+#     print("START")
+#     topic = Topic("test")
+#     # topic.register_subscriber(1)
+#     # topic.register_subscriber(2)
+#     publisher = LocalPublisher()
+#     print("YOLO")
+#     publisher.register_topic(topic)
 
-    publisher.publish(Event(EventType.dice_roll, {"dice_1": 1, "dice_2": 2}))
-    print("add1")
-    publisher.publish(Event(EventType.dice_roll, {"dice_1": 3, "dice_2": 4}))
-    print("add2")
-    publisher.publish(Event(EventType.dice_roll, {"dice_1": 5, "dice_2": 6}))
-    print("add3")
+#     publisher.publish(Event(EventType.G_DICE_ROLL, {"dice_1": 1, "dice_2": 2}))
+#     print("add1")
+#     publisher.publish(Event(EventType.G_DICE_ROLL, {"dice_1": 3, "dice_2": 4}))
+#     print("add2")
+#     publisher.publish(Event(EventType.G_DICE_ROLL, {"dice_1": 5, "dice_2": 6}))
+#     print("add3")
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+#     asyncio.run(main())

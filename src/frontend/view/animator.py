@@ -48,10 +48,11 @@ class Animator:
     def set_foreground_sprites(self, sprites: pygame.sprite.Group) -> None:
         self.foreground_sprites = sprites
 
-    def enqueue_token_move(self, token: PlayerToken, position: int) -> None:
-        current_pos = token.get_position()
-        for target_pos in range(current_pos, position):
-            self.queue.append(Call(token.set_position, position=target_pos + 1))
+    def enqueue_token_move(
+        self, token: PlayerToken, old_position: int, new_position: int
+    ) -> None:
+        for target_pos in range(old_position, new_position + 1):
+            self.queue.append(Call(token.set_position, position=target_pos))
             self.queue.append(
                 Call(token.draw, drawable=True, surface=self.screen.surface)
             )
@@ -65,6 +66,7 @@ class Animator:
             call = self.queue.popleft()
 
             if call.drawable:  # if the call is drawable, draw the background first
+                print("drawn")
                 self.background_sprites.draw(self.screen.surface)
                 self.foreground_sprites.draw(self.screen.surface)
             call()

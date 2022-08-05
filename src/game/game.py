@@ -31,7 +31,9 @@ class Game:
         next_player_id = (prev_player_uid + 1) % len(self.players)
         return self.players[next_player_id]
 
-    def get_player_position(self, player_uid: int) -> int:
+    def get_player_position(self, player_uid: Optional[int] = None) -> int:
+        if player_uid is None:
+            player_uid = self.current_player_uid
         return self.players[player_uid].position
 
     # NOTE be careful with this, it's not tested
@@ -119,6 +121,7 @@ class Game:
     def next_player_and_reset(self) -> Player:
         """Returns the next player uid and reset the game for next player"""
         next_player = self.get_next_player(self.current_player_uid)
+        self.current_player_uid = next_player.uid
         self._reset_for_next_player()
         return next_player
 
@@ -167,14 +170,20 @@ class Game:
             raise ValueError("Either steps or position must be provided")
         return new_pos
 
-    def check_go_pass(self, player_uid: int) -> Action:
+    def check_go_pass(self, player_uid: Optional[int] = None) -> Action:
+        if player_uid is None:
+            player_uid = self.current_player_uid
+
         if self.players[player_uid].position >= self.game_map.size:
             return Action.PASS_GO
         else:
             return Action.NOTHING
 
-    def offset_go_pos(self, player_uid: int) -> int:
+    def offset_go_pos(self, player_uid: Optional[int] = None) -> int:
         """Offset player's position by the map size after passing Go"""
+        if player_uid is None:
+            player_uid = self.current_player_uid
+
         new_pos = self.players[player_uid].offset_position(self.game_map.size)
         return new_pos
 
@@ -318,13 +327,19 @@ class Game:
             rent = property_.compute_rent()
         return property_.owner_uid, rent
 
-    def get_player_cash(self, player_uid: int) -> int:
+    def get_player_cash(self, player_uid: Optional[int] = None) -> int:
+        if player_uid is None:
+            player_uid = self.current_player_uid
         return self.players[player_uid].cash
 
-    def get_player_jail_card_ids(self, player_uid: int) -> list[int]:
+    def get_player_jail_card_ids(self, player_uid: Optional[int] = None) -> list[int]:
+        if player_uid is None:
+            player_uid = self.current_player_uid
         return self.players[player_uid].get_jail_card_ids()
 
-    def get_player_jail_turns(self, player_uid: int) -> Optional[int]:
+    def get_player_jail_turns(self, player_uid: Optional[int] = None) -> Optional[int]:
+        if player_uid is None:
+            player_uid = self.current_player_uid
         return self.players[player_uid].jail_turns
 
     # NOTE be careful no test

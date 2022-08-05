@@ -6,8 +6,16 @@ from typing import Any
 
 
 class EventType(enum.Enum):
-    dice_roll = "dice_roll"
-    move = "move"
+    G_DICE_ROLL = "g_dice_roll"
+    G_MOVE = "g_move"
+    G_CASH_CHANGE = "g_cash_change"
+    G_ADD_PLAYER = "g_add_player"
+
+    V_ADD_PLAYER = "v_add_player"
+    V_ROLL_AND_MOVE = "v_roll_and_move"
+    V_ASSIGN_TOKEN = "v_assign_token"
+    V_START_GAME = "v_start_game"
+    V_END_TURN = "v_end_turn"
 
 
 @dataclass(slots=True)
