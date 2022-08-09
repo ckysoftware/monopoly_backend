@@ -103,6 +103,7 @@ class GameModel:
             raise ValueError("The game is not waiting for roll")
 
         dice_1, dice_2 = self._roll_dice()
+        self.publisher.publish(create_dice_event(dice_1, dice_2))
         double_roll_action = self.game.check_double_roll(dice_1, dice_2)
         old_pos = self.game.get_player_position()
         new_pos = self.game.move_player(steps=dice_1 + dice_2)
@@ -142,9 +143,7 @@ class GameModel:
         # TODO send event
         """return dice roll and send event"""
         dice_1, dice_2 = self.game.roll_dice()
-        self.publisher.publish(
-            event.Event(event.EventType.G_DICE_ROLL, {"dices": (dice_1, dice_2)})
-        )
+        self.publisher.publish(create_dice_event(dice_1, dice_2))
         return dice_1, dice_2
 
 
@@ -170,3 +169,8 @@ def create_cash_change_event(
         event.EventType.G_CASH_CHANGE,
         {"player_id": player_id, "old_cash": old_cash, "new_cash": new_cash},
     )
+
+
+def create_dice_event(dice_1: int, dice_2: int) -> event.Event:
+    """create a dice event"""
+    return event.Event(event.EventType.G_DICE_ROLL, {"dices": (dice_1, dice_2)})

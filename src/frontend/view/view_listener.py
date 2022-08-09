@@ -25,9 +25,16 @@ class ViewListener(Subscriber):
                 self.player_to_user[player_id] = user_id
         elif event.event_type is EventType.G_MOVE:
             msg = event.message
-            player_id = msg["player_id"]
-            old_pos = msg["old_position"]
-            new_pos = msg["new_position"]
             self.animator.enqueue_token_move(
-                self._get_player_token(player_id), old_pos, new_pos
+                self._get_player_token(msg["player_id"]),
+                msg["old_position"],
+                msg["new_position"],
+            )
+        elif event.event_type is EventType.G_DICE_ROLL:
+            msg = event.message
+            self.animator.enqueue_dice_roll(msg["dices"])
+        elif event.event_type is EventType.G_CASH_CHANGE:
+            msg = event.message
+            self.animator.enqueue_cash_change(
+                self.player_to_user[msg["player_id"]], msg["old_cash"], msg["new_cash"]
             )

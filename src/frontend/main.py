@@ -55,13 +55,30 @@ def main():
     token_1 = view.PlayerToken(64, 64, 1)
     token_2 = view.PlayerToken(64, 64, 2)
 
-    foreground_sprites = pygame.sprite.Group()
-    foreground_sprites.add([token_1, token_2])
+    token_sprites = pygame.sprite.Group()
+    token_sprites.add([token_1, token_2])
+
+    dice_1 = view.Dice(100, 100)
+    dice_1.update_rect(300, 400)
+    dice_2 = view.Dice(100, 100)
+    dice_2.update_rect(500, 400)
+
+    dice_sprites = pygame.sprite.Group()
+    dice_sprites.add([dice_1, dice_2])
 
     animator = view.Animator()
     animator.set_screen(screen)
     animator.set_background_sprites(background_sprites)
-    animator.set_foreground_sprites(foreground_sprites)
+    animator.set_token_sprites(token_sprites)
+    animator.set_dice_sprites(dice_sprites)
+
+    player_info_1 = view.PlayerInfo(800, 0, 400, 250, token_1.user_id)
+    player_info_2 = view.PlayerInfo(800, 250, 400, 250, token_2.user_id)
+    player_info_sprites = pygame.sprite.Group()
+    player_info_sprites.add([player_info_1, player_info_2])
+    animator.set_player_info_sprites(player_info_sprites)
+    animator.add_draw_sprites(player_info_1)
+    animator.add_draw_sprites(player_info_2)
 
     game_model = model.GameModel(local=True)
     game_controller = controller.GameController(game_model)
@@ -86,7 +103,7 @@ def main():
     current_token = token_1
 
     background_sprites.draw(screen.surface)
-    foreground_sprites.draw(screen.surface)
+    token_sprites.draw(screen.surface)
 
     view_controller_publisher.publish(
         Event(EventType.V_ADD_PLAYER, {"user_ids": [token_1.user_id, token_2.user_id]})
