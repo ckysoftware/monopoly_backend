@@ -1,3 +1,5 @@
+from typing import Any
+
 import pygame
 
 # from .button import Button
@@ -13,6 +15,7 @@ class PlayerInfo(pygame.sprite.Sprite):
         self.font = pygame.font.SysFont("Arial", 20)
 
         self.cash: int = 0
+        self.is_current: bool = False
 
         self.name_text = self.font.render(self.user_id, True, pygame.Color("black"))
         self.cash_text = self.font.render(
@@ -21,15 +24,14 @@ class PlayerInfo(pygame.sprite.Sprite):
 
         self.rect: pygame.rect.Rect = pygame.Rect(x, y, width, height)
         self.image: pygame.surface.Surface
-        self.update_image()
+        self.update()
 
-    def draw(self, surface: pygame.surface.Surface) -> None:
-        self.update_image()
-        surface.blit(self.image, self.rect)
-
-    def update_image(self) -> None:
+    def update(self, *args: Any, **kwargs: Any) -> None:
         self.image: pygame.surface.Surface = pygame.Surface((self.width, self.height))
-        self.image.fill("white")
+        if self.is_current:
+            self.image.fill("white")
+        else:
+            self.image.fill("grey")
         self.image.blit(self.name_text, (5, 0))
         self.image.blit(self.cash_text, (5, 20))
 
@@ -44,7 +46,14 @@ class PlayerInfo(pygame.sprite.Sprite):
         self.cash_text = self.font.render(
             f"Cash: {str(self.cash)}", True, pygame.Color(color)
         )
-        self.update_image()
+        self.update()
+
+    def set_current(self, user_id: str) -> None:
+        if self.user_id == user_id:
+            self.is_current = True
+        else:
+            self.is_current = False
+        self.update()
 
     def update_rect(self, x: int, y: int) -> None:
         self.rect.center = (x, y)

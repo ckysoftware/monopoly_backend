@@ -11,6 +11,7 @@ from .screen import Screen
 
 
 class Drawable(Protocol):
+    # TODO remove this (?)
     def draw(self, surface: pygame.surface.Surface) -> Any:
         raise NotImplementedError
 
@@ -27,7 +28,8 @@ class Call:
         return self.fn(*self.args, **self.kwargs)
 
 
-def placeholder_call(n: int = 1) -> list[Call]:
+def blank_call(n: int = 1) -> list[Call]:
+    # blank call for animation (do nothing)
     return [Call(lambda: None) for _ in range(n)]
 
 
@@ -39,7 +41,8 @@ class Animator:
     token_sprites: pygame.sprite.Group = field(init=False)
     player_info_sprites: pygame.sprite.Group = field(init=False)
     dice_sprites: pygame.sprite.Group = field(init=False)
-    draw_sprites: list[Drawable] = field(default_factory=list)
+    button_sprites: pygame.sprite.Group = field(init=False)
+    # draw_sprites: list[Drawable] = field(default_factory=list)
 
     def set_screen(self, screen: Screen) -> None:
         self.screen = screen
@@ -60,15 +63,18 @@ class Animator:
         self.player_info_sprites = sprites
         # self.draw_sprites.append(self.player_info_sprites)
 
-    def add_draw_sprites(self, drawable: Drawable) -> None:
-        self.draw_sprites.append(drawable)
+    def set_button_sprites(self, sprites: pygame.sprite.Group) -> None:
+        self.button_sprites = sprites
+
+    # def add_draw_sprites(self, drawable: Drawable) -> None:
+    #     self.draw_sprites.append(drawable)
 
     def enqueue_token_move(
         self, token: PlayerToken, old_position: int, new_position: int
     ) -> None:
         for target_pos in range(old_position, new_position + 1):  # inter steps
             self.queue.append(Call(token.set_position, position=target_pos))
-            self.queue.extend(placeholder_call(3))
+            self.queue.extend(blank_call(3))
 
     def enqueue_dice_roll(self, dices: tuple[int]) -> None:
         for sprite, dice in zip(self.dice_sprites, dices):
@@ -86,6 +92,11 @@ class Animator:
                 self.queue.append(Call(player.set_cash, cash=new_cash))
                 break
 
+    def enqueue_current_player(self, user_id: str) -> None:
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            self.queue.append(Call(player.set_current, user_id=user_id))
+
     def draw(self) -> None:
         """get called every frame to draw"""
         if len(self.queue) > 0:
@@ -97,5 +108,6 @@ class Animator:
             self.token_sprites.draw(self.screen.surface)
             self.dice_sprites.draw(self.screen.surface)
             self.player_info_sprites.draw(self.screen.surface)
+            self.button_sprites.draw(self.screen.surface)
             # for drawable in self.draw_sprites:
             #     drawable.draw(self.screen.surface)

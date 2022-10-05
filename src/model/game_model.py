@@ -78,6 +78,8 @@ class GameModel:
         self.game.initialize()
         self.game.initialize_first_player()
         self.state = GameState.WAIT_FOR_ROLL
+        self._publish_current_player_event()
+        # TODO send data about current states of the game and initialize view, and send first player roll_result
 
     @require_current_player
     def end_turn(self, player_id: int) -> None:
@@ -86,6 +88,7 @@ class GameModel:
         self.game.next_player_and_reset()
         self.state = GameState.WAIT_FOR_ROLL
         print("player:", self.game.get_current_player()[1])
+        self._publish_current_player_event()
 
     def handle_start_turn(self):
         """handle what to do after starting the turn"""
@@ -103,11 +106,11 @@ class GameModel:
             raise ValueError("The game is not waiting for roll")
 
         dice_1, dice_2 = self._roll_dice()
-        self.publisher.publish(create_dice_event(dice_1, dice_2))
+        self._publish_dice_event(dice_1, dice_2)
         double_roll_action = self.game.check_double_roll(dice_1, dice_2)
         old_pos = self.game.get_player_position()
         new_pos = self.game.move_player(steps=dice_1 + dice_2)
-        self.publisher.publish(create_move_event(player_id, old_pos, new_pos))
+        self._publish_move_event(player_id, old_pos, new_pos)
         self._check_go_pass()
         if double_roll_action is Action.ASK_TO_ROLL:
             self.state = GameState.WAIT_FOR_ROLL
@@ -129,10 +132,9 @@ class GameModel:
             )
             old_pos = self.game.get_player_position()
             new_pos = self.game.offset_go_pos()
-            self.publisher.publish(
-                create_cash_change_event(player_id, old_cash, new_cash)
-            )
-            self.publisher.publish(create_move_event(player_id, old_pos, new_pos))
+            self._publish_cash_change_event(player_id, old_cash, new_cash)
+
+            self._publish_move_event(player_id, old_pos, new_pos)
 
     def handle_end_turn(self):
         """handle next player as well"""
@@ -143,34 +145,52 @@ class GameModel:
         # TODO send event
         """return dice roll and send event"""
         dice_1, dice_2 = self.game.roll_dice()
-        self.publisher.publish(create_dice_event(dice_1, dice_2))
+        self._publish_dice_event(dice_1, dice_2)
         return dice_1, dice_2
 
+    def _publish_move_event(
+        self, player_id: int, old_position: int, new_position: int
+    ) -> None:
+        """create a move event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_MOVE,
+                {
+                    "player_id": player_id,
+                    "old_position": old_position,
+                    "new_position": new_position,
+                },
+            )
+        )
 
-def create_move_event(
-    player_id: int, old_position: int, new_position: int
-) -> event.Event:
-    """create a move event"""
-    return event.Event(
-        event.EventType.G_MOVE,
-        {
-            "player_id": player_id,
-            "old_position": old_position,
-            "new_position": new_position,
-        },
-    )
+    def _publish_cash_change_event(
+        self, player_id: int, old_cash: int, new_cash: int
+    ) -> None:
+        """create a cash change event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_CASH_CHANGE,
+                {"player_id": player_id, "old_cash": old_cash, "new_cash": new_cash},
+            )
+        )
 
+    def _publish_dice_event(self, dice_1: int, dice_2: int) -> None:
+        """create a dice event"""
+        self.publisher.publish(
+            event.Event(event.EventType.G_DICE_ROLL, {"dices": (dice_1, dice_2)})
+        )
 
-def create_cash_change_event(
-    player_id: int, old_cash: int, new_cash: int
-) -> event.Event:
-    """create a cash change event"""
-    return event.Event(
-        event.EventType.G_CASH_CHANGE,
-        {"player_id": player_id, "old_cash": old_cash, "new_cash": new_cash},
-    )
+    def _publish_game_state_event(self) -> event.Event:
+        """create a game state event"""
+        # TODO send out all states
+        ...
+        # self.publisher.publish(event.Event(event.EventType.G_ALL_STATES, {"state": self.state}))
 
-
-def create_dice_event(dice_1: int, dice_2: int) -> event.Event:
-    """create a dice event"""
-    return event.Event(event.EventType.G_DICE_ROLL, {"dices": (dice_1, dice_2)})
+    def _publish_current_player_event(self) -> None:
+        """create a current player event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_CURRENT_PLAYER,
+                {"player_id": self.game.get_current_player()[1]},
+            )
+        )

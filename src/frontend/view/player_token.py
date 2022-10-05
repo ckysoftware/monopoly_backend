@@ -8,6 +8,7 @@ class PlayerToken(pygame.sprite.Sprite):
     def __init__(self, width: int, height: int, token: int):
         super(PlayerToken, self).__init__()
         self.user_id = uuid.uuid4().hex
+        self.token = token
         self.image: pygame.surface.Surface = pygame.image.load(
             f"./src/frontend/asset/token/token{token}.png"
         ).convert_alpha()
@@ -15,9 +16,6 @@ class PlayerToken(pygame.sprite.Sprite):
         self.rect: pygame.rect.Rect = self.image.get_rect()
         self.position: int = 0
         self.update_rect()
-
-    def draw(self, surface: pygame.Surface) -> None:
-        surface.blit(self.image, self.rect)
 
     def get_position(self) -> int:
         return self.position

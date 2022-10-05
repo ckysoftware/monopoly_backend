@@ -10,6 +10,8 @@ class EventType(enum.Enum):
     G_MOVE = "g_move"
     G_CASH_CHANGE = "g_cash_change"
     G_ADD_PLAYER = "g_add_player"
+    G_ALL_STATES = "g_all_states"
+    G_CURRENT_PLAYER = "g_current_player"
 
     V_ADD_PLAYER = "v_add_player"
     V_ROLL_AND_MOVE = "v_roll_and_move"
@@ -28,13 +30,13 @@ class Event:
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
 
-@dataclass(slots=True)
-class DiceRolled:
-    """Event that is published when dice are rolled"""
+# @dataclass(slots=True)
+# class DiceRolled:
+#     """Event that is published when dice are rolled"""
 
-    dice_1: int
-    dice_2: int
+#     dice_1: int
+#     dice_2: int
 
-    def __init__(self, dice_1: int, dice_2: int) -> None:
-        self.dice_1 = dice_1
-        self.dice_2 = dice_2
+#     def __init__(self, dice_1: int, dice_2: int) -> None:
+#         self.dice_1 = dice_1
+#         self.dice_2 = dice_2

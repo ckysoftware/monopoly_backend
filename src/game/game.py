@@ -28,6 +28,7 @@ class Game:
         return (self.players[self.current_player_uid].name, self.current_player_uid)
 
     def get_next_player(self, prev_player_uid: int) -> Player:
+        # TODO check if the player is out of the game
         next_player_id = (prev_player_uid + 1) % len(self.players)
         return self.players[next_player_id]
 
@@ -362,3 +363,7 @@ class Game:
         if player_id is None:
             player_id = self.current_player_uid
         return self.players[player_id].jail_turns is not None
+
+    def get_all_states(self):
+        # TODO: return game states for view
+        ...

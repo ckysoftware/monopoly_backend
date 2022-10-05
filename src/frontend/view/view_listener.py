@@ -38,3 +38,6 @@ class ViewListener(Subscriber):
             self.animator.enqueue_cash_change(
                 self.player_to_user[msg["player_id"]], msg["old_cash"], msg["new_cash"]
             )
+        elif event.event_type is EventType.G_CURRENT_PLAYER:
+            msg = event.message
+            self.animator.enqueue_current_player(self.player_to_user[msg["player_id"]])

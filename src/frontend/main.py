@@ -52,11 +52,9 @@ def main():
     background_sprites = pygame.sprite.Group()
     background_sprites.add([board, player_board])
 
-    token_1 = view.PlayerToken(64, 64, 1)
-    token_2 = view.PlayerToken(64, 64, 2)
-
+    token_list = [view.PlayerToken(64, 64, i + 1) for i in range(4)]
     token_sprites = pygame.sprite.Group()
-    token_sprites.add([token_1, token_2])
+    token_sprites.add(token_list)
 
     dice_1 = view.Dice(100, 100)
     dice_1.update_rect(300, 400)
@@ -72,13 +70,24 @@ def main():
     animator.set_token_sprites(token_sprites)
     animator.set_dice_sprites(dice_sprites)
 
-    player_info_1 = view.PlayerInfo(800, 0, 400, 250, token_1.user_id)
-    player_info_2 = view.PlayerInfo(800, 250, 400, 250, token_2.user_id)
+    player_info_list = [
+        view.PlayerInfo(800, 200 * i, 400, 200, token_list[i].user_id) for i in range(4)
+    ]
     player_info_sprites = pygame.sprite.Group()
-    player_info_sprites.add([player_info_1, player_info_2])
+    player_info_sprites.add(player_info_list)
     animator.set_player_info_sprites(player_info_sprites)
-    animator.add_draw_sprites(player_info_1)
-    animator.add_draw_sprites(player_info_2)
+
+    buttons_list = [
+        view.Button(800, 160 + 200 * i, 60, 40, "Roll", token_list[i].user_id, EventType.V_ROLL_AND_MOVE)
+        for i in range(4)
+    ]
+    buttons_list.extend([
+        view.Button(880, 160 + 200 * i, 60, 40, "End", token_list[i].user_id, EventType.V_END_TURN)
+        for i in range(4)
+    ])
+    button_sprites = pygame.sprite.Group()
+    button_sprites.add(buttons_list)
+    animator.set_button_sprites(button_sprites)
 
     game_model = model.GameModel(local=True)
     game_controller = controller.GameController(game_model)
@@ -86,7 +95,7 @@ def main():
     game_view_topic = Topic("game_view")
     view_listener = view.ViewListener(animator=animator)
     view_listener.set_player_tokens(
-        {token_1.user_id: token_1, token_2.user_id: token_2}
+        {token_list[i].user_id: token_list[i] for i in range(4)}
     )
     game_view_topic.register_subscriber(view_listener)
     game_model.register_publisher_topic(game_view_topic)
@@ -97,57 +106,73 @@ def main():
     view_controller_publisher = LocalPublisher()
     view_controller_publisher.register_topic(view_controller_topic)
 
-    # screen.add_drawable(board)
-    # screen.add_drawable(player_board)
-
-    current_token = token_1
+    view_controller_publisher.publish(
+        Event(
+            EventType.V_ADD_PLAYER,
+            {"user_ids": [token_list[i].user_id for i in range(4)]},
+        )
+    )
+    for i in range(4):
+        view_controller_publisher.publish(
+            Event(
+                EventType.V_ASSIGN_TOKEN,
+                {"user_id": token_list[i].user_id, "token": token_list[i].token},
+            )
+        )
+    view_controller_publisher.publish(Event(EventType.V_START_GAME, {}))
 
     background_sprites.draw(screen.surface)
     token_sprites.draw(screen.surface)
-
-    view_controller_publisher.publish(
-        Event(EventType.V_ADD_PLAYER, {"user_ids": [token_1.user_id, token_2.user_id]})
-    )
-    view_controller_publisher.publish(
-        Event(EventType.V_ASSIGN_TOKEN, {"user_id": token_1.user_id, "token": 1})
-    )
-    view_controller_publisher.publish(
-        Event(EventType.V_ASSIGN_TOKEN, {"user_id": token_2.user_id, "token": 2})
-    )
-    view_controller_publisher.publish(Event(EventType.V_START_GAME, {}))
+    button_sprites.draw(screen.surface)
 
     while True:
         clock.tick(FPS)
         # print(pygame.mouse.get_pos())
         # print(clock.get_fps())
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w:
-                    current_token.rect.move_ip(0, -200)
-                elif event.key == pygame.K_s:
-                    current_token.rect.move_ip(0, 200)
-                elif event.key == pygame.K_a:
-                    current_token.rect.move_ip(-200, 0)
-                elif event.key == pygame.K_d:
-                    current_token.rect.move_ip(200, 0)
-                elif event.key == pygame.K_1:
-                    current_token = token_1
-                elif event.key == pygame.K_2:
-                    current_token = token_2
-                elif event.key == pygame.K_g:
-                    view_controller_publisher.publish(
-                        Event(
-                            EventType.V_ROLL_AND_MOVE,
-                            {"user_id": current_token.user_id},
-                        )
-                    )
-                elif event.key == pygame.K_z:
-                    view_controller_publisher.publish(
-                        Event(EventType.V_END_TURN, {"user_id": current_token.user_id})
-                    )
+            # elif event.type == pygame.KEYDOWN:
+            #     if event.key == pygame.K_w:
+            #         current_token.rect.move_ip(0, -200)
+            #     elif event.key == pygame.K_s:
+            #         current_token.rect.move_ip(0, 200)
+            #     elif event.key == pygame.K_a:
+            #         current_token.rect.move_ip(-200, 0)
+            #     elif event.key == pygame.K_d:
+            #         current_token.rect.move_ip(200, 0)
+            #     elif event.key == pygame.K_1:
+            #         current_token = token_list[0]
+            #         print(f"DEBUG: Current token is {current_token.user_id}")
+            #     elif event.key == pygame.K_2:
+            #         current_token = token_list[1]
+            #         print(f"DEBUG: Current token is {current_token.user_id}")
+            #     elif event.key == pygame.K_3:
+            #         current_token = token_list[2]
+            #         print(f"DEBUG: Current token is {current_token.user_id}")
+            #     elif event.key == pygame.K_4:
+            #         current_token = token_list[3]
+            #         print(f"DEBUG: Current token is {current_token.user_id}")
+            #     elif event.key == pygame.K_g:
+            #         view_controller_publisher.publish(
+            #             Event(
+            #                 EventType.V_ROLL_AND_MOVE,
+            #                 {"user_id": current_token.user_id},
+            #             )
+            #         )
+            #     elif event.key == pygame.K_z:
+            #         view_controller_publisher.publish(
+            #             Event(EventType.V_END_TURN, {"user_id": current_token.user_id})
+            #         )
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = event.pos
+                for button in button_sprites:
+                    assert isinstance(button, view.Button)
+                    if button.rect.collidepoint(pos):
+                        print(f"DEBUG: Button {button.text} clicked")
+                        view_controller_publisher.publish(button.handle_click())
 
         # screen.fill(BLACK)
 
