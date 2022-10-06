@@ -22,7 +22,7 @@ class GameController:
     def roll_and_move(self, player_id: int) -> None:
         self.game_model.handle_roll_and_move_event(
             player_id
-        )  # pyright: reportPrivateUsage=false
+        )
 
     def end_turn(self, player_id: int) -> None:
         self.game_model.handle_end_turn_event(player_id)

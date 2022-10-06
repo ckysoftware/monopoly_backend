@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from event import Event, EventType, Subscriber
 
+from . import data
 from .animator import Animator
 from .player_token import PlayerToken
 
@@ -43,4 +44,12 @@ class ViewListener(Subscriber):
             self.animator.enqueue_current_player(self.player_to_user[msg["player_id"]])
         elif event.event_type is EventType.G_WAITING_FOR_ROLL:
             msg = event.message
-            self.animator.enqueue_waiting_for_roll(self.player_to_user[msg["player_id"]])
+            self.animator.enqueue_waiting_for_roll(
+                self.player_to_user[msg["player_id"]]
+            )
+        elif event.event_type is EventType.G_ASK_TO_BUY:
+            msg = event.message
+            property_data = data.CONST_PROPERTY_DATA[msg["property_id"]]
+            self.animator.enqueue_ask_to_buy(
+                self.player_to_user[msg["player_id"]], property_data
+            )

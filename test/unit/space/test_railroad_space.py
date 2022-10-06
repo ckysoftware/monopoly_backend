@@ -7,6 +7,7 @@ from game.actions import Action
 def rail_space_simple():
     property_set = space.PropertySet(id=0)
     rail_space = space.RailroadSpace(
+        id=1,
         name="Railroad 1",
         price=200,
         rent=[25, 50, 100, 200],
@@ -20,6 +21,7 @@ def rail_space_simple():
 def rail_space_diff_owners():
     property_set = space.PropertySet(id=0)
     rail_space_1 = space.RailroadSpace(
+        id=1,
         name="Railroad 1",
         price=200,
         rent=[25, 50, 100, 200],
@@ -27,6 +29,7 @@ def rail_space_diff_owners():
         owner_uid=1,
     )
     rail_space_2 = space.RailroadSpace(
+        id=2,
         name="Railroad 2",
         price=200,
         rent=[25, 50, 100, 200],

@@ -12,6 +12,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 @dataclass(kw_only=True, slots=True)
 class Property(Space):
+    id: int
     price: int
     property_set: PropertySet
     mortgaged: bool = False

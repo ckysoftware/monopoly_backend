@@ -125,15 +125,16 @@ class GameModel:
             ...
         else:
             # space trigger
-
+            self._space_trigger(player_id)
             self.state = GameState.WAIT_FOR_END_TURN
 
-    def _space_trigger(self) -> None:
+    def _space_trigger(self, player_id: int) -> None:
         """trigger space, publish event and change state"""
         space_action = self.game.trigger_space()
         if space_action == Action.ASK_TO_BUY:
+            property_ = self.game.current_property
             self.state = GameState.ASK_TO_BUY
-            self._publish_ask_to_buy_event()
+            self._publish_ask_to_buy_event(player_id, property_.id)
             # self._handle_buy(player_uid=player_uid)
         elif space_action == Action.PAY_RENT:
             ...
@@ -267,12 +268,12 @@ class GameModel:
             )
         )
 
-    def _publish_ask_to_buy_event(self) -> None:
+    def _publish_ask_to_buy_event(self, player_id: int, property_id: int) -> None:
         """publish a ask to buy event"""
         self.publisher.publish(
             event.Event(
                 event.EventType.G_ASK_TO_BUY,
-                {"player_id": self.game.get_current_player()[1]},
+                {"player_id": player_id, "property_id": property_id},
             )
         )
 

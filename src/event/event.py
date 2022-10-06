@@ -21,6 +21,7 @@ class EventType(enum.Enum):
     V_ASSIGN_TOKEN = "v_assign_token"
     V_START_GAME = "v_start_game"
     V_END_TURN = "v_end_turn"
+    V_BUY_PROPERTY = "v_buy_property"
 
 
 @dataclass(slots=True)

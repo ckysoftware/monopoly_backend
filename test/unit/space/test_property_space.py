@@ -8,6 +8,7 @@ from game.actions import Action
 def prop_space_simple():
     property_set = space.PropertySet(id=0)
     property_space = space.PropertySpace(
+        id=1,
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -31,6 +32,7 @@ def prop_space_monopoly(prop_space_simple: space.PropertySpace):
 def prop_space_diff_owners():
     property_set = space.PropertySet(id=0)
     property_space_1 = space.PropertySpace(
+        id=1,
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -42,6 +44,7 @@ def prop_space_diff_owners():
         owner_uid=1,
     )
     property_space_2 = space.PropertySpace(
+        id=2,
         name="Property 2",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],

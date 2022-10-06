@@ -67,5 +67,7 @@ class Button(pygame.sprite.Sprite):
             return event.EventType.V_ROLL_AND_MOVE
         elif self.button_type is ButtonType.END:
             return event.EventType.V_END_TURN
+        elif self.button_type is ButtonType.BUY:
+            return event.EventType.V_BUY_PROPERTY
         else:
             raise ValueError("Invalid button type")

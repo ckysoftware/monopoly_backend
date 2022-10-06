@@ -7,6 +7,7 @@ from game.actions import Action
 def util_space_simple():
     property_set = space.PropertySet(id=0)
     utility_space = space.UtilitySpace(
+        id=1,
         name="Utility 1",
         price=150,
         property_set=property_set,
@@ -25,12 +26,14 @@ def util_space_monopoly(util_space_simple: space.UtilitySpace):
 def util_space_diff_owners():
     property_set = space.PropertySet(id=0)
     util_space_1 = space.UtilitySpace(
+        id=1,
         name="Utility 1",
         price=150,
         property_set=property_set,
         owner_uid=1,
     )
     util_space_2 = space.UtilitySpace(
+        id=2,
         name="Utility 2",
         price=150,
         property_set=property_set,

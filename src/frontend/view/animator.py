@@ -4,6 +4,7 @@ from typing import Any, Callable, Protocol
 
 import pygame
 
+from . import data
 from .dice import Dice
 from .player_info import PlayerInfo
 from .player_token import PlayerToken
@@ -102,13 +103,25 @@ class Animator:
             assert isinstance(player, PlayerInfo)
             self.queue.append(Call(player.set_allow_roll, user_id=user_id))
 
+    def enqueue_ask_to_buy(
+        self, user_id: str, property_data: data.BasePropertyData
+    ) -> None:
+        # TODO show property data on the ui (middle of the board probably)
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            self.queue.append(
+                Call(
+                    player.set_allow_buy, user_id=user_id, price=property_data["price"]
+                )
+            )
+
     def draw(self) -> None:
         """get called every frame to draw"""
         if len(self.queue) > 0:
             call = self.queue.popleft()
             call()
 
-            print("drawn")
+            # print("drawn")
             self.background_sprites.draw(self.screen.surface)
             self.token_sprites.draw(self.screen.surface)
             self.dice_sprites.draw(self.screen.surface)

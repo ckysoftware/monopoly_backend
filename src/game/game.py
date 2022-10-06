@@ -34,10 +34,15 @@ class Game:
     def current_player(self) -> Player:
         return self.players[self.current_player_uid]
 
+    @property
+    def current_property(self) -> space.Property:
+        return self.get_property(player_uid=self.current_player_id)
+
     # TODO to be removed to property
     def get_current_player(self) -> tuple[str, int]:
         return (self.players[self.current_player_uid].name, self.current_player_uid)
 
+    # TODO to be removed to property
     def get_next_player(self, prev_player_uid: int) -> Player:
         # TODO check if the player is out of the game
         next_player_id = (prev_player_uid + 1) % len(self.players)
@@ -325,7 +330,6 @@ class Game:
 
         if not isinstance(property_, space.Property):
             raise ValueError(f"Space is not a Property: {type(property_)}")
-        assert isinstance(property_, space.Property)
         return property_
 
     def get_player_house_and_hotel_counts(self, player_uid: int) -> tuple[int, int]:

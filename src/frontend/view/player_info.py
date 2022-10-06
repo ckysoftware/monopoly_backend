@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 
 import pygame
 
@@ -15,22 +15,22 @@ class PlayerInfo(pygame.sprite.Sprite):
         self.height = height
         self.font = pygame.font.SysFont("Arial", 20)
 
-        self.cash: int = 0
+        self.cash: int = 1000
         self.is_current: bool = False
 
         self.name_text = self.font.render(self.user_id, True, pygame.Color("black"))
         self.cash_text = self.font.render(
             f"Cash: {str(self.cash)}", True, pygame.Color("black")
         )
-        self.buttons: List[button.Button] = self._create_buttons(x, y)
+        self.buttons: list[button.Button] = self._create_buttons(x, y)
 
         self.rect: pygame.rect.Rect = pygame.Rect(x, y, width, height)
         self.image: pygame.surface.Surface
         self.update()
 
-    def _create_buttons(self, x: int, y: int) -> List[button.Button]:
-        buttons = [
-            button.Button(
+    def _create_buttons(self, x: int, y: int) -> list[button.Button]:
+        def _create_roll_button(x: int, y: int) -> button.Button:
+            return button.Button(
                 x,
                 y + 160,
                 60,
@@ -38,8 +38,10 @@ class PlayerInfo(pygame.sprite.Sprite):
                 "Roll",
                 self.user_id,
                 button.ButtonType.ROLL,
-            ),
-            button.Button(
+            )
+
+        def _create_end_button(x: int, y: int) -> button.Button:
+            return button.Button(
                 x + 80,
                 y + 160,
                 60,
@@ -47,7 +49,23 @@ class PlayerInfo(pygame.sprite.Sprite):
                 "End",
                 self.user_id,
                 button.ButtonType.END,
-            ),
+            )
+
+        def _create_buy_button(x: int, y: int) -> button.Button:
+            return button.Button(
+                x + 160,
+                y + 160,
+                60,
+                40,
+                "Buy",
+                self.user_id,
+                button.ButtonType.BUY,
+            )
+
+        buttons = [
+            _create_roll_button(x, y),
+            _create_end_button(x, y),
+            _create_buy_button(x, y),
         ]
         return buttons
 
@@ -96,6 +114,14 @@ class PlayerInfo(pygame.sprite.Sprite):
         if self.is_current and self.user_id == user_id:
             for button_ in self.buttons:
                 if button_.button_type is button.ButtonType.END:
+                    button_.update_allow(True)
+                    return
+
+    def set_allow_buy(self, user_id: str, price: int) -> None:
+        """update the buy button to allowed"""
+        if self.is_current and self.user_id == user_id:
+            for button_ in self.buttons:
+                if button_.button_type is button.ButtonType.BUY and self.cash >= price:
                     button_.update_allow(True)
                     return
 
