@@ -1,6 +1,8 @@
 import constants as c
 import pytest
-from game import card, space
+from game import card
+from game import exceptions as exc
+from game import space
 from game.actions import Action
 from game.enum_types import DeckType
 from game.game import Game
@@ -331,8 +333,13 @@ class TestPropertyTransactions:
 
     def test_buy_property_no_cash(self, game_middle: Game):
         game_middle.players[0].cash = 10
-        with pytest.raises(ValueError, match=r"Player .* does not have enough cash$"):
+        with pytest.raises(exc.InsufficientCashError) as exc_info:
+            property_ = game_middle.game_map.map_list[8]
+            assert isinstance(property_, space.Property)
             game_middle.buy_property(player_uid=0, position=8)
+            assert exc_info.value.player_id == 0
+            assert exc_info.value.cur_amount == 10
+            assert exc_info.value.req_amount == property_.price
 
     def test_buy_property_transaction_without_price(self, game_middle: Game):
         property_ = game_middle.game_map.map_list[8]

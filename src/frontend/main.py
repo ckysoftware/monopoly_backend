@@ -77,14 +77,7 @@ def main():
     player_info_sprites.add(player_info_list)
     animator.set_player_info_sprites(player_info_sprites)
 
-    buttons_list = [
-        view.Button(800, 160 + 200 * i, 60, 40, "Roll", token_list[i].user_id, EventType.V_ROLL_AND_MOVE)
-        for i in range(4)
-    ]
-    buttons_list.extend([
-        view.Button(880, 160 + 200 * i, 60, 40, "End", token_list[i].user_id, EventType.V_END_TURN)
-        for i in range(4)
-    ])
+    buttons_list = [button for player in player_info_list for button in player.buttons]
     button_sprites = pygame.sprite.Group()
     button_sprites.add(buttons_list)
     animator.set_button_sprites(button_sprites)

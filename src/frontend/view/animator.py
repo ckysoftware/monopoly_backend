@@ -90,12 +90,17 @@ class Animator:
                 # set final cash, and then change color
                 self.queue.append(Call(player.set_cash, cash=new_cash))
                 self.queue.append(Call(player.set_cash, cash=new_cash))
-                break
+                return
 
     def enqueue_current_player(self, user_id: str) -> None:
         for player in self.player_info_sprites:
             assert isinstance(player, PlayerInfo)
             self.queue.append(Call(player.set_current, user_id=user_id))
+
+    def enqueue_waiting_for_roll(self, user_id: str) -> None:
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            self.queue.append(Call(player.set_allow_roll, user_id=user_id))
 
     def draw(self) -> None:
         """get called every frame to draw"""

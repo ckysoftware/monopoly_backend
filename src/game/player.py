@@ -20,7 +20,8 @@ class Player:
     jail_cards: list[card.ChanceCard] = field(default_factory=list)
     jail_turns: int | None = None
 
-    def __eq__(self, other: Player):
+    def __eq__(self, other: object):
+        assert isinstance(other, Player)
         return self.uid == other.uid
 
     def add_property(self, property_: space.Property) -> None:

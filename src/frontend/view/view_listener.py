@@ -41,3 +41,6 @@ class ViewListener(Subscriber):
         elif event.event_type is EventType.G_CURRENT_PLAYER:
             msg = event.message
             self.animator.enqueue_current_player(self.player_to_user[msg["player_id"]])
+        elif event.event_type is EventType.G_WAITING_FOR_ROLL:
+            msg = event.message
+            self.animator.enqueue_waiting_for_roll(self.player_to_user[msg["player_id"]])

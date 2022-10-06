@@ -1,6 +1,8 @@
-from typing import Any
+from typing import Any, List
 
 import pygame
+
+from . import button
 
 # from .button import Button
 
@@ -8,7 +10,6 @@ import pygame
 class PlayerInfo(pygame.sprite.Sprite):
     def __init__(self, x: int, y: int, width: int, height: int, user_id: str):
         super(PlayerInfo, self).__init__()
-        # button_p1 = Button(100, 100, 100, 100, "Player 1")
         self.user_id = user_id
         self.width = width
         self.height = height
@@ -21,10 +22,34 @@ class PlayerInfo(pygame.sprite.Sprite):
         self.cash_text = self.font.render(
             f"Cash: {str(self.cash)}", True, pygame.Color("black")
         )
+        self.buttons: List[button.Button] = self._create_buttons(x, y)
 
         self.rect: pygame.rect.Rect = pygame.Rect(x, y, width, height)
         self.image: pygame.surface.Surface
         self.update()
+
+    def _create_buttons(self, x: int, y: int) -> List[button.Button]:
+        buttons = [
+            button.Button(
+                x,
+                y + 160,
+                60,
+                40,
+                "Roll",
+                self.user_id,
+                button.ButtonType.ROLL,
+            ),
+            button.Button(
+                x + 80,
+                y + 160,
+                60,
+                40,
+                "End",
+                self.user_id,
+                button.ButtonType.END,
+            ),
+        ]
+        return buttons
 
     def update(self, *args: Any, **kwargs: Any) -> None:
         self.image: pygame.surface.Surface = pygame.Surface((self.width, self.height))
@@ -49,11 +74,30 @@ class PlayerInfo(pygame.sprite.Sprite):
         self.update()
 
     def set_current(self, user_id: str) -> None:
+        """set the current player"""
         if self.user_id == user_id:
             self.is_current = True
         else:
             self.is_current = False
+            for button_ in self.buttons:
+                button_.update_allow(False)
         self.update()
+
+    def set_allow_roll(self, user_id: str) -> None:
+        """update the roll button to allowed"""
+        if self.is_current and self.user_id == user_id:
+            for button_ in self.buttons:
+                if button_.button_type is button.ButtonType.ROLL:
+                    button_.update_allow(True)
+                    return
+
+    def set_allow_end(self, user_id: str) -> None:
+        """update the end button to allowed"""
+        if self.is_current and self.user_id == user_id:
+            for button_ in self.buttons:
+                if button_.button_type is button.ButtonType.END:
+                    button_.update_allow(True)
+                    return
 
     def update_rect(self, x: int, y: int) -> None:
         self.rect.center = (x, y)

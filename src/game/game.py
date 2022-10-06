@@ -5,7 +5,9 @@ from typing import Optional
 import constants as c
 
 import game.dice as dice
-from game import card, data, game_initializer, space
+from game import card, data
+from game import exceptions as exc
+from game import game_initializer, space
 from game.actions import Action
 from game.enum_types import DeckType
 from game.game_map import GameMap, SpaceDetails
@@ -24,6 +26,15 @@ class Game:
     # TODO jail_list with uid and count
     # TODO [FUTURE] accept game settings
 
+    @property
+    def current_player_id(self) -> int:
+        return self.current_player_uid
+
+    @property
+    def current_player(self) -> Player:
+        return self.players[self.current_player_uid]
+
+    # TODO to be removed to property
     def get_current_player(self) -> tuple[str, int]:
         return (self.players[self.current_player_uid].name, self.current_player_uid)
 
@@ -188,7 +199,10 @@ class Game:
         new_pos = self.players[player_uid].offset_position(self.game_map.size)
         return new_pos
 
-    def trigger_space(self, player_uid: int) -> Action:
+    def trigger_space(self, player_uid: Optional[int] = None) -> Action:
+        """Trigger space and return Action"""
+        if player_uid is None:
+            player_uid = self.current_player_uid
         action = self.game_map.trigger(self.players[player_uid])
         return action
 
@@ -233,8 +247,15 @@ class Game:
                 raise ValueError("Token is already assigned")
         self.players[player_uid].assign_token(token)
 
-    def buy_property(self, player_uid: int, position: Optional[int] = None) -> int:
-        player = self.players[player_uid]
+    def buy_property(
+        self, player_uid: Optional[int] = None, position: Optional[int] = None
+    ) -> int:
+        """Does not allow different price"""
+        if player_uid is None:
+            player_uid = self.current_player_id
+            player = self.current_player
+        else:
+            player = self.players[player_uid]
         if position is None:
             position = self.get_player_position(player_uid)
         property_ = self.game_map.map_list[position]
@@ -244,7 +265,7 @@ class Game:
         if property_.owner_uid is not None:
             raise ValueError("Property is already owned")
         if player.cash < property_.price:
-            raise ValueError(f"Player {player.name} does not have enough cash")
+            raise exc.InsufficientCashError(player_uid, player.cash, property_.price)
 
         new_cash = self.buy_property_transaction(player, property_)
         return new_cash
@@ -269,7 +290,9 @@ class Game:
         self, player: Player, property: space.Property, price: Optional[int] = None
     ) -> int:
         # TODO test monopoly after buying, also no monopoly check
-        """Process the purchase transactions. If price is not provided, use the property's price"""
+        # TODO probably can combine with buy property?
+        """Process the purchase transactions. If price is not provided, use the property's price
+        allow price to be different from property's price for auction"""
         if price is None:
             price = property.price
         new_cash = player.sub_cash(price)

@@ -20,9 +20,9 @@ class GameController:
         self.game_model.assign_player_token(player_id, token)
 
     def roll_and_move(self, player_id: int) -> None:
-        self.game_model._handle_roll_and_move(
+        self.game_model.handle_roll_and_move_event(
             player_id
         )  # pyright: reportPrivateUsage=false
 
     def end_turn(self, player_id: int) -> None:
-        self.game_model.end_turn(player_id)
+        self.game_model.handle_end_turn_event(player_id)
