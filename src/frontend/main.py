@@ -12,17 +12,6 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
 
-class Board(pygame.sprite.Sprite):
-    def __init__(self, width: int, height: int, x: int, y: int):
-        super(Board, self).__init__()
-        image = pygame.image.load("./src/frontend/asset/board-800.jpg").convert()
-        self.image: pygame.surface.Surface = pygame.transform.scale(
-            image, (width, height)
-        )
-        self.rect: pygame.rect.Rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-
-
 class PlayerBoard(pygame.sprite.Sprite):
     def __init__(self, width: int, height: int, x: int, y: int):
         super(PlayerBoard, self).__init__()
@@ -46,7 +35,7 @@ def main():
     # box = pygame.Surface((32, 32))
     # box.fill(BLACK)
 
-    board = Board(800, 800, 0, 0)
+    board = view.Board(800, 800, 0, 0)
     player_board = PlayerBoard(400, 800, 800, 0)
 
     background_sprites = pygame.sprite.Group()
@@ -81,6 +70,9 @@ def main():
     button_sprites = pygame.sprite.Group()
     button_sprites.add(buttons_list)
     animator.set_button_sprites(button_sprites)
+
+    property_info_static = view.PropertyInfo(380, 150, 240, 360, 0)
+    animator.set_property_info_static(property_info_static)
 
     game_model = model.GameModel(local=True)
     game_controller = controller.GameController(game_model)

@@ -53,3 +53,6 @@ class ViewListener(Subscriber):
             self.animator.enqueue_ask_to_buy(
                 self.player_to_user[msg["player_id"]], property_data
             )
+        elif event.event_type is EventType.G_ADD_PROPERTY:
+            msg = event.message
+            self.animator.enqueue_add_property(msg["player_id"], msg["property_id"])

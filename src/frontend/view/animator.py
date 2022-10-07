@@ -5,9 +5,11 @@ from typing import Any, Callable, Protocol
 import pygame
 
 from . import data
+from .board import Board
 from .dice import Dice
 from .player_info import PlayerInfo
 from .player_token import PlayerToken
+from .property_info import PropertyInfo
 from .screen import Screen
 
 
@@ -43,6 +45,7 @@ class Animator:
     player_info_sprites: pygame.sprite.Group = field(init=False)
     dice_sprites: pygame.sprite.Group = field(init=False)
     button_sprites: pygame.sprite.Group = field(init=False)
+    property_info_static: PropertyInfo = field(init=False)
     # draw_sprites: list[Drawable] = field(default_factory=list)
 
     def set_screen(self, screen: Screen) -> None:
@@ -66,6 +69,9 @@ class Animator:
 
     def set_button_sprites(self, sprites: pygame.sprite.Group) -> None:
         self.button_sprites = sprites
+
+    def set_property_info_static(self, property_info: PropertyInfo) -> None:
+        self.property_info_static = property_info
 
     # def add_draw_sprites(self, drawable: Drawable) -> None:
     #     self.draw_sprites.append(drawable)
@@ -106,7 +112,13 @@ class Animator:
     def enqueue_ask_to_buy(
         self, user_id: str, property_data: data.BasePropertyData
     ) -> None:
-        # TODO show property data on the ui (middle of the board probably)
+        self.queue.append(Call(self.property_info_static.update_allow, allow=True))
+        self.queue.append(
+            Call(
+                self.property_info_static.update_property,
+                property_id=property_data["id"],
+            )
+        )
         for player in self.player_info_sprites:
             assert isinstance(player, PlayerInfo)
             self.queue.append(
@@ -114,6 +126,15 @@ class Animator:
                     player.set_allow_buy, user_id=user_id, price=property_data["price"]
                 )
             )
+
+    def enqueue_add_property(
+        self, player_id: int, property_id: int
+    ) -> None:
+        for background in self.background_sprites:
+            if isinstance(background, Board):
+                self.queue.append(
+                    Call(background.update_property_owner, player_id=player_id, property_id=property_id)
+                )
 
     def draw(self) -> None:
         """get called every frame to draw"""
@@ -127,5 +148,6 @@ class Animator:
             self.dice_sprites.draw(self.screen.surface)
             self.player_info_sprites.draw(self.screen.surface)
             self.button_sprites.draw(self.screen.surface)
+            self.property_info_static.draw(self.screen.surface)
             # for drawable in self.draw_sprites:
             #     drawable.draw(self.screen.surface)

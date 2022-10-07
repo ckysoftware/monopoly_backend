@@ -126,7 +126,7 @@ class GameModel:
         else:
             # space trigger
             self._space_trigger(player_id)
-            self.state = GameState.WAIT_FOR_END_TURN
+            # self.state = GameState.WAIT_FOR_END_TURN
 
     def _space_trigger(self, player_id: int) -> None:
         """trigger space, publish event and change state"""
@@ -159,16 +159,16 @@ class GameModel:
 
     @require_current_player
     def handle_buy_event(self, player_id: int) -> None:
-        """Change property and cash, and publish events accordingly"""
+        """Handle event when a player buy a property after landing on it.
+        Add property and cash, and publish events accordingly"""
         if self.state is not GameState.ASK_TO_BUY:
             raise exc.CommandNotMatchingStateError("The game is not asking to buy")
         old_cash = self.game.get_player_cash(player_id)
         new_cash = self.game.buy_property()
         self._publish_cash_change_event(player_id, old_cash, new_cash)
-        self._publish_add_property_event(
-            player_id, self.game.get_player_position(player_id)
-        )
+        self._publish_add_property_event(player_id, self.game.current_property.id)
 
+        # TODO check double
         self.state = GameState.WAIT_FOR_END_TURN
 
     @require_current_player

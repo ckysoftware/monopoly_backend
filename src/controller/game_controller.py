@@ -11,6 +11,7 @@ class GameController:
         return self.game_model.add_players(user_ids)
 
     def roll_dice(self):
+        # TODO
         ...
 
     def start_game(self):
@@ -20,9 +21,10 @@ class GameController:
         self.game_model.assign_player_token(player_id, token)
 
     def roll_and_move(self, player_id: int) -> None:
-        self.game_model.handle_roll_and_move_event(
-            player_id
-        )
+        self.game_model.handle_roll_and_move_event(player_id)
+
+    def buy_property(self, player_id: int) -> None:
+        self.game_model.handle_buy_event(player_id)
 
     def end_turn(self, player_id: int) -> None:
         self.game_model.handle_end_turn_event(player_id)

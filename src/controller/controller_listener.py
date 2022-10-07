@@ -32,3 +32,7 @@ class ControllerListener(Subscriber):
             msg = event.message
             user_id = msg["user_id"]
             self.game_controller.end_turn(self.user_to_player[user_id])
+        elif event.event_type is EventType.V_BUY_PROPERTY:
+            msg = event.message
+            user_id = msg["user_id"]
+            self.game_controller.buy_property(self.user_to_player[user_id])
