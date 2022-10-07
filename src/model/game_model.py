@@ -43,14 +43,12 @@ class GameModel:
     id: str
     game: Game
     state: GameState
-    has_double_roll: bool
     publisher: event.Publisher
 
     def __init__(self, local: bool) -> None:
         self.id = uuid.uuid4().hex
         self.game = Game()
         self.state = GameState.NOT_STARTED
-        self.has_double_roll = False
         if local:
             self.publisher = event.LocalPublisher()
 
@@ -88,6 +86,10 @@ class GameModel:
     @require_current_player
     def handle_end_turn_event(self, player_id: int) -> None:
         """receive input from player and handle end turn"""
+        if self.state is not GameState.WAIT_FOR_END_TURN:
+            raise exc.CommandNotMatchingStateError(
+                "The game is not waiting for end turn"
+            )
         # TODO end turn and start next turn and send event for control
         print("player:", self.game.get_current_player()[1])
         self.game.next_player_and_reset()
@@ -119,10 +121,6 @@ class GameModel:
         if double_roll_action is Action.SEND_TO_JAIL:
             ...
             return
-        elif double_roll_action is Action.ASK_TO_ROLL:
-            self.has_double_roll = True
-        else:
-            self.has_double_roll = False
 
         self._space_trigger(player_id)
         # self.state = GameState.WAIT_FOR_END_TURN
@@ -167,7 +165,7 @@ class GameModel:
         self._publish_cash_change_event(player_id, old_cash, new_cash)
         self._publish_buy_property_event(player_id, self.game.current_property.id)
 
-        self._double_roll_change_state()
+        self._double_roll_state_change()
 
     @require_current_player
     def handle_auction_event(self, player_id: int) -> None:
@@ -199,9 +197,9 @@ class GameModel:
                 player_id, old_pos, new_pos
             )  # only offset position
 
-    def _double_roll_change_state(self) -> None:
+    def _double_roll_state_change(self) -> None:
         """change state and publish event depending on the double roll state"""
-        if self.has_double_roll:
+        if self.game.has_double_roll:
             self.state = GameState.WAIT_FOR_ROLL
             self._publish_wait_for_roll_event()
         else:

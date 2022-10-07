@@ -38,6 +38,10 @@ class Game:
     def current_property(self) -> space.Property:
         return self.get_property(player_uid=self.current_player_id)
 
+    @property
+    def has_double_roll(self) -> bool:
+        return self._roll_double_counter is not None
+
     # TODO to be removed to property
     def get_current_player(self) -> tuple[str, int]:
         return (self.players[self.current_player_uid].name, self.current_player_uid)
