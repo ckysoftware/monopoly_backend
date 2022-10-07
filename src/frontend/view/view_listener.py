@@ -42,9 +42,12 @@ class ViewListener(Subscriber):
         elif event.event_type is EventType.G_CURRENT_PLAYER:
             msg = event.message
             self.animator.enqueue_current_player(self.player_to_user[msg["player_id"]])
-        elif event.event_type is EventType.G_WAITING_FOR_ROLL:
+        elif event.event_type is EventType.G_WAIT_FOR_ROLL:
             msg = event.message
-            self.animator.enqueue_waiting_for_roll(
+            self.animator.enqueue_wait_for_roll(self.player_to_user[msg["player_id"]])
+        elif event.event_type is EventType.G_WAIT_FOR_END_TURN:
+            msg = event.message
+            self.animator.enqueue_wait_for_end_turn(
                 self.player_to_user[msg["player_id"]]
             )
         elif event.event_type is EventType.G_ASK_TO_BUY:
@@ -53,6 +56,6 @@ class ViewListener(Subscriber):
             self.animator.enqueue_ask_to_buy(
                 self.player_to_user[msg["player_id"]], property_data
             )
-        elif event.event_type is EventType.G_ADD_PROPERTY:
+        elif event.event_type is EventType.G_BUY_PROPERTY:
             msg = event.message
-            self.animator.enqueue_add_property(msg["player_id"], msg["property_id"])
+            self.animator.enqueue_buy_property(msg["player_id"], msg["property_id"])

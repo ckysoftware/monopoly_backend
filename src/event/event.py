@@ -12,9 +12,10 @@ class EventType(enum.Enum):
     G_ADD_PLAYER = "g_add_player"
     G_ALL_STATES = "g_all_states"
     G_CURRENT_PLAYER = "g_current_player"
-    G_WAITING_FOR_ROLL = "g_waiting_for_roll"
+    G_WAIT_FOR_ROLL = "g_wait_for_roll"
+    G_WAIT_FOR_END_TURN = "g_wait_for_end_turn"
     G_ASK_TO_BUY = "g_ask_to_buy"
-    G_ADD_PROPERTY = "g_add_property"
+    G_BUY_PROPERTY = "g_buy_property"
 
     V_ADD_PLAYER = "v_add_player"
     V_ROLL_AND_MOVE = "v_roll_and_move"

@@ -38,7 +38,6 @@ def require_current_player(fn: Callable[..., Any]):
     return inner
 
 
-# TODO send event later
 @dataclass(slots=True)
 class GameModel:
     id: str
@@ -105,28 +104,28 @@ class GameModel:
             ...
         else:
             self.state = GameState.WAIT_FOR_ROLL
-            self._publish_waiting_for_roll_event()
+            self._publish_wait_for_roll_event()
 
     @require_current_player
     def handle_roll_and_move_event(self, player_id: int):
         """receive input from player and handle roll and move"""
-        # TODO handle double roll
         if self.state is not GameState.WAIT_FOR_ROLL:
             raise exc.CommandNotMatchingStateError("The game is not waiting for roll")
 
         dice_1, dice_2 = self._roll_dice()
         double_roll_action = self.game.check_double_roll(dice_1, dice_2)
-
         self._move_player(player_id, dice_1 + dice_2)
-        if double_roll_action is Action.ASK_TO_ROLL:
-            self.has_double_roll = True
-            print("DOUBLED")
-        elif double_roll_action is Action.SEND_TO_JAIL:
+
+        if double_roll_action is Action.SEND_TO_JAIL:
             ...
+            return
+        elif double_roll_action is Action.ASK_TO_ROLL:
+            self.has_double_roll = True
         else:
-            # space trigger
-            self._space_trigger(player_id)
-            # self.state = GameState.WAIT_FOR_END_TURN
+            self.has_double_roll = False
+
+        self._space_trigger(player_id)
+        # self.state = GameState.WAIT_FOR_END_TURN
 
     def _space_trigger(self, player_id: int) -> None:
         """trigger space, publish event and change state"""
@@ -166,10 +165,9 @@ class GameModel:
         old_cash = self.game.get_player_cash(player_id)
         new_cash = self.game.buy_property()
         self._publish_cash_change_event(player_id, old_cash, new_cash)
-        self._publish_add_property_event(player_id, self.game.current_property.id)
+        self._publish_buy_property_event(player_id, self.game.current_property.id)
 
-        # TODO check double
-        self.state = GameState.WAIT_FOR_END_TURN
+        self._double_roll_change_state()
 
     @require_current_player
     def handle_auction_event(self, player_id: int) -> None:
@@ -200,6 +198,15 @@ class GameModel:
             self._publish_move_event(
                 player_id, old_pos, new_pos
             )  # only offset position
+
+    def _double_roll_change_state(self) -> None:
+        """change state and publish event depending on the double roll state"""
+        if self.has_double_roll:
+            self.state = GameState.WAIT_FOR_ROLL
+            self._publish_wait_for_roll_event()
+        else:
+            self.state = GameState.WAIT_FOR_END_TURN
+            self._publish_wait_for_end_turn_event()
 
     def _end_turn(self):
         """handle next player as well, reset double roll, etc"""
@@ -239,7 +246,7 @@ class GameModel:
         )
 
     def _publish_dice_event(self, dice_1: int, dice_2: int) -> None:
-        """publish a dice event"""
+        """publish a dice roll event"""
         self.publisher.publish(
             event.Event(event.EventType.G_DICE_ROLL, {"dices": (dice_1, dice_2)})
         )
@@ -255,16 +262,25 @@ class GameModel:
         self.publisher.publish(
             event.Event(
                 event.EventType.G_CURRENT_PLAYER,
-                {"player_id": self.game.get_current_player()[1]},
+                {"player_id": self.game.current_player_id},
             )
         )
 
-    def _publish_waiting_for_roll_event(self) -> None:
+    def _publish_wait_for_roll_event(self) -> None:
         """publisih a waiting for roll event"""
         self.publisher.publish(
             event.Event(
-                event.EventType.G_WAITING_FOR_ROLL,
-                {"player_id": self.game.get_current_player()[1]},
+                event.EventType.G_WAIT_FOR_ROLL,
+                {"player_id": self.game.current_player_id},
+            )
+        )
+
+    def _publish_wait_for_end_turn_event(self) -> None:
+        """publish a wait for end turn event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_WAIT_FOR_END_TURN,
+                {"player_id": self.game.current_player_id},
             )
         )
 
@@ -277,11 +293,11 @@ class GameModel:
             )
         )
 
-    def _publish_add_property_event(self, player_id: int, property_id: int) -> None:
-        """publish a add property event"""
+    def _publish_buy_property_event(self, player_id: int, property_id: int) -> None:
+        """publish a buy property event due to buying landed property"""
         self.publisher.publish(
             event.Event(
-                event.EventType.G_ADD_PROPERTY,
+                event.EventType.G_BUY_PROPERTY,
                 {"player_id": player_id, "property_id": property_id},
             )
         )

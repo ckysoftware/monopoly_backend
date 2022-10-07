@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 import pygame
 
@@ -102,7 +102,7 @@ class PlayerInfo(pygame.sprite.Sprite):
         self.update()
 
     def set_allow_roll(self, user_id: str) -> None:
-        """update the roll button to allowed"""
+        """set the roll button to allowed if user_id matches"""
         if self.is_current and self.user_id == user_id:
             for button_ in self.buttons:
                 if button_.button_type is button.ButtonType.ROLL:
@@ -110,7 +110,7 @@ class PlayerInfo(pygame.sprite.Sprite):
                     return
 
     def set_allow_end(self, user_id: str) -> None:
-        """update the end button to allowed"""
+        """set the end button to allowed if user_id matches"""
         if self.is_current and self.user_id == user_id:
             for button_ in self.buttons:
                 if button_.button_type is button.ButtonType.END:
@@ -118,12 +118,27 @@ class PlayerInfo(pygame.sprite.Sprite):
                     return
 
     def set_allow_buy(self, user_id: str, price: int) -> None:
-        """update the buy button to allowed"""
+        """set the buy button to allowed if user_id matches and enough cash"""
         if self.is_current and self.user_id == user_id:
             for button_ in self.buttons:
                 if button_.button_type is button.ButtonType.BUY and self.cash >= price:
                     button_.update_allow(True)
                     return
+
+    def set_allow_buttons(
+        self,
+        roll: Optional[bool] = None,
+        end: Optional[bool] = None,
+        buy: Optional[bool] = None,
+    ) -> None:
+        """set the buttons to be allowed or not, does not check for user_id"""
+        for button_ in self.buttons:
+            if roll is not None and button_.button_type is button.ButtonType.ROLL:
+                button_.update_allow(roll)
+            elif end is not None and button_.button_type is button.ButtonType.END:
+                button_.update_allow(end)
+            elif buy is not None and button_.button_type is button.ButtonType.BUY:
+                button_.update_allow(buy)
 
     def update_rect(self, x: int, y: int) -> None:
         self.rect.center = (x, y)
