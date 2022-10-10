@@ -369,18 +369,18 @@ class TestPropertyTransactions:
         assert property_ in player_.properties
 
     def test_auction_property(self, game_middle: Game):
-        bidders = game_middle.auction_property(8)
+        bidders = game_middle.auction_property_old(8)
         assert bidders[0] == game_middle.get_next_player(game_middle.current_player_uid)
         while len(bidders) > 0:
             assert bidders.popleft() in game_middle.players
 
     def test_auction_property_not_property(self, game_middle: Game):
         with pytest.raises(ValueError, match=r"Space is not a Property: .*"):
-            _ = game_middle.auction_property(0)
+            _ = game_middle.auction_property_old(0)
 
     def test_auction_property_owned(self, game_middle: Game):
         with pytest.raises(ValueError, match="Property is already owned"):
-            _ = game_middle.auction_property(3)
+            _ = game_middle.auction_property_old(3)
 
 
 class TestPayRent:

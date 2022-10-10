@@ -59,6 +59,9 @@ def main():
     animator.set_token_sprites(token_sprites)
     animator.set_dice_sprites(dice_sprites)
 
+    notifcation = view.Notification(140, 500, 280, 150)
+    animator.set_notification(notifcation)
+
     player_info_list = [
         view.PlayerInfo(800, 200 * i, 400, 200, token_list[i].user_id) for i in range(4)
     ]
@@ -67,6 +70,9 @@ def main():
     animator.set_player_info_sprites(player_info_sprites)
 
     buttons_list = [button for player in player_info_list for button in player.buttons]
+    buttons_list.extend(
+        [button for player in player_info_list for button in player.bid_buttons]
+    )
     button_sprites = pygame.sprite.Group()
     button_sprites.add(buttons_list)
     animator.set_button_sprites(button_sprites)

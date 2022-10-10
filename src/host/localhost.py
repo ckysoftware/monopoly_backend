@@ -473,7 +473,7 @@ class LocalHost:
         ...
 
     def _handle_auction(self, player_uid: int) -> None:
-        bidders = self.game.auction_property(
+        bidders = self.game.auction_property_old(
             position=self.game.get_player_position(player_uid)
         )
         space_details = self.game.get_space_details(player_uid=player_uid)

@@ -36,3 +36,27 @@ class ControllerListener(Subscriber):
             msg = event.message
             user_id = msg["user_id"]
             self.game_controller.buy_property(self.user_to_player[user_id])
+        elif event.event_type is EventType.V_AUCTION_PROPERTY:
+            msg = event.message
+            user_id = msg["user_id"]
+            self.game_controller.auction_property(self.user_to_player[user_id])
+        elif event.event_type in (
+            EventType.V_BID_1,
+            EventType.V_BID_10,
+            EventType.V_BID_50,
+            EventType.V_BID_100,
+            EventType.V_BID_PASS,
+        ):
+            msg = event.message
+            user_id = msg["user_id"]
+            if event.event_type is EventType.V_BID_1:
+                amount = 1
+            elif event.event_type is EventType.V_BID_10:
+                amount = 10
+            elif event.event_type is EventType.V_BID_50:
+                amount = 50
+            elif event.event_type is EventType.V_BID_100:
+                amount = 100
+            else:
+                amount = 0
+            self.game_controller.bid_property(self.user_to_player[user_id], amount)

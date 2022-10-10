@@ -18,6 +18,11 @@ from game.player import Player
 class Game:
     game_map: GameMap = field(init=False)
     players: list[Player] = field(default_factory=list)  # sorted by Player.uid
+    bidders: deque[Player] = field(
+        default_factory=deque
+    )  # TODO abstract by a new object Auction?
+    current_bid_price: int = 0  # TODO abstract by a new object Auction?
+    current_bid_property: Optional[space.Property] = None
     current_player_uid: int = field(init=False)  # current pos of the player_order
     _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
     cc_deck: card.Deck = field(init=False)
@@ -32,7 +37,7 @@ class Game:
 
     @property
     def current_player(self) -> Player:
-        return self.players[self.current_player_uid]
+        return self.get_player(self.current_player_id)
 
     @property
     def current_property(self) -> space.Property:
@@ -41,6 +46,13 @@ class Game:
     @property
     def has_double_roll(self) -> bool:
         return self._roll_double_counter is not None
+
+    @property
+    def current_bidder_id(self) -> int:
+        return self.bidders[0].uid
+
+    def get_player(self, player_id: int) -> Player:
+        return self.players[player_id]
 
     # TODO to be removed to property
     def get_current_player(self) -> tuple[str, int]:
@@ -279,7 +291,47 @@ class Game:
         new_cash = self.buy_property_transaction(player, property_)
         return new_cash
 
-    def auction_property(self, position: int) -> deque[Player]:
+    def auction_property(self, property_: space.Property) -> None:
+        """Start auctioning the property. Initialise auction players list"""
+        # TODO change exception
+
+        if property_.owner_uid is not None:
+            raise ValueError("Property is already owned")
+        if len(self.bidders) != 0:
+            raise ValueError(f"There are still active bidders: {self.bidders}")
+
+        self.current_bid_price = 0
+        self.current_bid_property = property_
+        self.bidders = deque()
+        for player in self.players:
+            # TODO filter out inactive players
+            # if player.active:
+            self.bidders.append(player)
+        # rotate the deque until the next player is at the leftmost position
+        while self.bidders[0] != self.get_next_player(self.current_player_uid):
+            self.bidders.rotate(-1)
+
+    def bid_property(self, amount: int) -> None:
+        if amount == 0:  # pass
+            if len(self.bidders) == 0:
+                raise ValueError("There are no active bidders")
+            self.bidders.popleft()
+            return
+
+        player = self.players[self.current_bidder_id]
+        new_bid = self.current_bid_price + amount
+        if player.cash < new_bid:
+            raise exc.InsufficientCashError(player.uid, player.cash, new_bid)
+        self.current_bid_price = new_bid
+        self.bidders.rotate(-1)
+
+    def end_auction(self) -> None:
+        self.bidders = deque()
+        self.current_bid_price = 0
+        self.current_bid_property = None
+
+    def auction_property_old(self, position: int) -> deque[Player]:
+        # TODO remove this after removing local host
         """Returns the bidders (active players). The first bidder is the next player.
         Raise error if the property is not auctionable"""
         property_ = self.game_map.map_list[position]

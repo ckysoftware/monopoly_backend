@@ -59,3 +59,24 @@ class ViewListener(Subscriber):
         elif event.event_type is EventType.G_BUY_PROPERTY:
             msg = event.message
             self.animator.enqueue_buy_property(msg["player_id"], msg["property_id"])
+        elif event.event_type is EventType.G_START_AUCTION:
+            msg = event.message
+            self.animator.enqueue_start_auction(
+                msg["property_id"],
+            )
+        elif event.event_type is EventType.G_CURRENT_AUCTION:
+            ...
+            msg = event.message
+            self.animator.enqueue_current_auction(
+                data.CONST_PROPERTY_DATA[msg["property_id"]],
+                [self.player_to_user[player_id] for player_id in msg["bidders"]],
+                self.player_to_user[msg["player_id"]],
+                msg["price"],
+            )
+        elif event.event_type is EventType.G_END_AUCTION:
+            msg = event.message
+            self.animator.enqueue_end_auction(
+                self.player_to_user[msg["player_id"]],
+                data.CONST_PROPERTY_DATA[msg["property_id"]],
+                msg["price"],
+            )

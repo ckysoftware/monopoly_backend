@@ -4,12 +4,10 @@ import pygame
 
 from . import button
 
-# from .button import Button
-
 
 class PlayerInfo(pygame.sprite.Sprite):
     def __init__(self, x: int, y: int, width: int, height: int, user_id: str):
-        super(PlayerInfo, self).__init__()
+        super().__init__()
         self.user_id = user_id
         self.width = width
         self.height = height
@@ -23,6 +21,7 @@ class PlayerInfo(pygame.sprite.Sprite):
             f"Cash: {str(self.cash)}", True, pygame.Color("black")
         )
         self.buttons: list[button.Button] = self._create_buttons(x, y)
+        self.bid_buttons: list[button.Button] = self._create_bid_buttons(x, y)
 
         self.rect: pygame.rect.Rect = pygame.Rect(x, y, width, height)
         self.image: pygame.surface.Surface
@@ -62,12 +61,74 @@ class PlayerInfo(pygame.sprite.Sprite):
                 button.ButtonType.BUY,
             )
 
+        def _create_auction_button(x: int, y: int) -> button.Button:
+            return button.Button(
+                x + 240,
+                y + 160,
+                80,
+                40,
+                "Auction",
+                self.user_id,
+                button.ButtonType.AUCTION,
+            )
+
         buttons = [
             _create_roll_button(x, y),
             _create_end_button(x, y),
             _create_buy_button(x, y),
+            _create_auction_button(x, y),
         ]
         return buttons
+
+    def _create_bid_buttons(self, x: int, y: int) -> list[button.Button]:
+        bid_buttons = [
+            button.Button(
+                x,
+                y + 80,
+                70,
+                40,
+                "Bid 1",
+                self.user_id,
+                button.ButtonType.BID_1,
+            ),
+            button.Button(
+                x + 80,
+                y + 80,
+                70,
+                40,
+                "Bid 10",
+                self.user_id,
+                button.ButtonType.BID_10,
+            ),
+            button.Button(
+                x + 160,
+                y + 80,
+                70,
+                40,
+                "Bid 50",
+                self.user_id,
+                button.ButtonType.BID_50,
+            ),
+            button.Button(
+                x + 240,
+                y + 80,
+                70,
+                40,
+                "Bid 100",
+                self.user_id,
+                button.ButtonType.BID_100,
+            ),
+            button.Button(
+                x + 320,
+                y + 80,
+                70,
+                40,
+                "Pass",
+                self.user_id,
+                button.ButtonType.BID_PASS,
+            ),
+        ]
+        return bid_buttons
 
     def update(self, *args: Any, **kwargs: Any) -> None:
         self.image: pygame.surface.Surface = pygame.Surface((self.width, self.height))
@@ -117,28 +178,41 @@ class PlayerInfo(pygame.sprite.Sprite):
                     button_.update_allow(True)
                     return
 
-    def set_allow_buy(self, user_id: str, price: int) -> None:
-        """set the buy button to allowed if user_id matches and enough cash"""
+    def set_allow_buy_and_auction(self, user_id: str, price: int) -> None:
+        """set the buy and auction button to allowed if user_id matches and enough cash"""
         if self.is_current and self.user_id == user_id:
             for button_ in self.buttons:
                 if button_.button_type is button.ButtonType.BUY and self.cash >= price:
                     button_.update_allow(True)
-                    return
+                if button_.button_type is button.ButtonType.AUCTION:
+                    button_.update_allow(True)
+
+    def set_allow_bid(self, user_id: str) -> None:
+        """set the auction bid button to allowed if user_id matches, otherwise disable"""
+        if self.user_id == user_id:
+            for button_ in self.bid_buttons:
+                button_.update_allow(True)
+        else:
+            for button_ in self.bid_buttons:
+                button_.update_allow(False)
 
     def set_allow_buttons(
         self,
         roll: Optional[bool] = None,
         end: Optional[bool] = None,
         buy: Optional[bool] = None,
+        auction: Optional[bool] = None,
     ) -> None:
         """set the buttons to be allowed or not, does not check for user_id"""
         for button_ in self.buttons:
             if roll is not None and button_.button_type is button.ButtonType.ROLL:
                 button_.update_allow(roll)
-            elif end is not None and button_.button_type is button.ButtonType.END:
+            if end is not None and button_.button_type is button.ButtonType.END:
                 button_.update_allow(end)
-            elif buy is not None and button_.button_type is button.ButtonType.BUY:
+            if buy is not None and button_.button_type is button.ButtonType.BUY:
                 button_.update_allow(buy)
+            if auction is not None and button_.button_type is button.ButtonType.AUCTION:
+                button_.update_allow(auction)
 
     def update_rect(self, x: int, y: int) -> None:
         self.rect.center = (x, y)

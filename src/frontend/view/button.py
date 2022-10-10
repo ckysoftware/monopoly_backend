@@ -12,6 +12,12 @@ class ButtonType(enum.auto):
     BUY = enum.auto()
     SELL = enum.auto()
     END = enum.auto()
+    AUCTION = enum.auto()
+    BID_1 = enum.auto()
+    BID_10 = enum.auto()
+    BID_50 = enum.auto()
+    BID_100 = enum.auto()
+    BID_PASS = enum.auto()
 
 
 class Button(pygame.sprite.Sprite):
@@ -69,5 +75,17 @@ class Button(pygame.sprite.Sprite):
             return event.EventType.V_END_TURN
         elif self.button_type is ButtonType.BUY:
             return event.EventType.V_BUY_PROPERTY
+        elif self.button_type is ButtonType.AUCTION:
+            return event.EventType.V_AUCTION_PROPERTY
+        elif self.button_type is ButtonType.BID_1:
+            return event.EventType.V_BID_1
+        elif self.button_type is ButtonType.BID_10:
+            return event.EventType.V_BID_10
+        elif self.button_type is ButtonType.BID_50:
+            return event.EventType.V_BID_50
+        elif self.button_type is ButtonType.BID_100:
+            return event.EventType.V_BID_100
+        elif self.button_type is ButtonType.BID_PASS:
+            return event.EventType.V_BID_PASS
         else:
             raise ValueError("Invalid button type")

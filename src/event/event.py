@@ -16,6 +16,9 @@ class EventType(enum.Enum):
     G_WAIT_FOR_END_TURN = "g_wait_for_end_turn"
     G_ASK_TO_BUY = "g_ask_to_buy"
     G_BUY_PROPERTY = "g_buy_property"
+    G_START_AUCTION = "g_start_auction"
+    G_CURRENT_AUCTION = "g_current_auction"
+    G_END_AUCTION = "g_end_auction"
 
     V_ADD_PLAYER = "v_add_player"
     V_ROLL_AND_MOVE = "v_roll_and_move"
@@ -23,6 +26,12 @@ class EventType(enum.Enum):
     V_START_GAME = "v_start_game"
     V_END_TURN = "v_end_turn"
     V_BUY_PROPERTY = "v_buy_property"
+    V_AUCTION_PROPERTY = "v_auction_property"
+    V_BID_1 = "v_bid_1"
+    V_BID_10 = "v_bid_10"
+    V_BID_50 = "v_bid_50"
+    V_BID_100 = "v_bid_100"
+    V_BID_PASS = "v_bid_pass"
 
 
 @dataclass(slots=True)

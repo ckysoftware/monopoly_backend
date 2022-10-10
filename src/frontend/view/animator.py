@@ -7,6 +7,7 @@ import pygame
 from . import data
 from .board import Board
 from .dice import Dice
+from .notification import Notification
 from .player_info import PlayerInfo
 from .player_token import PlayerToken
 from .property_info import PropertyInfo
@@ -40,6 +41,7 @@ class Animator:
     dice_sprites: pygame.sprite.Group = field(init=False)
     button_sprites: pygame.sprite.Group = field(init=False)
     property_info_static: PropertyInfo = field(init=False)
+    notification: Notification = field(init=False)
 
     def set_screen(self, screen: Screen) -> None:
         self.screen = screen
@@ -61,6 +63,9 @@ class Animator:
 
     def set_property_info_static(self, property_info: PropertyInfo) -> None:
         self.property_info_static = property_info
+
+    def set_notification(self, notification: Notification) -> None:
+        self.notification = notification
 
     def enqueue_token_move(
         self, token: PlayerToken, old_position: int, new_position: int
@@ -110,22 +115,50 @@ class Animator:
             assert isinstance(player, PlayerInfo)
             self.queue.append(
                 Call(
-                    player.set_allow_buy, user_id=user_id, price=property_data["price"]
+                    player.set_allow_buy_and_auction,
+                    user_id=user_id,
+                    price=property_data["price"],
                 )
             )
 
     def enqueue_buy_property(self, player_id: int, property_id: int) -> None:
-        self._hide_buy_button()
+        self._hide_buy_and_auction_button()
         self._hide_property_info_static()
-        for background in self.background_sprites:
-            if isinstance(background, Board):
-                self.queue.append(
-                    Call(
-                        background.update_property_owner,
-                        player_id=player_id,
-                        property_id=property_id,
-                    )
-                )
+        self._update_owner(player_id, property_id)
+
+    def enqueue_start_auction(self, property_id: int) -> None:
+        self._hide_buy_and_auction_button()
+        self._show_property_info_static(property_id)
+        self.queue.append(Call(self.notification.update_allow, True))
+
+    def enqueue_current_auction(
+        self,
+        property_data: data.BasePropertyData,
+        bidders: list[str],
+        current_user_id: str,
+        price: int,
+    ) -> None:
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            self.queue.append(Call(player.set_allow_bid, user_id=current_user_id))
+        noti_text = [
+            f"Auction for {property_data['name']} is ongoing",
+            "Active bidders:",
+            *[f"    {bidder}" for bidder in bidders],
+            f"Current price: {price}",
+        ]
+        self.notification.update(texts=noti_text)
+
+    def enqueue_end_auction(
+        self, user_id: str, property_data: data.BasePropertyData, price: int
+    ) -> None:
+        self._hide_bid_button()
+        noti_text = [
+            f"{user_id} won the auction",
+            f"Bought {property_data['name']} for ${price}",
+        ]
+        self.notification.update(texts=noti_text)
+        # self.queue.append(Call(self.notification.update_allow, False))
 
     def _show_property_info_static(self, property_id: int) -> None:
         self.queue.append(Call(self.property_info_static.update_allow, allow=True))
@@ -145,11 +178,28 @@ class Animator:
             assert isinstance(player, PlayerInfo)
             self.queue.append(Call(player.set_allow_buttons, roll=False))
 
-    def _hide_buy_button(self) -> None:
+    def _hide_buy_and_auction_button(self) -> None:
         """hide buy button for all players"""
         for player in self.player_info_sprites:
             assert isinstance(player, PlayerInfo)
-            self.queue.append(Call(player.set_allow_buttons, buy=False))
+            self.queue.append(Call(player.set_allow_buttons, buy=False, auction=False))
+
+    def _hide_bid_button(self) -> None:
+        """hide bid button for all players. Assume no user_id is empty ("")"""
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            self.queue.append(Call(player.set_allow_bid, ""))
+
+    def _update_owner(self, player_id: int, property_id: int) -> None:
+        for background in self.background_sprites:
+            if isinstance(background, Board):
+                self.queue.append(
+                    Call(
+                        background.update_property_owner,
+                        player_id=player_id,
+                        property_id=property_id,
+                    )
+                )
 
     def draw(self) -> None:
         """get called every frame to draw"""
@@ -164,5 +214,6 @@ class Animator:
             self.player_info_sprites.draw(self.screen.surface)
             self.button_sprites.draw(self.screen.surface)
             self.property_info_static.draw(self.screen.surface)
+            self.notification.draw(self.screen.surface)
             # for drawable in self.draw_sprites:
             #     drawable.draw(self.screen.surface)

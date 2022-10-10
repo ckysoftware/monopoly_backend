@@ -1,12 +1,13 @@
 from .animator import Animator
+from .board import Board
 from .button import Button, ButtonType
 from .dice import Dice
+from .notification import Notification
 from .player_info import PlayerInfo
 from .player_token import PlayerToken
 from .property_info import PropertyInfo
 from .screen import Screen
 from .view_listener import ViewListener
-from .board import Board
 
 __all__ = [
     "PlayerToken",
@@ -19,4 +20,5 @@ __all__ = [
     "PlayerInfo",
     "PropertyInfo",
     "Board",
+    "Notification",
 ]

@@ -24,6 +24,7 @@ class GameState(enum.Enum):
     WAIT_FOR_ROLL = enum.auto()
     WAIT_FOR_END_TURN = enum.auto()
     ASK_TO_BUY = enum.auto()
+    AUCTION = enum.auto()
 
 
 def require_current_player(fn: Callable[..., Any]):
@@ -169,9 +170,47 @@ class GameModel:
 
     @require_current_player
     def handle_auction_event(self, player_id: int) -> None:
+        """Handle event when the player decided to auction the landed property"""
         if self.state is not GameState.ASK_TO_BUY:
             raise exc.CommandNotMatchingStateError("The game is not asking to buy")
-        ...
+
+        self.state = GameState.AUCTION
+        property_ = self.game.current_property
+        self.game.auction_property(property_)
+        self._publish_start_auction_event(property_.id)
+        self._publish_current_auction_event(property_.id)
+
+    def handle_bid_event(self, player_id: int, amount: int) -> None:
+        """Handle event when the player decided to bid on the property. Amount = 0 if pass"""
+        if self.state is not GameState.AUCTION:
+            raise exc.CommandNotMatchingStateError("The game is not in auction")
+        if player_id != self.game.bidders[0].uid:
+            raise exc.NotCurrentBidderError(player_id)
+
+        self.game.bid_property(amount)
+        if len(self.game.bidders) != 1:
+            self._publish_current_auction_event(self.game.current_property.id)
+        else:
+            self._end_auction()
+            self._double_roll_state_change()
+
+    def _end_auction(self) -> None:
+        """Process the transactions related to ending the auction.
+        Reset the auction process in Game.
+        Publish property and cash events"""
+        property_ = self.game.current_bid_property
+        assert property_ is not None
+        winner = self.game.get_player(self.game.current_bidder_id)
+        old_cash = self.game.get_player_cash(winner.uid)
+        new_cash = self.game.buy_property_transaction(
+            winner, property_, self.game.current_bid_price
+        )
+        self._publish_end_auction_event(
+            winner.uid, property_.id, self.game.current_bid_price
+        )
+        self._publish_cash_change_event(winner.uid, old_cash, new_cash)
+        self._publish_buy_property_event(winner.uid, property_.id)
+        self.game.end_auction()
 
     def _move_player(self, player_id: int, steps: int):
         """move player and publish move event"""
@@ -297,5 +336,45 @@ class GameModel:
             event.Event(
                 event.EventType.G_BUY_PROPERTY,
                 {"player_id": player_id, "property_id": property_id},
+            )
+        )
+
+    def _publish_start_auction_event(self, property_id: int) -> None:
+        """publish a start auction event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_START_AUCTION,
+                {
+                    "property_id": property_id,
+                },
+            )
+        )
+
+    def _publish_current_auction_event(self, property_id: int) -> None:
+        """publish the current bidder and price in auction property"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_CURRENT_AUCTION,
+                {
+                    "player_id": self.game.current_bidder_id,
+                    "bidders": [player.uid for player in self.game.bidders],
+                    "property_id": property_id,
+                    "price": self.game.current_bid_price,
+                },
+            )
+        )
+
+    def _publish_end_auction_event(
+        self, player_id: int, property_id: int, price: int
+    ) -> None:
+        """publish a end auction event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_END_AUCTION,
+                {
+                    "player_id": player_id,
+                    "property_id": property_id,
+                    "price": price,
+                },
             )
         )

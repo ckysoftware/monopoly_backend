@@ -22,6 +22,14 @@ class NotCurrentPlayerError(GameInvalidCommandError):
         super().__init__(message)
 
 
+class NotCurrentBidderError(GameInvalidCommandError):
+    """The player sending the command is not the current bidder"""
+
+    def __init__(self, player_id: int):
+        message = f"Player id: {player_id} is not the current bidder"
+        super().__init__(message)
+
+
 class CommandNotMatchingStateError(GameInvalidCommandError):
     """The command sent does not match the current game state"""
 
