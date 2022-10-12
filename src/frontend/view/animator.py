@@ -175,15 +175,10 @@ class Animator:
             f"{payer_id} has to pay ${rent} to {payee_id}",
         ]
         self.queue.append(Call(self.notification.update, texts=noti_text))
-        # TODO check enough money or not
+
         for player in self.player_info_sprites:
             assert isinstance(player, PlayerInfo)
-            self.queue.append(
-                Call(
-                    player.set_allow_pay,
-                    user_id=payer_id,
-                )
-            )
+            self.queue.append(Call(player.set_allow_pay, user_id=payer_id, price=rent))
 
     def _show_property_info_static(self, property_id: int) -> None:
         self.queue.append(Call(self.property_info_static.update_allow, allow=True))

@@ -209,11 +209,11 @@ class PlayerInfo(pygame.sprite.Sprite):
             for button_ in self.bid_buttons:
                 button_.update_allow(False)
 
-    def set_allow_pay(self, user_id: str) -> None:
+    def set_allow_pay(self, user_id: str, price: int) -> None:
         """set the pay button to allowed if user_id matches"""
         if self.user_id == user_id:
             for button_ in self.buttons:
-                if button_.button_type is button.ButtonType.PAY:
+                if button_.button_type is button.ButtonType.PAY and self.cash >= price:
                     button_.update_allow(True)
                     return
 
