@@ -7,7 +7,7 @@ from frontend.constant import coordinate as coor
 class PlayerToken(pygame.sprite.Sprite):
     def __init__(self, width: int, height: int, token: int):
         super(PlayerToken, self).__init__()
-        self.user_id = uuid.uuid4().hex
+        self.user_id = uuid.uuid4().hex[:5]
         self.token = token
         self.image: pygame.surface.Surface = pygame.image.load(
             f"./src/frontend/asset/token/token{token}.png"

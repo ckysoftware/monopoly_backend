@@ -264,7 +264,7 @@ class TestGetInfo:
 
     def test_get_rent_info_property_space(self, game_middle: Game):
         game_middle.players[0].position = 3
-        payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=10000)
+        payee_uid, rent = game_middle.get_pay_rent_info_old(0, dice_count=10000)
         assert payee_uid == 1
         assert rent == 450
 
@@ -273,19 +273,19 @@ class TestGetInfo:
         game_middle.players[1].add_property(game_middle.get_property(position=12))
         game_middle.get_property(position=12).assign_owner(1)
 
-        payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=12)
+        payee_uid, rent = game_middle.get_pay_rent_info_old(0, dice_count=12)
         assert payee_uid == 1
         assert rent == 12 * 4
 
     def test_get_rent_info_unowned(self, game_middle: Game):
         game_middle.players[0].position = 39
         with pytest.raises(ValueError, match=r"Player does not need to pay rent"):
-            _, _ = game_middle.get_pay_rent_info(0, dice_count=12)
+            _, _ = game_middle.get_pay_rent_info_old(0, dice_count=12)
 
     def test_get_rent_info_self_owned(self, game_middle: Game):
         game_middle.players[1].position = 39
         with pytest.raises(ValueError, match=r"Player does not need to pay rent"):
-            _, _ = game_middle.get_pay_rent_info(1, dice_count=12)
+            _, _ = game_middle.get_pay_rent_info_old(1, dice_count=12)
 
 
 class TestAssignToken:
@@ -388,7 +388,7 @@ class TestPayRent:
         game_middle.players[0].position = 3
         old_cash_payer = game_middle.players[0].cash
         old_cash_payee = game_middle.players[1].cash
-        payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=10)
+        payee_uid, rent = game_middle.get_pay_rent_info_old(0, dice_count=10)
 
         new_cash_payer, new_cash_payee = game_middle.transfer_cash(
             0, payee_uid, amount=rent
@@ -399,7 +399,7 @@ class TestPayRent:
     def test_pay_rent_not_enough_cash(self, game_middle: Game):
         game_middle.players[0].position = 3
         game_middle.players[0].cash = 100
-        payee_uid, rent = game_middle.get_pay_rent_info(0, dice_count=10)
+        payee_uid, rent = game_middle.get_pay_rent_info_old(0, dice_count=10)
         with pytest.raises(ValueError, match=r"Player .* does not have enough cash$"):
             _, _ = game_middle.transfer_cash(0, payee_uid, amount=rent)
 

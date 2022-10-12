@@ -32,5 +32,8 @@ class GameController:
     def bid_property(self, player_id: int, amount: int) -> None:
         self.game_model.handle_bid_event(player_id, amount)
 
+    def pay(self, player_id: int) -> None:
+        self.game_model.handle_pay_event(player_id)
+
     def end_turn(self, player_id: int) -> None:
         self.game_model.handle_end_turn_event(player_id)

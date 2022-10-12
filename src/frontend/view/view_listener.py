@@ -80,3 +80,11 @@ class ViewListener(Subscriber):
                 data.CONST_PROPERTY_DATA[msg["property_id"]],
                 msg["price"],
             )
+        elif event.event_type is EventType.G_ASK_FOR_RENT:
+            msg = event.message
+            self.animator.enqueue_ask_for_rent(
+                self.player_to_user[msg["payer_id"]],
+                self.player_to_user[msg["payee_id"]],
+                msg["rent"],
+                data.CONST_PROPERTY_DATA[msg["property_id"]],
+            )

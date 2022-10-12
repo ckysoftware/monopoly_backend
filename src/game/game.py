@@ -24,6 +24,7 @@ class Game:
     current_bid_price: int = 0  # TODO abstract by a new object Auction?
     current_bid_property: Optional[space.Property] = None
     current_player_uid: int = field(init=False)  # current pos of the player_order
+    last_dice_rolls: Optional[tuple[int, int]] = None
     _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
     cc_deck: card.Deck = field(init=False)
     chance_deck: card.Deck = field(init=False)
@@ -95,6 +96,7 @@ class Game:
 
     def _reset_for_next_player(self) -> None:
         self._roll_double_counter = None
+        self.last_dice_rolls = None
 
     def add_player(self, name: str):
         new_player = Player(
@@ -159,7 +161,9 @@ class Game:
         return next_player
 
     def roll_dice(self) -> tuple[int, ...]:
-        return dice.roll(num_faces=6, num_dice=2)
+        rolls = dice.roll(num_faces=6, num_dice=2)
+        self.last_dice_rolls = rolls
+        return rolls
 
     def check_double_roll(
         self, dice_1: int, dice_2: int, player_uid: Optional[int] = None
@@ -399,7 +403,24 @@ class Game:
                 hotel_count += property_.no_of_hotels
         return house_count, hotel_count
 
-    def get_pay_rent_info(self, player_uid: int, dice_count: int) -> tuple[int, int]:
+    def get_pay_rent_info(self) -> tuple[int, int]:
+        """Returns the payee id and the rent amount to pay rent to using
+        the current position and last dice rolls"""
+        property_ = self.current_property
+        if property_.owner_uid is None or property_.owner_uid == self.current_player_id:
+            raise ValueError("Player does not need to pay rent")
+        if isinstance(property_, space.UtilitySpace):
+            if self.last_dice_rolls is None:
+                raise ValueError("Last dice rolls is None")
+            rent = property_.compute_rent(dice_count=sum(self.last_dice_rolls))
+        else:
+            rent = property_.compute_rent()
+        return property_.owner_uid, rent
+
+    def get_pay_rent_info_old(
+        self, player_uid: int, dice_count: int
+    ) -> tuple[int, int]:
+        # TODO remove this
         """Returns the uid and the rent amount  to pay rent to using
         the position of the arg player_uid"""
         property_ = self.get_property(player_uid=player_uid)

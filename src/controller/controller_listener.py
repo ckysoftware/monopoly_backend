@@ -60,3 +60,7 @@ class ControllerListener(Subscriber):
             else:
                 amount = 0
             self.game_controller.bid_property(self.user_to_player[user_id], amount)
+        elif event.event_type is EventType.V_PAY:
+            msg = event.message
+            user_id = msg["user_id"]
+            self.game_controller.pay(self.user_to_player[user_id])

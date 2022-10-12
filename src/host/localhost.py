@@ -443,7 +443,7 @@ class LocalHost:
             raise ValueError("Dice rolls is None")
 
         player_name = self.game.players[player_uid].name
-        payee_uid, rent = self.game.get_pay_rent_info(
+        payee_uid, rent = self.game.get_pay_rent_info_old(
             player_uid=player_uid, dice_count=sum(self.dice_rolls)
         )
         payee_name = self.game.players[payee_uid].name

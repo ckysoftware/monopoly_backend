@@ -97,11 +97,13 @@ class Animator:
             self.queue.append(Call(player.set_current, user_id=user_id))
 
     def enqueue_wait_for_roll(self, user_id: str) -> None:
+        self._hide_all_buttons()
         for player in self.player_info_sprites:
             assert isinstance(player, PlayerInfo)
             self.queue.append(Call(player.set_allow_roll, user_id=user_id))
 
     def enqueue_wait_for_end_turn(self, user_id: str) -> None:
+        self._hide_all_buttons()
         for player in self.player_info_sprites:
             assert isinstance(player, PlayerInfo)
             self.queue.append(Call(player.set_allow_end, user_id=user_id))
@@ -147,7 +149,7 @@ class Animator:
             *[f"    {bidder}" for bidder in bidders],
             f"Current price: {price}",
         ]
-        self.notification.update(texts=noti_text)
+        self.queue.append(Call(self.notification.update, texts=noti_text))
 
     def enqueue_end_auction(
         self, user_id: str, property_data: data.BasePropertyData, price: int
@@ -157,8 +159,31 @@ class Animator:
             f"{user_id} won the auction",
             f"Bought {property_data['name']} for ${price}",
         ]
-        self.notification.update(texts=noti_text)
+        self.queue.append(Call(self.notification.update, texts=noti_text))
         # self.queue.append(Call(self.notification.update_allow, False))
+
+    def enqueue_ask_for_rent(
+        self,
+        payer_id: str,
+        payee_id: str,
+        rent: int,
+        property_data: data.BasePropertyData,
+    ) -> None:
+        self._hide_roll_button()
+        noti_text = [
+            f"{payer_id} landed on {payee_id}'s property - {property_data['name']}",
+            f"{payer_id} has to pay ${rent} to {payee_id}",
+        ]
+        self.queue.append(Call(self.notification.update, texts=noti_text))
+        # TODO check enough money or not
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            self.queue.append(
+                Call(
+                    player.set_allow_pay,
+                    user_id=payer_id,
+                )
+            )
 
     def _show_property_info_static(self, property_id: int) -> None:
         self.queue.append(Call(self.property_info_static.update_allow, allow=True))
@@ -189,6 +214,27 @@ class Animator:
         for player in self.player_info_sprites:
             assert isinstance(player, PlayerInfo)
             self.queue.append(Call(player.set_allow_bid, ""))
+
+    def _hide_pay_button(self) -> None:
+        """hide pay button for all players. Assume no user_id is empty ("")"""
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            self.queue.append(Call(player.set_allow_pay, pay=False))
+
+    def _hide_all_buttons(self) -> None:
+        """hide all buttons for all players"""
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            self.queue.append(
+                Call(
+                    player.set_allow_buttons,
+                    roll=False,
+                    end=False,
+                    buy=False,
+                    auction=False,
+                    pay=False,
+                )
+            )
 
     def _update_owner(self, player_id: int, property_id: int) -> None:
         for background in self.background_sprites:

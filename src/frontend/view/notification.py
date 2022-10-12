@@ -11,7 +11,7 @@ class Notification(pygame.sprite.Sprite):
         self.font = pygame.font.SysFont("Arial", 12)
 
         self.texts = [self.font.render("", True, pygame.Color("black"))]
-        self.allow: bool = False
+        self.allow: bool = True
         self.rect: pygame.rect.Rect = pygame.Rect(x, y, width, height)
         self.image: pygame.surface.Surface
         self.update()

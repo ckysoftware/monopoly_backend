@@ -19,6 +19,7 @@ class EventType(enum.Enum):
     G_START_AUCTION = "g_start_auction"
     G_CURRENT_AUCTION = "g_current_auction"
     G_END_AUCTION = "g_end_auction"
+    G_ASK_FOR_RENT = "g_ask_for_rent"
 
     V_ADD_PLAYER = "v_add_player"
     V_ROLL_AND_MOVE = "v_roll_and_move"
@@ -32,6 +33,7 @@ class EventType(enum.Enum):
     V_BID_50 = "v_bid_50"
     V_BID_100 = "v_bid_100"
     V_BID_PASS = "v_bid_pass"
+    V_PAY = "v_pay"
 
 
 @dataclass(slots=True)

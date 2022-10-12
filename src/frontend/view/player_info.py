@@ -72,19 +72,32 @@ class PlayerInfo(pygame.sprite.Sprite):
                 button.ButtonType.AUCTION,
             )
 
+        def _create_pay_button(x: int, y: int) -> button.Button:
+            return button.Button(
+                x,
+                y + 105,
+                60,
+                40,
+                "Pay",
+                self.user_id,
+                button.ButtonType.PAY,
+            )
+
         buttons = [
             _create_roll_button(x, y),
             _create_end_button(x, y),
             _create_buy_button(x, y),
             _create_auction_button(x, y),
+            _create_pay_button(x, y),
         ]
         return buttons
 
     def _create_bid_buttons(self, x: int, y: int) -> list[button.Button]:
+        height = y + 50
         bid_buttons = [
             button.Button(
                 x,
-                y + 80,
+                height,
                 70,
                 40,
                 "Bid 1",
@@ -93,7 +106,7 @@ class PlayerInfo(pygame.sprite.Sprite):
             ),
             button.Button(
                 x + 80,
-                y + 80,
+                height,
                 70,
                 40,
                 "Bid 10",
@@ -102,7 +115,7 @@ class PlayerInfo(pygame.sprite.Sprite):
             ),
             button.Button(
                 x + 160,
-                y + 80,
+                height,
                 70,
                 40,
                 "Bid 50",
@@ -111,7 +124,7 @@ class PlayerInfo(pygame.sprite.Sprite):
             ),
             button.Button(
                 x + 240,
-                y + 80,
+                height,
                 70,
                 40,
                 "Bid 100",
@@ -120,7 +133,7 @@ class PlayerInfo(pygame.sprite.Sprite):
             ),
             button.Button(
                 x + 320,
-                y + 80,
+                height,
                 70,
                 40,
                 "Pass",
@@ -196,12 +209,21 @@ class PlayerInfo(pygame.sprite.Sprite):
             for button_ in self.bid_buttons:
                 button_.update_allow(False)
 
+    def set_allow_pay(self, user_id: str) -> None:
+        """set the pay button to allowed if user_id matches"""
+        if self.user_id == user_id:
+            for button_ in self.buttons:
+                if button_.button_type is button.ButtonType.PAY:
+                    button_.update_allow(True)
+                    return
+
     def set_allow_buttons(
         self,
         roll: Optional[bool] = None,
         end: Optional[bool] = None,
         buy: Optional[bool] = None,
         auction: Optional[bool] = None,
+        pay: Optional[bool] = None,
     ) -> None:
         """set the buttons to be allowed or not, does not check for user_id"""
         for button_ in self.buttons:
@@ -213,6 +235,8 @@ class PlayerInfo(pygame.sprite.Sprite):
                 button_.update_allow(buy)
             if auction is not None and button_.button_type is button.ButtonType.AUCTION:
                 button_.update_allow(auction)
+            if pay is not None and button_.button_type is button.ButtonType.PAY:
+                button_.update_allow(pay)
 
     def update_rect(self, x: int, y: int) -> None:
         self.rect.center = (x, y)

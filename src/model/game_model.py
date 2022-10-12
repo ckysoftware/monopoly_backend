@@ -23,6 +23,7 @@ class GameState(enum.Enum):
     NOT_STARTED = enum.auto()
     WAIT_FOR_ROLL = enum.auto()
     WAIT_FOR_END_TURN = enum.auto()
+    WAIT_FOR_PAY_RENT = enum.auto()
     ASK_TO_BUY = enum.auto()
     AUCTION = enum.auto()
 
@@ -135,8 +136,7 @@ class GameModel:
             self._publish_ask_to_buy_event(player_id, property_.id)
             # self._handle_buy(player_uid=player_uid)
         elif space_action == Action.PAY_RENT:
-            ...
-            # self._handle_pay_rent(player_uid=player_uid)
+            self._ask_for_rent()
         elif space_action in (Action.DRAW_CHANCE_CARD, Action.DRAW_CC_CARD):
             ...
             # end_turn = self._handle_draw_card(
@@ -194,6 +194,21 @@ class GameModel:
             self._end_auction()
             self._double_roll_state_change()
 
+    @require_current_player
+    def handle_pay_event(self, player_id: int) -> None:
+        if self.state not in (GameState.WAIT_FOR_PAY_RENT,):
+            raise exc.CommandNotMatchingStateError("The game is not asking for payment")
+        if self.state is GameState.WAIT_FOR_PAY_RENT:
+            payee_id, rent = self.game.get_pay_rent_info()
+            old_cash_payer = self.game.get_player_cash(player_id)
+            old_cash_payee = self.game.get_player_cash(payee_id)
+            new_cash_payer, new_cash_payee = self.game.transfer_cash(
+                player_id, payee_id, rent
+            )
+            self._publish_cash_change_event(player_id, old_cash_payer, new_cash_payer)
+            self._publish_cash_change_event(payee_id, old_cash_payee, new_cash_payee)
+            self._double_roll_state_change()
+
     def _end_auction(self) -> None:
         """Process the transactions related to ending the auction.
         Reset the auction process in Game.
@@ -245,8 +260,20 @@ class GameModel:
             self.state = GameState.WAIT_FOR_END_TURN
             self._publish_wait_for_end_turn_event()
 
+    def _ask_for_rent(self) -> None:
+        """handle rent payment and publish events"""
+        # TODO handles not enough money and bankruptcy, mortgage, trade, etc.
+        # send pay rent info -> wait input, but also need to handle bankrupt, probably manual bankrupt
+        payee_id, rent = self.game.get_pay_rent_info()
+        payer_id = self.game.current_player_id
+        self._publish_ask_for_rent_event(
+            payer_id, payee_id, rent, self.game.current_property.id
+        )
+        self.state = GameState.WAIT_FOR_PAY_RENT
+
     def _end_turn(self):
         """handle next player as well, reset double roll, etc"""
+        # TODO
         ...
 
     def _roll_dice(self):
@@ -375,6 +402,22 @@ class GameModel:
                     "player_id": player_id,
                     "property_id": property_id,
                     "price": price,
+                },
+            )
+        )
+
+    def _publish_ask_for_rent_event(
+        self, payer_id: int, payee_id: int, rent: int, property_id: int
+    ) -> None:
+        """publish rent info to ask for rent"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_ASK_FOR_RENT,
+                {
+                    "payer_id": payer_id,
+                    "payee_id": payee_id,
+                    "rent": rent,
+                    "property_id": property_id,
                 },
             )
         )
