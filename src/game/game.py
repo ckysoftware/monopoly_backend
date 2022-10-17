@@ -42,7 +42,18 @@ class Game:
 
     @property
     def current_property(self) -> space.Property:
+        """current property stepped by the current player"""
         return self.get_property(player_uid=self.current_player_id)
+
+    @property
+    def current_position(self) -> int:
+        """current position of the current player"""
+        return self.get_player_position(player_uid=self.current_player_id)
+
+    @property
+    def current_cash(self) -> int:
+        """Return current player's cash"""
+        return self.get_player_cash(player_uid=self.current_player_id)
 
     @property
     def has_double_roll(self) -> bool:
@@ -232,10 +243,12 @@ class Game:
         return action
 
     def add_player_cash(self, player_uid: int, amount: int) -> int:
+        # TODO raise exception for inactive player
         new_cash = self.players[player_uid].add_cash(amount)
         return new_cash
 
     def sub_player_cash(self, player_uid: int, amount: int) -> int:
+        # TODO raise exception for inactive player
         new_cash = self.players[player_uid].sub_cash(amount)
         return new_cash
 
@@ -368,6 +381,7 @@ class Game:
     def transfer_cash(
         self, player_uid: int, payee_uid: int, amount: int
     ) -> tuple[int, int]:
+        # TODO remove this
         """Transfer amount to the payee_uid. Raise error if the player_uid
         does not have enough cash.
         Returns (new_cash of player_uid, new_cash of payee_uid)"""

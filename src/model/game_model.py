@@ -131,9 +131,7 @@ class GameModel:
         """trigger space, publish event and change state"""
         space_action = self.game.trigger_space()
         if space_action == Action.ASK_TO_BUY:
-            property_ = self.game.current_property
-            self.state = GameState.ASK_TO_BUY
-            self._publish_ask_to_buy_event(player_id, property_.id)
+            self._ask_for_buy()
             # self._handle_buy(player_uid=player_uid)
         elif space_action == Action.PAY_RENT:
             self._ask_for_rent()
@@ -143,17 +141,22 @@ class GameModel:
             #     player_uid=player_uid, action=space_action
             # )
         elif space_action in (Action.CHARGE_INCOME_TAX, Action.CHARGE_LUXURY_TAX):
-            ...
             # TODO handle bankrupt
-            # self._handle_charge_tax(player_uid=player_uid, action=space_action)
+            self._charge_tax(tax_action=space_action)
         elif space_action == Action.SEND_TO_JAIL:
             ...
             # print(f"Player {player_name}: Step on jail. Send to jail")
             # end_turn = self._send_player(player_uid=player_uid, position=Position.JAIL)
         elif space_action == Action.NOTHING:
-            pass  # catch Nothing so that an else check can be used next
+            self._check_double_roll_or_end()
         else:
-            raise ValueError(f"Unknown trigger {space_action}")  # pragma: no cover
+            raise ValueError(f"Unknown trigger {space_action}")
+
+    def _ask_for_buy(self):
+        self.state = GameState.ASK_TO_BUY
+        self._publish_ask_to_buy_event(
+            self.game.current_player_id, self.game.current_property.id
+        )
 
     @require_current_player
     def handle_buy_event(self, player_id: int) -> None:
@@ -166,7 +169,7 @@ class GameModel:
         self._publish_cash_change_event(player_id, old_cash, new_cash)
         self._publish_buy_property_event(player_id, self.game.current_property.id)
 
-        self._double_roll_state_change()
+        self._check_double_roll_or_end()
 
     @require_current_player
     def handle_auction_event(self, player_id: int) -> None:
@@ -192,7 +195,7 @@ class GameModel:
             self._publish_current_auction_event(self.game.current_property.id)
         else:
             self._end_auction()
-            self._double_roll_state_change()
+            self._check_double_roll_or_end()
 
     @require_current_player
     def handle_pay_event(self, player_id: int) -> None:
@@ -200,14 +203,16 @@ class GameModel:
             raise exc.CommandNotMatchingStateError("The game is not asking for payment")
         if self.state is GameState.WAIT_FOR_PAY_RENT:
             payee_id, rent = self.game.get_pay_rent_info()
-            old_cash_payer = self.game.get_player_cash(player_id)
-            old_cash_payee = self.game.get_player_cash(payee_id)
-            new_cash_payer, new_cash_payee = self.game.transfer_cash(
-                player_id, payee_id, rent
-            )
-            self._publish_cash_change_event(player_id, old_cash_payer, new_cash_payer)
-            self._publish_cash_change_event(payee_id, old_cash_payee, new_cash_payee)
-            self._double_roll_state_change()
+            # TODO remove
+            # old_cash_payer = self.game.get_player_cash(player_id)
+            # old_cash_payee = self.game.get_player_cash(payee_id)
+            # new_cash_payer, new_cash_payee = self.game.transfer_cash(
+            #     player_id, payee_id, rent
+            # )
+            # self._publish_cash_change_event(player_id, old_cash_payer, new_cash_payer)
+            # self._publish_cash_change_event(payee_id, old_cash_payee, new_cash_payee)
+            self._transfer_player_cash(player_id, payee_id, rent)
+            self._check_double_roll_or_end()
 
     def _end_auction(self) -> None:
         """Process the transactions related to ending the auction.
@@ -239,19 +244,14 @@ class GameModel:
         go_action = self.game.check_go_pass()
 
         if go_action is Action.PASS_GO:
-            old_cash = self.game.get_player_cash()
-            _, player_id = self.game.get_current_player()
-            new_cash = self.game.add_player_cash(
-                player_uid=player_id, amount=c.CONST_GO_CASH
-            )
-            old_pos = self.game.get_player_position()
+            player_id = self.game.current_player_id
+            self._change_player_cash(player_id, c.CONST_GO_CASH)
+            old_pos = self.game.current_position
             new_pos = self.game.offset_go_pos()
-            self._publish_cash_change_event(player_id, old_cash, new_cash)
-            self._publish_move_event(
-                player_id, old_pos, new_pos
-            )  # only offset position
+            # offset position by the map size
+            self._publish_move_event(player_id, old_pos, new_pos)
 
-    def _double_roll_state_change(self) -> None:
+    def _check_double_roll_or_end(self) -> None:
         """change state and publish event depending on the double roll state"""
         if self.game.has_double_roll:
             self.state = GameState.WAIT_FOR_ROLL
@@ -282,6 +282,34 @@ class GameModel:
         dice_1, dice_2 = self.game.roll_dice()
         self._publish_dice_event(dice_1, dice_2)
         return dice_1, dice_2
+
+    def _charge_tax(self, tax_action: Action) -> None:
+        """Charge income or luxury tax after landding on the tax square"""
+        # TODO send out UI event for tax
+        # TODO handle not enough money and bankruptcy, mortgage, trade, etc.
+        player_id = self.game.current_player_id
+        if tax_action == Action.CHARGE_INCOME_TAX:
+            self._change_player_cash(player_id, -c.CONST_INCOME_TAX)
+        elif tax_action == Action.CHARGE_LUXURY_TAX:
+            self._change_player_cash(player_id, -c.CONST_LUXURY_TAX)
+        else:
+            raise ValueError(f"Invalid tax action: {tax_action}")
+
+    def _change_player_cash(self, player_id: int, amount: int) -> None:
+        """Change player cash and publish cash change event. Amount can be negative"""
+        old_cash = self.game.get_player_cash(player_id)
+        if amount >= 0:
+            new_cash = self.game.add_player_cash(player_id, amount)
+        else:
+            new_cash = self.game.sub_player_cash(player_id, -amount)
+        self._publish_cash_change_event(player_id, old_cash, new_cash)
+
+    def _transfer_player_cash(self, payer_id: int, payee_id: int, amount: int) -> None:
+        """transfer player cash and publish cash change event. Amount must be positive"""
+        if amount < 0:
+            raise ValueError("Amount must be positive. Please swap the two.")
+        self._change_player_cash(payer_id, -amount)
+        self._change_player_cash(payee_id, amount)
 
     def _publish_move_event(
         self, player_id: int, old_position: int, new_position: int
