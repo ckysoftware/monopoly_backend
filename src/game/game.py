@@ -210,12 +210,7 @@ class Game:
         """Move player either by steps or map position"""
         if player_uid is None:
             player_uid = self.current_player_uid
-        if position is not None:
-            new_pos = self.players[player_uid].move(position=position)
-        elif steps is not None:
-            new_pos = self.players[player_uid].move(steps=steps)
-        else:
-            raise ValueError("Either steps or position must be provided")
+        new_pos = self.players[player_uid].move(steps=steps, position=position)
         return new_pos
 
     def check_go_pass(self, player_uid: Optional[int] = None) -> Action:

@@ -1,18 +1,18 @@
 import enum
 import uuid
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import constants as c
 import event
-from game import Game
+from game import Game, card
+from game import positions as pos
 from game.actions import Action
 
 from . import exceptions as exc
 
 # @dataclass(kw_only=True, slots=True)
 # class User:
-#     # TODO remove optional and use init=False instead
 #     name: str
 #     uid: str = field(default_factory=lambda: str(uuid.uuid4()))
 #     game_id: Optional[str] = None  # assigned after joining a room
@@ -121,32 +121,24 @@ class GameModel:
         self._move_player(player_id, dice_1 + dice_2)
 
         if double_roll_action is Action.SEND_TO_JAIL:
-            ...
+            self._send_to_jail()
             return
+        self._space_trigger()
 
-        self._space_trigger(player_id)
-        # self.state = GameState.WAIT_FOR_END_TURN
-
-    def _space_trigger(self, player_id: int) -> None:
+    def _space_trigger(self) -> None:
         """trigger space, publish event and change state"""
         space_action = self.game.trigger_space()
         if space_action == Action.ASK_TO_BUY:
             self._ask_for_buy()
-            # self._handle_buy(player_uid=player_uid)
         elif space_action == Action.PAY_RENT:
             self._ask_for_rent()
         elif space_action in (Action.DRAW_CHANCE_CARD, Action.DRAW_CC_CARD):
-            ...
-            # end_turn = self._handle_draw_card(
-            #     player_uid=player_uid, action=space_action
-            # )
+            self._draw_chance_card(space_action)
         elif space_action in (Action.CHARGE_INCOME_TAX, Action.CHARGE_LUXURY_TAX):
             # TODO handle bankrupt
             self._charge_tax(tax_action=space_action)
         elif space_action == Action.SEND_TO_JAIL:
-            ...
-            # print(f"Player {player_name}: Step on jail. Send to jail")
-            # end_turn = self._send_player(player_uid=player_uid, position=Position.JAIL)
+            self._send_to_jail()
         elif space_action == Action.NOTHING:
             self._check_double_roll_or_end()
         else:
@@ -157,6 +149,158 @@ class GameModel:
         self._publish_ask_to_buy_event(
             self.game.current_player_id, self.game.current_property.id
         )
+
+    def _draw_chance_card(self, action: Action):
+        if action is Action.DRAW_CHANCE_CARD:
+            drawn_card = self.game.draw_chance_card()
+        elif action is Action.DRAW_CC_CARD:
+            drawn_card = self.game.draw_cc_card()
+        else:
+            raise ValueError(f"Unknown action {action} in draw chance card")
+        self._publish_draw_chance_card_event(drawn_card)
+        self._process_chance_card(drawn_card)
+
+    def _process_chance_card(self, drawn_card: card.ChanceCard):
+        card_action = drawn_card.trigger()
+        player_id = self.game.current_player_id
+        match card_action:
+            case Action.SEND_TO_BOARDWALK:
+                self._send_player(position=pos.Position.BOARDWALK)
+            case Action.SEND_TO_GO:
+                self._send_player(position=pos.Position.GO)
+            case Action.SEND_TO_ILLINOIS_AVE:
+                self._send_player(position=pos.Position.ILLINOIS_AVE)
+            case Action.SEND_TO_ST_CHARLES_PLACE:
+                self._send_player(position=pos.Position.ST_CHARLES_PLACE)
+            case Action.SEND_TO_NEAREST_RAILROAD:
+                self._send_player(position=pos.Position.RAILROADS)
+            case Action.SEND_TO_NEAREST_UTILITY:
+                self._send_player(position=pos.Position.UTILITIES)
+            case Action.COLLECT_DIVIDEND:
+                self._change_player_cash(player_id, c.CONST_COLLECT_DIVIDEND)
+            case Action.COLLECT_JAIL_CARD:
+                # TODO
+                raise NotImplementedError
+                # self.game.add_player_jail_card(
+                #     player_uid=player_uid, jail_card=drawn_card
+                # )
+                # jail_card_ids = self.game.get_player_jail_card_ids(
+                #     player_uid=player_uid
+                # )
+                # print(
+                #     f"Player {player_name} has {len(jail_card_ids)} Get out of Jail Free cards"
+                # )
+            case Action.SEND_BACK_THREE_SPACES:
+                self._move_player(player_id, steps=-3)
+                self._space_trigger()
+            case Action.SEND_TO_JAIL:
+                self._send_to_jail()
+            case Action.CHARGE_GENERAL_REPAIR_FEE:
+                house_count, hotel_count = self.game.get_player_house_and_hotel_counts(
+                    player_id
+                )
+                charge_amount = (
+                    house_count * c.CONST_GENERAL_REPAIR_HOUSE
+                    + hotel_count * c.CONST_GENERAL_REPAIR_HOTEL
+                )
+                self._change_player_cash(player_id, -charge_amount)
+            case Action.CHARGE_POOR_TAX:
+                self._change_player_cash(player_id, -c.CONST_POOR_TAX)
+            case Action.SEND_TO_READING_RAILROAD:
+                self._send_player(position=pos.Position.READING_RAILROAD)
+            case Action.PAY_CHAIRMAN_FEE:
+                # TODO remove inactive players
+                charge_amount = 0
+                for o_player in self.game.players:
+                    if o_player.uid != player_id:
+                        charge_amount += c.CONST_CHAIRMAN_FEE
+                        self._change_player_cash(o_player.uid, c.CONST_CHAIRMAN_FEE)
+                self._change_player_cash(player_id, -charge_amount)
+            case Action.COLLECT_LOAN:
+                self._change_player_cash(player_id, c.CONST_COLLECT_LOAN)
+            # CC card
+            case Action.COLLECT_BANK_ERROR:
+                self._change_player_cash(player_id, c.CONST_COLLECT_BANK_ERROR)
+            case Action.CHARGE_DOCTOR_FEE:
+                self._change_player_cash(player_id, -c.CONST_DOCTOR_FEE)
+            case Action.COLLECT_STOCK_SALE:
+                self._change_player_cash(player_id, c.CONST_COLLECT_STOCK_SALE)
+            case Action.COLLECT_GRAND_OPERA_NIGHT:
+                receive_amount = 0
+                for o_player in self.game.players:
+                    if o_player.uid != player_id:
+                        receive_amount += c.CONST_GRAND_OPERA_NIGHT
+                        self._change_player_cash(
+                            o_player.uid, -c.CONST_GRAND_OPERA_NIGHT
+                        )
+                self._change_player_cash(player_id, receive_amount)
+            case Action.COLLECT_HOLIDAY_FUND:
+                self._change_player_cash(player_id, c.CONST_COLLECT_HOLIDAY_FUND)
+            case Action.COLLECT_TAX_REFUND:
+                self._change_player_cash(player_id, c.CONST_COLLECT_TAX_REFUND)
+            case Action.COLLECT_BIRTHDAY:
+                receive_amount = 0
+                for o_player in self.game.players:
+                    if o_player.uid != player_id:
+                        receive_amount += c.CONST_BIRTHDAY
+                        self._change_player_cash(o_player.uid, -c.CONST_BIRTHDAY)
+                self._change_player_cash(player_id, receive_amount)
+            case Action.COLLECT_INSURANCE:
+                self._change_player_cash(player_id, c.CONST_COLLECT_INSURANCE)
+            case Action.CHARGE_HOSPITAL_FEE:
+                self._change_player_cash(player_id, -c.CONST_HOSPITAL_FEE)
+            case Action.CHARGE_SCHOOL_FEE:
+                self._change_player_cash(player_id, -c.CONST_SCHOOL_FEE)
+            case Action.COLLECT_CONSULTANCY_FEE:
+                self._change_player_cash(player_id, c.CONST_COLLECT_CONSULTANCY_FEE)
+            case Action.CHARGE_STREET_REPAIR_FEE:
+                house_count, hotel_count = self.game.get_player_house_and_hotel_counts(
+                    player_id
+                )
+                charge_amount = (
+                    house_count * c.CONST_STREET_REPAIR_HOUSE
+                    + hotel_count * c.CONST_STREET_REPAIR_HOTEL
+                )
+                self._change_player_cash(player_id, -charge_amount)
+            case Action.COLLECT_CONTEST_PRIZE:
+                self._change_player_cash(player_id, c.CONST_COLLECT_CONTEST_PRIZE)
+            case Action.COLLECT_INHERITANCE:
+                self._change_player_cash(player_id, c.CONST_COLLECT_INHERITANCE)
+            case _:  # pragma: no cover
+                raise ValueError(f"Unknown action {card_action} in chance card")
+
+    def _publish_draw_chance_card_event(self, drawn_card: card.ChanceCard):
+        # TODO
+        ...
+
+    def _send_player(self, position: pos.Position) -> None:
+        """Send a player to a position, handle Go check and trigger space.
+        Handles nearest railroad or utility too."""
+        if position is pos.Position.JAIL:
+            self._send_to_jail()
+            return
+        player_pos = self.game.current_position
+        if position is pos.Position.RAILROADS or position is pos.Position.UTILITIES:
+            pos_value = self._find_nearest_position(player_pos, position.value)
+        else:
+            pos_value = position.value
+        self._move_player(self.game.current_player_id, position=pos_value)
+        self._space_trigger()
+
+    def _send_to_jail(self) -> None:
+        self._move_player(self.game.current_player_id, position=pos.Position.JAIL.value)
+        self.state = GameState.WAIT_FOR_END_TURN
+        self._publish_wait_for_end_turn_event()
+
+    @staticmethod
+    def _find_nearest_position(player_pos: int, search_pos: list[int]) -> int:
+        """Find the nearest position from search_pos that is ahead of the
+        player's current position."""
+        for position in search_pos:
+            assert position != player_pos, "Impossible for this"  # pragma: no cover
+            if player_pos < position:
+                return position
+        return search_pos[0]  # returns the first one after passing Go
 
     @require_current_player
     def handle_buy_event(self, player_id: int) -> None:
@@ -203,14 +347,6 @@ class GameModel:
             raise exc.CommandNotMatchingStateError("The game is not asking for payment")
         if self.state is GameState.WAIT_FOR_PAY_RENT:
             payee_id, rent = self.game.get_pay_rent_info()
-            # TODO remove
-            # old_cash_payer = self.game.get_player_cash(player_id)
-            # old_cash_payee = self.game.get_player_cash(payee_id)
-            # new_cash_payer, new_cash_payee = self.game.transfer_cash(
-            #     player_id, payee_id, rent
-            # )
-            # self._publish_cash_change_event(player_id, old_cash_payer, new_cash_payer)
-            # self._publish_cash_change_event(payee_id, old_cash_payee, new_cash_payee)
             self._transfer_player_cash(player_id, payee_id, rent)
             self._check_double_roll_or_end()
 
@@ -232,10 +368,17 @@ class GameModel:
         self._publish_buy_property_event(winner.uid, property_.id)
         self.game.end_auction()
 
-    def _move_player(self, player_id: int, steps: int):
-        """move player and publish move event"""
+    def _move_player(
+        self,
+        player_id: int,
+        steps: Optional[int] = None,
+        position: Optional[int] = None,
+    ) -> None:
+        """move player and publish move event. Either steps or position must be provided.
+        Position will take precedence.
+        Send move event and check go pass"""
         old_pos = self.game.get_player_position()
-        new_pos = self.game.move_player(steps=steps)
+        new_pos = self.game.move_player(steps=steps, position=position)
         self._publish_move_event(player_id, old_pos, new_pos)
         self._check_go_pass()
 
