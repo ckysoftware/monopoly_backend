@@ -42,8 +42,11 @@ class Player:
 
     def offset_position(self, offset: int) -> int:
         # offset position after passing Go
-        self.position -= offset
-        return self.position
+        if self.position < offset:
+            return self.position
+        else:
+            self.position -= offset
+            return self.position
 
     def add_cash(self, amount: int) -> int:
         self.cash += amount

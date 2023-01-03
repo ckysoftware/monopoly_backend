@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import constants as c
-
 import game.dice as dice
 from game import card, data
 from game import exceptions as exc
@@ -210,6 +209,9 @@ class Game:
         """Move player either by steps or map position"""
         if player_uid is None:
             player_uid = self.current_player_uid
+        if position is not None and position < self.players[player_uid].position:
+            # movement only allows forward, if it is backward, offset by map size first
+            position += self.game_map.size
         new_pos = self.players[player_uid].move(steps=steps, position=position)
         return new_pos
 

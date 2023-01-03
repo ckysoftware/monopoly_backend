@@ -180,6 +180,23 @@ class Animator:
             assert isinstance(player, PlayerInfo)
             self.queue.append(Call(player.set_allow_pay, user_id=payer_id, price=rent))
 
+    def enqueue_draw_chance_card(
+        self,
+        player_id: str,
+        description: str,
+        ownable: bool,
+    ) -> None:
+        self._hide_roll_button()
+        # TODO change to chance card or CC card
+        noti_text = [
+            f"{player_id} drew a chance card",
+            description,
+        ]
+        self.queue.append(Call(self.notification.update, texts=noti_text))
+        # TODO add ownable jail card
+        # if ownable:
+        #     self.queue.append(Call(self.notification.update_allow, True))
+
     def _show_property_info_static(self, property_id: int) -> None:
         self.queue.append(Call(self.property_info_static.update_allow, allow=True))
         self.queue.append(

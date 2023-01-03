@@ -6,7 +6,6 @@ from game import Game, card
 from game.actions import Action
 from game.enum_types import DeckType
 from game.positions import Position
-
 from host.user import User
 
 
@@ -397,6 +396,7 @@ class LocalHost:
             )
 
         _ = self.game.move_player(player_uid, position=pos_value)
+        _ = self.game.offset_go_pos(player_uid)
         end_turn = self._handle_space_trigger(player_uid=player_uid)
         return end_turn
 

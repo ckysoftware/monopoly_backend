@@ -88,3 +88,10 @@ class ViewListener(Subscriber):
                 msg["rent"],
                 data.CONST_PROPERTY_DATA[msg["property_id"]],
             )
+        elif event.event_type is EventType.G_DRAW_CHANCE_CARD:
+            msg = event.message
+            self.animator.enqueue_draw_chance_card(
+                self.player_to_user[msg["player_id"]],
+                msg["description"],
+                msg["ownable"],
+            )

@@ -157,7 +157,7 @@ class GameModel:
             drawn_card = self.game.draw_cc_card()
         else:
             raise ValueError(f"Unknown action {action} in draw chance card")
-        self._publish_draw_chance_card_event(drawn_card)
+        self._publish_draw_chance_card_event(self.game.current_player_id, drawn_card)
         self._process_chance_card(drawn_card)
 
     def _process_chance_card(self, drawn_card: card.ChanceCard):
@@ -178,6 +178,7 @@ class GameModel:
                 self._send_player(position=pos.Position.UTILITIES)
             case Action.COLLECT_DIVIDEND:
                 self._change_player_cash(player_id, c.CONST_COLLECT_DIVIDEND)
+                self._check_double_roll_or_end()
             case Action.COLLECT_JAIL_CARD:
                 # TODO
                 raise NotImplementedError
@@ -204,8 +205,10 @@ class GameModel:
                     + hotel_count * c.CONST_GENERAL_REPAIR_HOTEL
                 )
                 self._change_player_cash(player_id, -charge_amount)
+                self._check_double_roll_or_end()
             case Action.CHARGE_POOR_TAX:
                 self._change_player_cash(player_id, -c.CONST_POOR_TAX)
+                self._check_double_roll_or_end()
             case Action.SEND_TO_READING_RAILROAD:
                 self._send_player(position=pos.Position.READING_RAILROAD)
             case Action.PAY_CHAIRMAN_FEE:
@@ -216,15 +219,20 @@ class GameModel:
                         charge_amount += c.CONST_CHAIRMAN_FEE
                         self._change_player_cash(o_player.uid, c.CONST_CHAIRMAN_FEE)
                 self._change_player_cash(player_id, -charge_amount)
+                self._check_double_roll_or_end()
             case Action.COLLECT_LOAN:
                 self._change_player_cash(player_id, c.CONST_COLLECT_LOAN)
+                self._check_double_roll_or_end()
             # CC card
             case Action.COLLECT_BANK_ERROR:
                 self._change_player_cash(player_id, c.CONST_COLLECT_BANK_ERROR)
+                self._check_double_roll_or_end()
             case Action.CHARGE_DOCTOR_FEE:
                 self._change_player_cash(player_id, -c.CONST_DOCTOR_FEE)
+                self._check_double_roll_or_end()
             case Action.COLLECT_STOCK_SALE:
                 self._change_player_cash(player_id, c.CONST_COLLECT_STOCK_SALE)
+                self._check_double_roll_or_end()
             case Action.COLLECT_GRAND_OPERA_NIGHT:
                 receive_amount = 0
                 for o_player in self.game.players:
@@ -234,10 +242,13 @@ class GameModel:
                             o_player.uid, -c.CONST_GRAND_OPERA_NIGHT
                         )
                 self._change_player_cash(player_id, receive_amount)
+                self._check_double_roll_or_end()
             case Action.COLLECT_HOLIDAY_FUND:
                 self._change_player_cash(player_id, c.CONST_COLLECT_HOLIDAY_FUND)
+                self._check_double_roll_or_end()
             case Action.COLLECT_TAX_REFUND:
                 self._change_player_cash(player_id, c.CONST_COLLECT_TAX_REFUND)
+                self._check_double_roll_or_end()
             case Action.COLLECT_BIRTHDAY:
                 receive_amount = 0
                 for o_player in self.game.players:
@@ -245,14 +256,19 @@ class GameModel:
                         receive_amount += c.CONST_BIRTHDAY
                         self._change_player_cash(o_player.uid, -c.CONST_BIRTHDAY)
                 self._change_player_cash(player_id, receive_amount)
+                self._check_double_roll_or_end()
             case Action.COLLECT_INSURANCE:
                 self._change_player_cash(player_id, c.CONST_COLLECT_INSURANCE)
+                self._check_double_roll_or_end()
             case Action.CHARGE_HOSPITAL_FEE:
                 self._change_player_cash(player_id, -c.CONST_HOSPITAL_FEE)
+                self._check_double_roll_or_end()
             case Action.CHARGE_SCHOOL_FEE:
                 self._change_player_cash(player_id, -c.CONST_SCHOOL_FEE)
+                self._check_double_roll_or_end()
             case Action.COLLECT_CONSULTANCY_FEE:
                 self._change_player_cash(player_id, c.CONST_COLLECT_CONSULTANCY_FEE)
+                self._check_double_roll_or_end()
             case Action.CHARGE_STREET_REPAIR_FEE:
                 house_count, hotel_count = self.game.get_player_house_and_hotel_counts(
                     player_id
@@ -262,16 +278,15 @@ class GameModel:
                     + hotel_count * c.CONST_STREET_REPAIR_HOTEL
                 )
                 self._change_player_cash(player_id, -charge_amount)
+                self._check_double_roll_or_end()
             case Action.COLLECT_CONTEST_PRIZE:
                 self._change_player_cash(player_id, c.CONST_COLLECT_CONTEST_PRIZE)
+                self._check_double_roll_or_end()
             case Action.COLLECT_INHERITANCE:
                 self._change_player_cash(player_id, c.CONST_COLLECT_INHERITANCE)
+                self._check_double_roll_or_end()
             case _:  # pragma: no cover
                 raise ValueError(f"Unknown action {card_action} in chance card")
-
-    def _publish_draw_chance_card_event(self, drawn_card: card.ChanceCard):
-        # TODO
-        ...
 
     def _send_player(self, position: pos.Position) -> None:
         """Send a player to a position, handle Go check and trigger space.
@@ -378,6 +393,7 @@ class GameModel:
         Position will take precedence.
         Send move event and check go pass"""
         old_pos = self.game.get_player_position()
+        print(f"***** {steps} {position} *****")
         new_pos = self.game.move_player(steps=steps, position=position)
         self._publish_move_event(player_id, old_pos, new_pos)
         self._check_go_pass()
@@ -589,6 +605,21 @@ class GameModel:
                     "payee_id": payee_id,
                     "rent": rent,
                     "property_id": property_id,
+                },
+            )
+        )
+
+    def _publish_draw_chance_card_event(
+        self, player_id: int, drawn_card: card.ChanceCard
+    ) -> None:
+        """publish a chance card drawn event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_DRAW_CHANCE_CARD,
+                {
+                    "player_id": player_id,
+                    "description": drawn_card.description,
+                    "ownable": drawn_card.ownable,
                 },
             )
         )

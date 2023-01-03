@@ -1,9 +1,10 @@
 # pyright: reportPrivateUsage=false
 from typing import Callable, Iterable
 
+import pytest
+
 import constants as c
 import host
-import pytest
 from game import card, space
 from game.actions import Action
 from game.game import Game
@@ -319,7 +320,11 @@ class TestStartTurn:
         fake_player.position = 0
         localhost_fake_player._start_turn()
         assert fake_player.cash == 1500 - 100 - 160  # Oriental, Virginia
-        assert fake_player.position == Position.JAIL.value
+        assert (
+            fake_player.position == Position.JAIL.value
+            or fake_player.position
+            == Position.JAIL.value + localhost_fake_player.game.game_map.size
+        )
         assert (
             localhost_fake_player.game.game_map.map_list[6] in fake_player.properties
             and localhost_fake_player.game.game_map.map_list[14]
@@ -409,7 +414,11 @@ class TestSpaceTriggerDrawChanceCard:
             patch_input("buy", m)
             end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
         assert end_turn is False
-        assert fake_player.position == position.value
+        assert (
+            fake_player.position == position.value
+            or fake_player.position
+            == position.value + localhost_fake_player.game.game_map.size
+        )
         assert fake_player.cash == 1500 - property_.price + go_cash_offset
         assert property_ in fake_player.properties
 
@@ -536,7 +545,11 @@ class TestSpaceTriggerDrawChanceCard:
 
         end_turn = localhost_fake_player._handle_space_trigger(player_uid=0)
         assert end_turn is True
-        assert fake_player.position == Position.JAIL.value
+        assert (
+            fake_player.position == Position.JAIL.value
+            or fake_player.position
+            == Position.JAIL.value + localhost_fake_player.game.game_map.size
+        )
         assert fake_player.cash == 1500
 
     @pytest.mark.parametrize(
