@@ -137,6 +137,7 @@ class GameModel:
         elif space_action in (Action.CHARGE_INCOME_TAX, Action.CHARGE_LUXURY_TAX):
             # TODO handle bankrupt
             self._charge_tax(tax_action=space_action)
+            self._check_double_roll_or_end()
         elif space_action == Action.SEND_TO_JAIL:
             self._send_to_jail()
         elif space_action == Action.NOTHING:
@@ -181,6 +182,7 @@ class GameModel:
                 self._check_double_roll_or_end()
             case Action.COLLECT_JAIL_CARD:
                 # TODO
+                self._check_double_roll_or_end()
                 raise NotImplementedError
                 # self.game.add_player_jail_card(
                 #     player_uid=player_uid, jail_card=drawn_card
@@ -303,6 +305,7 @@ class GameModel:
         self._space_trigger()
 
     def _send_to_jail(self) -> None:
+        # TODO send to jail by space or card should not get GO money!
         self._move_player(self.game.current_player_id, position=pos.Position.JAIL.value)
         self.state = GameState.WAIT_FOR_END_TURN
         self._publish_wait_for_end_turn_event()
@@ -393,7 +396,6 @@ class GameModel:
         Position will take precedence.
         Send move event and check go pass"""
         old_pos = self.game.get_player_position()
-        print(f"***** {steps} {position} *****")
         new_pos = self.game.move_player(steps=steps, position=position)
         self._publish_move_event(player_id, old_pos, new_pos)
         self._check_go_pass()
@@ -448,8 +450,10 @@ class GameModel:
         # TODO handle not enough money and bankruptcy, mortgage, trade, etc.
         player_id = self.game.current_player_id
         if tax_action == Action.CHARGE_INCOME_TAX:
+            self._publish_charge_tax_event(player_id, c.CONST_INCOME_TAX, "Income Tax")
             self._change_player_cash(player_id, -c.CONST_INCOME_TAX)
         elif tax_action == Action.CHARGE_LUXURY_TAX:
+            self._publish_charge_tax_event(player_id, c.CONST_LUXURY_TAX, "Luxury Tax")
             self._change_player_cash(player_id, -c.CONST_LUXURY_TAX)
         else:
             raise ValueError(f"Invalid tax action: {tax_action}")
@@ -620,6 +624,21 @@ class GameModel:
                     "player_id": player_id,
                     "description": drawn_card.description,
                     "ownable": drawn_card.ownable,
+                },
+            )
+        )
+
+    def _publish_charge_tax_event(
+        self, player_id: int, tax_amount: int, tax_type: str
+    ) -> None:
+        """publish a charge tax event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_CHARGE_TAX,
+                {
+                    "player_id": player_id,
+                    "tax_amount": tax_amount,
+                    "tax_type": tax_type,
                 },
             )
         )

@@ -21,6 +21,7 @@ class EventType(enum.Enum):
     G_END_AUCTION = "g_end_auction"
     G_ASK_FOR_RENT = "g_ask_for_rent"
     G_DRAW_CHANCE_CARD = "g_draw_chance_card"
+    G_CHARGE_TAX = "g_charge_tax"
 
     V_ADD_PLAYER = "v_add_player"
     V_ROLL_AND_MOVE = "v_roll_and_move"

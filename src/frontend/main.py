@@ -1,9 +1,9 @@
+import pygame
+import view
+
 import controller
 import model
-import pygame
 from event import Event, EventType, LocalPublisher, Topic
-
-import view
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -61,7 +61,6 @@ def main():
 
     notifcation = view.Notification(140, 500, 280, 150)
     animator.set_notification(notifcation)
-
     player_info_list = [
         view.PlayerInfo(800, 200 * i, 400, 200, token_list[i].user_id) for i in range(4)
     ]

@@ -144,10 +144,10 @@ class Animator:
             assert isinstance(player, PlayerInfo)
             self.queue.append(Call(player.set_allow_bid, user_id=current_user_id))
         noti_text = [
-            f"Auction for {property_data['name']} is ongoing",
+            f"Auction for {property_data['name']} is ongoing.",
             "Active bidders:",
             *[f"    {bidder}" for bidder in bidders],
-            f"Current price: {price}",
+            f"Current price: {price}.",
         ]
         self.queue.append(Call(self.notification.update, texts=noti_text))
 
@@ -156,8 +156,8 @@ class Animator:
     ) -> None:
         self._hide_bid_button()
         noti_text = [
-            f"{user_id} won the auction",
-            f"Bought {property_data['name']} for ${price}",
+            f"{user_id} won the auction.",
+            f"Bought {property_data['name']} for ${price}.",
         ]
         self.queue.append(Call(self.notification.update, texts=noti_text))
         # self.queue.append(Call(self.notification.update_allow, False))
@@ -171,8 +171,8 @@ class Animator:
     ) -> None:
         self._hide_roll_button()
         noti_text = [
-            f"{payer_id} landed on {payee_id}'s property - {property_data['name']}",
-            f"{payer_id} has to pay ${rent} to {payee_id}",
+            f"{payer_id} landed on {payee_id}'s property - {property_data['name']}.",
+            f"{payer_id} has to pay ${rent} to {payee_id}.",
         ]
         self.queue.append(Call(self.notification.update, texts=noti_text))
 
@@ -189,13 +189,22 @@ class Animator:
         self._hide_roll_button()
         # TODO change to chance card or CC card
         noti_text = [
-            f"{player_id} drew a chance card",
+            f"{player_id} drew a chance card.",
             description,
         ]
         self.queue.append(Call(self.notification.update, texts=noti_text))
         # TODO add ownable jail card
         # if ownable:
         #     self.queue.append(Call(self.notification.update_allow, True))
+
+    def enqueue_charge_tax(
+        self,
+        player_id: str,
+        tax_amount: int,
+        tax_type: str,
+    ) -> None:
+        noti_text = [f"{player_id} has been charged {tax_type} for {tax_amount}."]
+        self.queue.append(Call(self.notification.update, texts=noti_text))
 
     def _show_property_info_static(self, property_id: int) -> None:
         self.queue.append(Call(self.property_info_static.update_allow, allow=True))

@@ -95,3 +95,10 @@ class ViewListener(Subscriber):
                 msg["description"],
                 msg["ownable"],
             )
+        elif event.event_type is EventType.G_CHARGE_TAX:
+            msg = event.message
+            self.animator.enqueue_charge_tax(
+                self.player_to_user[msg["player_id"]],
+                msg["tax_amount"],
+                msg["tax_type"],
+            )
