@@ -40,7 +40,9 @@ class Notification(pygame.sprite.Sprite):
 
     @staticmethod
     def _wrap_text(text: str, width: int = 45) -> list[str]:
-        """wrap text to fit in notification box"""
+        """wrap text to fit in notification box.
+        Text in a line longer than the width will be put into another str.
+        """
         if len(text) <= width:
             return [text]
         else:
