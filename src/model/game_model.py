@@ -181,21 +181,11 @@ class GameModel:
                 self._change_player_cash(player_id, c.CONST_COLLECT_DIVIDEND)
                 self._check_double_roll_or_end()
             case Action.COLLECT_JAIL_CARD:
-                # TODO
                 self.game.add_player_jail_card(player_id, drawn_card)
                 self._publish_collect_jail_card_event(
                     player_id, len(self.game.get_player_jail_card_ids(player_id))
                 )
                 self._check_double_roll_or_end()
-                # self.game.add_player_jail_card(
-                #     player_uid=player_uid, jail_card=drawn_card
-                # )
-                # jail_card_ids = self.game.get_player_jail_card_ids(
-                #     player_uid=player_uid
-                # )
-                # print(
-                #     f"Player {player_name} has {len(jail_card_ids)} Get out of Jail Free cards"
-                # )
             case Action.SEND_BACK_THREE_SPACES:
                 self._move_player(player_id, steps=-3)
                 self._space_trigger()
