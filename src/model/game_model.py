@@ -182,8 +182,11 @@ class GameModel:
                 self._check_double_roll_or_end()
             case Action.COLLECT_JAIL_CARD:
                 # TODO
+                self.game.add_player_jail_card(player_id, drawn_card)
+                self._publish_collect_jail_card_event(
+                    player_id, len(self.game.get_player_jail_card_ids(player_id))
+                )
                 self._check_double_roll_or_end()
-                raise NotImplementedError
                 # self.game.add_player_jail_card(
                 #     player_uid=player_uid, jail_card=drawn_card
                 # )
@@ -639,6 +642,20 @@ class GameModel:
                     "player_id": player_id,
                     "tax_amount": tax_amount,
                     "tax_type": tax_type,
+                },
+            )
+        )
+
+    def _publish_collect_jail_card_event(
+        self, player_id: int, current_card_amount: int
+    ) -> None:
+        """publish a collect jail card event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_COLLECT_JAIL_CARD,
+                {
+                    "player_id": player_id,
+                    "current_card_amount": current_card_amount,
                 },
             )
         )

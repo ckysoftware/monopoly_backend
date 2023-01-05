@@ -102,3 +102,9 @@ class ViewListener(Subscriber):
                 msg["tax_amount"],
                 msg["tax_type"],
             )
+        elif event.event_type is EventType.G_COLLECT_JAIL_CARD:
+            msg = event.message
+            self.animator.enqueue_collect_jail_card(
+                self.player_to_user[msg["player_id"]],
+                msg["current_card_amount"],
+            )

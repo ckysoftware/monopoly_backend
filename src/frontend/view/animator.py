@@ -182,14 +182,14 @@ class Animator:
 
     def enqueue_draw_chance_card(
         self,
-        player_id: str,
+        user_id: str,
         description: str,
         ownable: bool,
     ) -> None:
         self._hide_roll_button()
         # TODO change to chance card or CC card
         noti_text = [
-            f"{player_id} drew a chance card.",
+            f"{user_id} drew a chance card.",
             description,
         ]
         self.queue.append(Call(self.notification.update, texts=noti_text))
@@ -199,12 +199,25 @@ class Animator:
 
     def enqueue_charge_tax(
         self,
-        player_id: str,
+        user_id: str,
         tax_amount: int,
         tax_type: str,
     ) -> None:
-        noti_text = [f"{player_id} has been charged {tax_type} for {tax_amount}."]
+        noti_text = [f"{user_id} has been charged {tax_type} for {tax_amount}."]
         self.queue.append(Call(self.notification.update, texts=noti_text))
+
+    def enqueue_collect_jail_card(
+        self,
+        user_id: str,
+        current_card_amount: int,
+    ) -> None:
+        for player in self.player_info_sprites:
+            assert isinstance(player, PlayerInfo)
+            if player.user_id == user_id:
+                self.queue.append(
+                    Call(player.set_num_jail_card, num_jail_cards=current_card_amount)
+                )
+                return
 
     def _show_property_info_static(self, property_id: int) -> None:
         self.queue.append(Call(self.property_info_static.update_allow, allow=True))

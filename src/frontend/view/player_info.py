@@ -14,11 +14,15 @@ class PlayerInfo(pygame.sprite.Sprite):
         self.font = pygame.font.SysFont("Arial", 20)
 
         self.cash: int = 1000
+        self.num_jail_cards: int = 0
         self.is_current: bool = False
 
         self.name_text = self.font.render(self.user_id, True, pygame.Color("black"))
         self.cash_text = self.font.render(
             f"Cash: {str(self.cash)}", True, pygame.Color("black")
+        )
+        self.jail_card_text = self.font.render(
+            f"Jail card(s): {str(self.num_jail_cards)}", True, pygame.Color("black")
         )
         self.buttons: list[button.Button] = self._create_buttons(x, y)
         self.bid_buttons: list[button.Button] = self._create_bid_buttons(x, y)
@@ -151,6 +155,7 @@ class PlayerInfo(pygame.sprite.Sprite):
             self.image.fill("grey")
         self.image.blit(self.name_text, (5, 0))
         self.image.blit(self.cash_text, (5, 20))
+        self.image.blit(self.jail_card_text, (200, 20))
 
     def set_cash(self, cash: int) -> None:
         if self.cash == cash:
@@ -162,6 +167,13 @@ class PlayerInfo(pygame.sprite.Sprite):
         self.cash = cash
         self.cash_text = self.font.render(
             f"Cash: {str(self.cash)}", True, pygame.Color(color)
+        )
+        self.update()
+
+    def set_num_jail_card(self, num_jail_cards: int) -> None:
+        self.num_jail_cards = num_jail_cards
+        self.jail_card_text = self.font.render(
+            f"Jail card(s): {str(self.num_jail_cards)}", True, pygame.Color("black")
         )
         self.update()
 
