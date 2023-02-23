@@ -37,3 +37,18 @@ class GameController:
 
     def end_turn(self, player_id: int) -> None:
         self.game_model.handle_end_turn_event(player_id)
+
+    def get_property_status(self, player_id: int) -> None:
+        self.game_model.handle_property_status_event(player_id)
+
+    def mortgage(self, player_id: int, property_id: int) -> None:
+        self.game_model.handle_mortgage_event(player_id, property_id)
+
+    def unmortgage(self, player_id: int, property_id: int) -> None:
+        self.game_model.handle_unmortgage_event(player_id, property_id)
+
+    def add_house(self, player_id: int, property_id: int) -> None:
+        self.game_model.handle_add_house_event(player_id, property_id)
+
+    def sell_house(self, player_id: int, property_id: int) -> None:
+        self.game_model.handle_sell_house_event(player_id, property_id)

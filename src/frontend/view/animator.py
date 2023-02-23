@@ -9,6 +9,7 @@ from .board import Board
 from .dice import Dice
 from .notification import Notification
 from .player_info import PlayerInfo
+from .player_property_status import PlayerPropertyStatus
 from .player_token import PlayerToken
 from .property_info import PropertyInfo
 from .screen import Screen
@@ -42,6 +43,7 @@ class Animator:
     button_sprites: pygame.sprite.Group = field(init=False)
     property_info_static: PropertyInfo = field(init=False)
     notification: Notification = field(init=False)
+    player_property_status: PlayerPropertyStatus = field(init=False)
 
     def set_screen(self, screen: Screen) -> None:
         self.screen = screen
@@ -66,6 +68,11 @@ class Animator:
 
     def set_notification(self, notification: Notification) -> None:
         self.notification = notification
+
+    def set_player_property_status(
+        self, PlayerPropertyStatus: PlayerPropertyStatus
+    ) -> None:
+        self.player_property_status = PlayerPropertyStatus
 
     def enqueue_token_move(
         self, token: PlayerToken, old_position: int, new_position: int
@@ -219,6 +226,16 @@ class Animator:
                 )
                 return
 
+    def enqueue_player_property_status(
+        self,
+        user_id: str,
+        property_status: list[dict[str, Any]],
+    ) -> None:
+        self.queue.append(
+            Call(self.player_property_status.update, property_status, user_id)
+        )
+        self.queue.append(Call(self.player_property_status.update_allow, allow=True))
+
     def _show_property_info_static(self, property_id: int) -> None:
         self.queue.append(Call(self.property_info_static.update_allow, allow=True))
         self.queue.append(
@@ -295,5 +312,6 @@ class Animator:
             self.button_sprites.draw(self.screen.surface)
             self.property_info_static.draw(self.screen.surface)
             self.notification.draw(self.screen.surface)
+            self.player_property_status.draw(self.screen.surface)
             # for drawable in self.draw_sprites:
             #     drawable.draw(self.screen.surface)

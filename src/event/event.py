@@ -23,6 +23,7 @@ class EventType(enum.Enum):
     G_DRAW_CHANCE_CARD = "g_draw_chance_card"
     G_CHARGE_TAX = "g_charge_tax"
     G_COLLECT_JAIL_CARD = "g_collect_jail_card"
+    G_PROPERTY_STATUS = "g_property_status"
 
     V_ADD_PLAYER = "v_add_player"
     V_ROLL_AND_MOVE = "v_roll_and_move"
@@ -37,6 +38,11 @@ class EventType(enum.Enum):
     V_BID_100 = "v_bid_100"
     V_BID_PASS = "v_bid_pass"
     V_PAY = "v_pay"
+    V_PROPERTY_STATUS = "v_property_status"
+    V_MORTGAGE = "v_mortgage"
+    V_UNMORTGAGE = "v_unmortgage"
+    V_ADD_HOUSE = "v_add_house"
+    V_SELL_HOUSE = "v_sell_house"
 
 
 @dataclass(slots=True)

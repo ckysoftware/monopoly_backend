@@ -64,3 +64,27 @@ class ControllerListener(Subscriber):
             msg = event.message
             user_id = msg["user_id"]
             self.game_controller.pay(self.user_to_player[user_id])
+        elif event.event_type is EventType.V_PROPERTY_STATUS:
+            msg = event.message
+            user_id = msg["user_id"]
+            self.game_controller.get_property_status(self.user_to_player[user_id])
+        elif event.event_type is EventType.V_MORTGAGE:
+            msg = event.message
+            user_id = msg["user_id"]
+            property_id = msg["property_id"]
+            self.game_controller.mortgage(self.user_to_player[user_id], property_id)
+        elif event.event_type is EventType.V_UNMORTGAGE:
+            msg = event.message
+            user_id = msg["user_id"]
+            property_id = msg["property_id"]
+            self.game_controller.unmortgage(self.user_to_player[user_id], property_id)
+        elif event.event_type is EventType.V_ADD_HOUSE:
+            msg = event.message
+            user_id = msg["user_id"]
+            property_id = msg["property_id"]
+            self.game_controller.add_house(self.user_to_player[user_id], property_id)
+        elif event.event_type is EventType.V_SELL_HOUSE:
+            msg = event.message
+            user_id = msg["user_id"]
+            property_id = msg["property_id"]
+            self.game_controller.sell_house(self.user_to_player[user_id], property_id)

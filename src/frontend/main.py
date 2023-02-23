@@ -79,6 +79,9 @@ def main():
     property_info_static = view.PropertyInfo(380, 150, 240, 360, 0)
     animator.set_property_info_static(property_info_static)
 
+    player_property_status = view.PlayerPropertyStatus(150, 150, 500, 330)
+    animator.set_player_property_status(player_property_status)
+
     game_model = model.GameModel(local=True)
     game_controller = controller.GameController(game_model)
 
@@ -124,45 +127,25 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            # elif event.type == pygame.KEYDOWN:
-            #     if event.key == pygame.K_w:
-            #         current_token.rect.move_ip(0, -200)
-            #     elif event.key == pygame.K_s:
-            #         current_token.rect.move_ip(0, 200)
-            #     elif event.key == pygame.K_a:
-            #         current_token.rect.move_ip(-200, 0)
-            #     elif event.key == pygame.K_d:
-            #         current_token.rect.move_ip(200, 0)
-            #     elif event.key == pygame.K_1:
-            #         current_token = token_list[0]
-            #         print(f"DEBUG: Current token is {current_token.user_id}")
-            #     elif event.key == pygame.K_2:
-            #         current_token = token_list[1]
-            #         print(f"DEBUG: Current token is {current_token.user_id}")
-            #     elif event.key == pygame.K_3:
-            #         current_token = token_list[2]
-            #         print(f"DEBUG: Current token is {current_token.user_id}")
-            #     elif event.key == pygame.K_4:
-            #         current_token = token_list[3]
-            #         print(f"DEBUG: Current token is {current_token.user_id}")
-            #     elif event.key == pygame.K_g:
-            #         view_controller_publisher.publish(
-            #             Event(
-            #                 EventType.V_ROLL_AND_MOVE,
-            #                 {"user_id": current_token.user_id},
-            #             )
-            #         )
-            #     elif event.key == pygame.K_z:
-            #         view_controller_publisher.publish(
-            #             Event(EventType.V_END_TURN, {"user_id": current_token.user_id})
-            #         )
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = event.pos
-                for button in button_sprites:
+                for button in animator.button_sprites:
                     assert isinstance(button, view.Button)
                     if button.rect.collidepoint(pos):
                         print(f"DEBUG: Button {button.text} clicked")
                         view_controller_publisher.publish(button.handle_click())
+                        break
+
+                for button in animator.player_property_status.buttons:
+                    assert isinstance(button, view.Button)
+                    offset_pos = (
+                        pos[0] - animator.player_property_status.rect.topleft[0],
+                        pos[1] - animator.player_property_status.rect.topleft[1],
+                    )
+                    if button.rect.collidepoint(offset_pos):
+                        print(f"DEBUG: Property Status Button {button.text} clicked")
+                        view_controller_publisher.publish(button.handle_click())
+                        break
 
         # screen.fill(BLACK)
 

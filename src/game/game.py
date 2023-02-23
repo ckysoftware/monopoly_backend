@@ -1,6 +1,6 @@
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 import constants as c
 import game.dice as dice
@@ -388,6 +388,26 @@ class Game:
         new_cash_payee = self.add_player_cash(payee_uid, amount)
         return new_cash_payer, new_cash_payee
 
+    def mortgage_property(self, property_id: int) -> int:
+        """Mortgage the property. Return the mortgage price"""
+
+        property_ = self._get_property_from_id(property_id)
+        mortgaged_value = property_.mortgage()
+        return mortgaged_value
+
+    def unmortgage_property(self, property_id: int) -> int:
+        """Unmortgage the property. Return the unmortgage price"""
+
+        property_ = self._get_property_from_id(property_id)
+        unmortgaged_value = property_.unmortgage()
+        return unmortgaged_value
+
+    def _get_property_from_id(self, property_id: int) -> space.Property:
+        for map_space in self.game_map.map_list:
+            if isinstance(map_space, space.Property) and map_space.id == property_id:
+                return map_space
+        raise ValueError("Invalid property id: {0}".format(property_id))
+
     def get_property(
         self, position: Optional[int] = None, player_uid: Optional[int] = None
     ) -> space.Property:
@@ -457,6 +477,33 @@ class Game:
         if player_uid is None:
             player_uid = self.current_player_uid
         return self.players[player_uid].jail_turns
+
+    def get_player_property_status(
+        self, player_uid: Optional[int] = None
+    ) -> list[dict[str, Any]]:
+        """Returns a list of player's properties and their possibilities of building/removing houses."""
+
+        if player_uid is None:
+            player_uid = self.current_player_uid
+
+        property_status: list[dict[str, Any]] = []
+        for property_ in self.players[player_uid].properties:
+            new_status = {
+                "property_id": property_.id,
+                "allow_mortgage": property_.allow_mortgage(),
+                "allow_unmortgage": property_.mortgaged,
+            }
+            if isinstance(property_, space.PropertySpace):
+                new_status.update(
+                    {
+                        "allow_add_house": property_.allow_add_house(),
+                        "allow_add_hotel": property_.allow_add_hotel(),
+                        "allow_sell_house": property_.allow_remove_house(),
+                        "allow_sell_hotel": property_.allow_remove_hotel(),
+                    }
+                )
+            property_status.append(new_status)
+        return property_status
 
     # NOTE be careful no test
     def print_map(self) -> None:  # pragma: no cover

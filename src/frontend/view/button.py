@@ -1,8 +1,9 @@
 import enum
-from typing import Any
+from typing import Any, Optional
+
+import pygame
 
 import event
-import pygame
 
 
 class ButtonType(enum.auto):
@@ -19,6 +20,11 @@ class ButtonType(enum.auto):
     BID_50 = enum.auto()
     BID_100 = enum.auto()
     BID_PASS = enum.auto()
+    PROPERTY_STATUS = enum.auto()
+    MORTGAGE = enum.auto()
+    UNMORTGAGE = enum.auto()
+    ADD_HOUSE = enum.auto()
+    SELL_HOUSE = enum.auto()
 
 
 class Button(pygame.sprite.Sprite):
@@ -31,6 +37,8 @@ class Button(pygame.sprite.Sprite):
         text: str,
         user_id: str,
         button_type: ButtonType,
+        property_id: Optional[int] = None,
+        text_size: int = 20,
     ):
         super().__init__()
         self.user_id = user_id
@@ -38,7 +46,8 @@ class Button(pygame.sprite.Sprite):
         self.event_type = self._get_event_type()
         self.width = width
         self.height = height
-        self.font = pygame.font.SysFont("Arial", 20)
+        self.property_id = property_id
+        self.font = pygame.font.SysFont("Arial", text_size)
         self.text = self.font.render(text, True, pygame.Color("black"))
 
         self.allow: bool = False
@@ -58,7 +67,7 @@ class Button(pygame.sprite.Sprite):
     def handle_click(self) -> event.Event:
         return event.Event(
             self.event_type,
-            {"user_id": self.user_id},
+            {"user_id": self.user_id, "property_id": self.property_id},
         )
 
     def update_allow(self, allow: bool) -> None:
@@ -90,5 +99,15 @@ class Button(pygame.sprite.Sprite):
             return event.EventType.V_BID_PASS
         elif self.button_type is ButtonType.PAY:
             return event.EventType.V_PAY
+        elif self.button_type is ButtonType.PROPERTY_STATUS:
+            return event.EventType.V_PROPERTY_STATUS
+        elif self.button_type is ButtonType.MORTGAGE:
+            return event.EventType.V_MORTGAGE
+        elif self.button_type is ButtonType.UNMORTGAGE:
+            return event.EventType.V_UNMORTGAGE
+        elif self.button_type is ButtonType.ADD_HOUSE:
+            return event.EventType.V_ADD_HOUSE
+        elif self.button_type is ButtonType.SELL_HOUSE:
+            return event.EventType.V_SELL_HOUSE
         else:
             raise ValueError("Invalid button type")

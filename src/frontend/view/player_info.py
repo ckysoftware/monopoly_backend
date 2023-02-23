@@ -76,6 +76,17 @@ class PlayerInfo(pygame.sprite.Sprite):
                 button.ButtonType.AUCTION,
             )
 
+        def _create_property_status_button(x: int, y: int) -> button.Button:
+            return button.Button(
+                x + 330,
+                y + 160,
+                80,
+                40,
+                "Status",
+                self.user_id,
+                button.ButtonType.PROPERTY_STATUS,
+            )
+
         def _create_pay_button(x: int, y: int) -> button.Button:
             return button.Button(
                 x,
@@ -92,6 +103,7 @@ class PlayerInfo(pygame.sprite.Sprite):
             _create_end_button(x, y),
             _create_buy_button(x, y),
             _create_auction_button(x, y),
+            _create_property_status_button(x, y),
             _create_pay_button(x, y),
         ]
         return buttons

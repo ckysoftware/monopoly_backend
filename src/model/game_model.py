@@ -361,6 +361,31 @@ class GameModel:
             self._transfer_player_cash(player_id, payee_id, rent)
             self._check_double_roll_or_end()
 
+    @require_current_player
+    def handle_property_status_event(self, player_id: int) -> None:
+        property_status = self.game.get_player_property_status(player_id)
+        self._publish_property_status_event(player_id, property_status)
+
+    @require_current_player
+    def handle_mortgage_event(self, player_id: int, property_id: int) -> None:
+        mortgaged_value = self.game.mortgage_property(property_id)
+        self._change_player_cash(player_id, mortgaged_value)
+        self.handle_property_status_event(player_id)
+
+    @require_current_player
+    def handle_unmortgage_event(self, player_id: int, property_id: int) -> None:
+        unmortgaged_value = self.game.unmortgage_property(property_id)
+        self._change_player_cash(player_id, -unmortgaged_value)
+        self.handle_property_status_event(player_id)
+
+    @require_current_player
+    def handle_add_house_event(self, player_id: int, property_id: int) -> None:
+        raise NotImplementedError
+
+    @require_current_player
+    def handle_sell_house_event(self, player_id: int, property_id: int) -> None:
+        raise NotImplementedError
+
     def _end_auction(self) -> None:
         """Process the transactions related to ending the auction.
         Reset the auction process in Game.
@@ -647,5 +672,16 @@ class GameModel:
                     "player_id": player_id,
                     "current_card_amount": current_card_amount,
                 },
+            )
+        )
+
+    def _publish_property_status_event(
+        self, player_id: int, property_status: list[dict[str, Any]]
+    ) -> None:
+        """publish a property status event"""
+        self.publisher.publish(
+            event.Event(
+                event.EventType.G_PROPERTY_STATUS,
+                {"player_id": player_id, "property_status": property_status},
             )
         )

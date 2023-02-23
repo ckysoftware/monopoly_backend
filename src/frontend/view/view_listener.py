@@ -108,3 +108,9 @@ class ViewListener(Subscriber):
                 self.player_to_user[msg["player_id"]],
                 msg["current_card_amount"],
             )
+        elif event.event_type is EventType.G_PROPERTY_STATUS:
+            msg = event.message
+            self.animator.enqueue_player_property_status(
+                self.player_to_user[msg["player_id"]],
+                msg["property_status"],
+            )
