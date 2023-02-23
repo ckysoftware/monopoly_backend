@@ -30,6 +30,10 @@ class Property(Space):
     def property_set_id(self) -> int:
         return self.property_set.id
 
+    # TODO add test
+    def allow_mortgage(self) -> bool:
+        return (not self.mortgaged) and self.owner_uid is not None
+
     def mortgage(self) -> int:  # NOTE probably need to return action/event
         if self.mortgaged:
             raise ValueError("Property is already mortgaged")
@@ -44,8 +48,7 @@ class Property(Space):
             raise ValueError("Property is not mortgaged")
 
         self.mortgaged = False
-        assert self.mortgage_value % 10 == 0, "Mortgage value is not a multiple of 10"
-        return int(self.mortgage_value * 1.1)  # 10% interest
+        return round(self.mortgage_value * 1.1)  # 10% interest
 
     @abstractmethod
     def compute_rent(self) -> int:
