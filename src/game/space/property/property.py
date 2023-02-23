@@ -30,9 +30,11 @@ class Property(Space):
     def property_set_id(self) -> int:
         return self.property_set.id
 
-    # TODO add test
     def allow_mortgage(self) -> bool:
         return (not self.mortgaged) and self.owner_uid is not None
+
+    def allow_unmortgage(self) -> bool:
+        return self.mortgaged
 
     def mortgage(self) -> int:  # NOTE probably need to return action/event
         if self.mortgaged:

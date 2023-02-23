@@ -491,7 +491,7 @@ class Game:
             new_status = {
                 "property_id": property_.id,
                 "allow_mortgage": property_.allow_mortgage(),
-                "allow_unmortgage": property_.mortgaged,
+                "allow_unmortgage": property_.allow_unmortgage(),
             }
             if isinstance(property_, space.PropertySpace):
                 new_status.update(

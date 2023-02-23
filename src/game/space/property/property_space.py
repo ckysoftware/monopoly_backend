@@ -38,11 +38,14 @@ class PropertySpace(Property):
 
     # TODO test this
     def allow_mortgage(self) -> bool:
+        set_no_of_houses, set_no_of_hotels = self.property_set.count_houses_and_hotels()
         if (
             self.mortgaged
             or self.owner_uid is None
             or self.no_of_houses != 0
             or self.no_of_hotels != 0
+            or set_no_of_houses != 0
+            or set_no_of_hotels != 0
         ):
             return False
         return True
@@ -107,8 +110,11 @@ class PropertySpace(Property):
         self.no_of_hotels = 1
 
     def allow_remove_house(self) -> bool:
-        if self.no_of_houses == 0 or not self.property_set.check_evenly_remove_house(
-            self.no_of_houses
+        if (
+            self.no_of_houses == 0
+            or not self.property_set.check_evenly_remove_house_or_hotel(
+                self.no_of_houses
+            )
         ):
             return False
         return True
@@ -116,7 +122,7 @@ class PropertySpace(Property):
     def remove_house(self) -> None:
         if self.no_of_houses == 0:
             raise ValueError("No houses to remove")
-        if not self.property_set.check_evenly_remove_house(self.no_of_houses):
+        if not self.property_set.check_evenly_remove_house_or_hotel(self.no_of_houses):
             raise ValueError("Houses are not evenly distributed in the property set")
         self.no_of_houses -= 1
 

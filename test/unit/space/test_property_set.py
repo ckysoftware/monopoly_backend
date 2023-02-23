@@ -1,5 +1,6 @@
-import constants as c
 import pytest
+
+import constants as c
 from game import space
 
 
@@ -148,7 +149,7 @@ class TestPropertySetCountOwner:
         assert prop_set_four_unowned.count_owned(1) == 3
 
 
-class TestPropertySetCountHouseAndHotels:
+class TestPropertySetCountHousesAndHotels:
     def test_property_set_count_houses_and_hotels_not_monopoly(
         self, prop_set_monopoly: space.PropertySet
     ):
@@ -168,3 +169,17 @@ class TestPropertySetCountHouseAndHotels:
         property_0.no_of_houses = 3
         property_1.no_of_hotels = 1
         assert prop_set_monopoly.count_houses_and_hotels() == (3, 1)
+
+
+class TestPropertySetCheckEvenHousesOrHotels:
+    def test_property_set_check_evenly_add_house_or_hotel_not_monopoly(
+        self, prop_set_monopoly: space.PropertySet
+    ):
+        prop_set_monopoly.monopoly = False
+        assert prop_set_monopoly.check_evenly_add_house_or_hotel(0) is False
+
+    def test_property_set_check_evenly_remove_house_or_hotel_not_monopoly(
+        self, prop_set_monopoly: space.PropertySet
+    ):
+        prop_set_monopoly.monopoly = False
+        assert prop_set_monopoly.check_evenly_remove_house_or_hotel(0) is False

@@ -60,7 +60,7 @@ class PropertySet:
         Return true if it can, false otherwise"""
         return self._check_even_house_or_hotel(house_count, ops="add")
 
-    def check_evenly_remove_house(self, house_count: int) -> bool:
+    def check_evenly_remove_house_or_hotel(self, house_count: int) -> bool:
         """Check if a house can be remove based on the current house_count.
         Return true if it can, false otherwise"""
         return self._check_even_house_or_hotel(house_count, ops="remove")
