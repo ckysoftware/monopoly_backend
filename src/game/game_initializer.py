@@ -85,6 +85,7 @@ def _build_property_spaces(
         if property_set_id not in property_sets:  # new property set
             property_sets[property_set_id] = space.PropertySet(id=property_set_id)
         new_property_space = space.PropertySpace(
+            id=property_data["id"],
             name=property_data["name"],
             price=property_data["price"],
             rent=property_data["rent"],
@@ -106,6 +107,7 @@ def _build_railroad_spaces() -> list[space.RailroadSpace]:
     railroad_spaces: list[space.RailroadSpace] = []
     for railroad_data in data.CONST_RAILROAD_SPACES:
         new_railroad_space = space.RailroadSpace(
+            id=railroad_data["id"],
             name=railroad_data["name"],
             price=railroad_data["price"],
             rent=railroad_data["rent"],
@@ -121,6 +123,7 @@ def _build_utility_spaces() -> list[space.UtilitySpace]:
     utility_spaces: list[space.UtilitySpace] = []
     for utility_data in data.CONST_UTILITY_SPACES:
         new_utility_space = space.UtilitySpace(
+            id=utility_data["id"],
             name=utility_data["name"],
             price=utility_data["price"],
             property_set=property_set,

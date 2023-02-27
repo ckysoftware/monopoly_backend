@@ -1,4 +1,5 @@
 import pytest
+
 from game import player, space
 from game.actions import Action
 
@@ -7,6 +8,7 @@ from game.actions import Action
 def util_space_simple():
     property_set = space.PropertySet(id=0)
     utility_space = space.UtilitySpace(
+        id=1,
         name="Utility 1",
         price=150,
         property_set=property_set,
@@ -25,12 +27,14 @@ def util_space_monopoly(util_space_simple: space.UtilitySpace):
 def util_space_diff_owners():
     property_set = space.PropertySet(id=0)
     util_space_1 = space.UtilitySpace(
+        id=1,
         name="Utility 1",
         price=150,
         property_set=property_set,
         owner_uid=1,
     )
     util_space_2 = space.UtilitySpace(
+        id=2,
         name="Utility 2",
         price=150,
         property_set=property_set,
@@ -88,20 +92,29 @@ def test_compute_rent_nonpositive_dice_count(util_space_simple: space.UtilitySpa
         util_space_simple.compute_rent()
 
 
-def test_mortgage(util_space_diff_owners: space.UtilitySpace):
-    util_space_diff_owners.mortgage()
-    assert util_space_diff_owners.mortgaged is True
-
-
-def test_mortgage_again(util_space_diff_owners: space.UtilitySpace):
-    util_space_diff_owners.mortgage()
-    with pytest.raises(ValueError, match="Property is already mortgaged"):
+class TestMortgage:
+    def test_mortgage(self, util_space_diff_owners: space.UtilitySpace):
         util_space_diff_owners.mortgage()
+        assert util_space_diff_owners.mortgaged is True
 
+    def test_mortgage_again(self, util_space_diff_owners: space.UtilitySpace):
+        util_space_diff_owners.mortgage()
+        with pytest.raises(ValueError, match="Property is already mortgaged"):
+            util_space_diff_owners.mortgage()
 
-def test_mortgage_no_owner(util_space_simple: space.UtilitySpace):
-    with pytest.raises(ValueError, match="Property has no owner"):
-        util_space_simple.mortgage()
+    def test_mortgage_no_owner(self, util_space_simple: space.UtilitySpace):
+        with pytest.raises(ValueError, match="Property has no owner"):
+            util_space_simple.mortgage()
+
+    def test_allow_mortgage(self, util_space_diff_owners: space.UtilitySpace):
+        assert util_space_diff_owners.allow_mortgage() is True
+
+    def test_allow_mortgage_again(self, util_space_diff_owners: space.UtilitySpace):
+        util_space_diff_owners.mortgage()
+        assert util_space_diff_owners.allow_mortgage() is False
+
+    def test_allow_mortgage_no_owner(self, util_space_simple: space.UtilitySpace):
+        assert util_space_simple.allow_mortgage() is False
 
 
 def test_trigger_unowned(

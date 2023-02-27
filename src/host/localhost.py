@@ -6,7 +6,6 @@ from game import Game, card
 from game.actions import Action
 from game.enum_types import DeckType
 from game.positions import Position
-
 from host.user import User
 
 
@@ -397,6 +396,7 @@ class LocalHost:
             )
 
         _ = self.game.move_player(player_uid, position=pos_value)
+        _ = self.game.offset_go_pos(player_uid)
         end_turn = self._handle_space_trigger(player_uid=player_uid)
         return end_turn
 
@@ -443,7 +443,7 @@ class LocalHost:
             raise ValueError("Dice rolls is None")
 
         player_name = self.game.players[player_uid].name
-        payee_uid, rent = self.game.get_pay_rent_info(
+        payee_uid, rent = self.game.get_pay_rent_info_old(
             player_uid=player_uid, dice_count=sum(self.dice_rolls)
         )
         payee_name = self.game.players[payee_uid].name
@@ -473,7 +473,7 @@ class LocalHost:
         ...
 
     def _handle_auction(self, player_uid: int) -> None:
-        bidders = self.game.auction_property(
+        bidders = self.game.auction_property_old(
             position=self.game.get_player_position(player_uid)
         )
         space_details = self.game.get_space_details(player_uid=player_uid)

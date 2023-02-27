@@ -1,11 +1,12 @@
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 import constants as c
-
 import game.dice as dice
-from game import card, data, game_initializer, space
+from game import card, data
+from game import exceptions as exc
+from game import game_initializer, space
 from game.actions import Action
 from game.enum_types import DeckType
 from game.game_map import GameMap, SpaceDetails
@@ -16,7 +17,13 @@ from game.player import Player
 class Game:
     game_map: GameMap = field(init=False)
     players: list[Player] = field(default_factory=list)  # sorted by Player.uid
+    bidders: deque[Player] = field(
+        default_factory=deque
+    )  # TODO abstract by a new object Auction?
+    current_bid_price: int = 0  # TODO abstract by a new object Auction?
+    current_bid_property: Optional[space.Property] = None
     current_player_uid: int = field(init=False)  # current pos of the player_order
+    last_dice_rolls: Optional[tuple[int, int]] = None
     _roll_double_counter: Optional[tuple[int, int]] = None  # uid, count
     cc_deck: card.Deck = field(init=False)
     chance_deck: card.Deck = field(init=False)
@@ -24,14 +31,53 @@ class Game:
     # TODO jail_list with uid and count
     # TODO [FUTURE] accept game settings
 
+    @property
+    def current_player_id(self) -> int:
+        return self.current_player_uid
+
+    @property
+    def current_player(self) -> Player:
+        return self.get_player(self.current_player_id)
+
+    @property
+    def current_property(self) -> space.Property:
+        """current property stepped by the current player"""
+        return self.get_property(player_uid=self.current_player_id)
+
+    @property
+    def current_position(self) -> int:
+        """current position of the current player"""
+        return self.get_player_position(player_uid=self.current_player_id)
+
+    @property
+    def current_cash(self) -> int:
+        """Return current player's cash"""
+        return self.get_player_cash(player_uid=self.current_player_id)
+
+    @property
+    def has_double_roll(self) -> bool:
+        return self._roll_double_counter is not None
+
+    @property
+    def current_bidder_id(self) -> int:
+        return self.bidders[0].uid
+
+    def get_player(self, player_id: int) -> Player:
+        return self.players[player_id]
+
+    # TODO to be removed to property
     def get_current_player(self) -> tuple[str, int]:
         return (self.players[self.current_player_uid].name, self.current_player_uid)
 
+    # TODO to be removed to property
     def get_next_player(self, prev_player_uid: int) -> Player:
+        # TODO check if the player is out of the game
         next_player_id = (prev_player_uid + 1) % len(self.players)
         return self.players[next_player_id]
 
-    def get_player_position(self, player_uid: int) -> int:
+    def get_player_position(self, player_uid: Optional[int] = None) -> int:
+        if player_uid is None:
+            player_uid = self.current_player_uid
         return self.players[player_uid].position
 
     # NOTE be careful with this, it's not tested
@@ -60,6 +106,7 @@ class Game:
 
     def _reset_for_next_player(self) -> None:
         self._roll_double_counter = None
+        self.last_dice_rolls = None
 
     def add_player(self, name: str):
         new_player = Player(
@@ -119,13 +166,21 @@ class Game:
     def next_player_and_reset(self) -> Player:
         """Returns the next player uid and reset the game for next player"""
         next_player = self.get_next_player(self.current_player_uid)
+        self.current_player_uid = next_player.uid
         self._reset_for_next_player()
         return next_player
 
     def roll_dice(self) -> tuple[int, ...]:
-        return dice.roll(num_faces=6, num_dice=2)
+        rolls = dice.roll(num_faces=6, num_dice=2)
+        self.last_dice_rolls = rolls
+        return rolls
 
-    def check_double_roll(self, player_uid: int, dice_1: int, dice_2: int) -> Action:
+    def check_double_roll(
+        self, dice_1: int, dice_2: int, player_uid: Optional[int] = None
+    ) -> Action:
+        if player_uid is None:
+            player_uid = self.current_player_uid
+
         if dice_1 == dice_2:
             if self._roll_double_counter is None:  # 1st roll
                 self._roll_double_counter = (player_uid, 1)
@@ -147,39 +202,50 @@ class Game:
 
     def move_player(
         self,
-        player_uid: int,
+        player_uid: Optional[int] = None,
         steps: Optional[int] = None,
         position: Optional[int] = None,
     ) -> int:
         """Move player either by steps or map position"""
-        if position is not None:
-            new_pos = self.players[player_uid].move(position=position)
-        elif steps is not None:
-            new_pos = self.players[player_uid].move(steps=steps)
-        else:
-            raise ValueError("Either steps or position must be provided")
+        if player_uid is None:
+            player_uid = self.current_player_uid
+        if position is not None and position < self.players[player_uid].position:
+            # movement only allows forward, if it is backward, offset by map size first
+            position += self.game_map.size
+        new_pos = self.players[player_uid].move(steps=steps, position=position)
         return new_pos
 
-    def check_go_pass(self, player_uid: int) -> Action:
+    def check_go_pass(self, player_uid: Optional[int] = None) -> Action:
+        if player_uid is None:
+            player_uid = self.current_player_uid
+
         if self.players[player_uid].position >= self.game_map.size:
             return Action.PASS_GO
         else:
             return Action.NOTHING
 
-    def offset_go_pos(self, player_uid: int) -> int:
+    def offset_go_pos(self, player_uid: Optional[int] = None) -> int:
         """Offset player's position by the map size after passing Go"""
+        if player_uid is None:
+            player_uid = self.current_player_uid
+
         new_pos = self.players[player_uid].offset_position(self.game_map.size)
         return new_pos
 
-    def trigger_space(self, player_uid: int) -> Action:
+    def trigger_space(self, player_uid: Optional[int] = None) -> Action:
+        """Trigger space and return Action"""
+        if player_uid is None:
+            player_uid = self.current_player_uid
         action = self.game_map.trigger(self.players[player_uid])
         return action
 
     def add_player_cash(self, player_uid: int, amount: int) -> int:
+        # TODO raise exception for inactive player
         new_cash = self.players[player_uid].add_cash(amount)
         return new_cash
 
     def sub_player_cash(self, player_uid: int, amount: int) -> int:
+        # TODO raise exception for inactive player
         new_cash = self.players[player_uid].sub_cash(amount)
         return new_cash
 
@@ -216,8 +282,15 @@ class Game:
                 raise ValueError("Token is already assigned")
         self.players[player_uid].assign_token(token)
 
-    def buy_property(self, player_uid: int, position: Optional[int] = None) -> int:
-        player = self.players[player_uid]
+    def buy_property(
+        self, player_uid: Optional[int] = None, position: Optional[int] = None
+    ) -> int:
+        """Does not allow different price"""
+        if player_uid is None:
+            player_uid = self.current_player_id
+            player = self.current_player
+        else:
+            player = self.players[player_uid]
         if position is None:
             position = self.get_player_position(player_uid)
         property_ = self.game_map.map_list[position]
@@ -227,12 +300,52 @@ class Game:
         if property_.owner_uid is not None:
             raise ValueError("Property is already owned")
         if player.cash < property_.price:
-            raise ValueError(f"Player {player.name} does not have enough cash")
+            raise exc.InsufficientCashError(player_uid, player.cash, property_.price)
 
         new_cash = self.buy_property_transaction(player, property_)
         return new_cash
 
-    def auction_property(self, position: int) -> deque[Player]:
+    def auction_property(self, property_: space.Property) -> None:
+        """Start auctioning the property. Initialise auction players list"""
+        # TODO change exception
+
+        if property_.owner_uid is not None:
+            raise ValueError("Property is already owned")
+        if len(self.bidders) != 0:
+            raise ValueError(f"There are still active bidders: {self.bidders}")
+
+        self.current_bid_price = 0
+        self.current_bid_property = property_
+        self.bidders = deque()
+        for player in self.players:
+            # TODO filter out inactive players
+            # if player.active:
+            self.bidders.append(player)
+        # rotate the deque until the next player is at the leftmost position
+        while self.bidders[0] != self.get_next_player(self.current_player_uid):
+            self.bidders.rotate(-1)
+
+    def bid_property(self, amount: int) -> None:
+        if amount == 0:  # pass
+            if len(self.bidders) == 0:
+                raise ValueError("There are no active bidders")
+            self.bidders.popleft()
+            return
+
+        player = self.players[self.current_bidder_id]
+        new_bid = self.current_bid_price + amount
+        if player.cash < new_bid:
+            raise exc.InsufficientCashError(player.uid, player.cash, new_bid)
+        self.current_bid_price = new_bid
+        self.bidders.rotate(-1)
+
+    def end_auction(self) -> None:
+        self.bidders = deque()
+        self.current_bid_price = 0
+        self.current_bid_property = None
+
+    def auction_property_old(self, position: int) -> deque[Player]:
+        # TODO remove this after removing local host
         """Returns the bidders (active players). The first bidder is the next player.
         Raise error if the property is not auctionable"""
         property_ = self.game_map.map_list[position]
@@ -252,7 +365,9 @@ class Game:
         self, player: Player, property: space.Property, price: Optional[int] = None
     ) -> int:
         # TODO test monopoly after buying, also no monopoly check
-        """Process the purchase transactions. If price is not provided, use the property's price"""
+        # TODO probably can combine with buy property?
+        """Process the purchase transactions. If price is not provided, use the property's price
+        allow price to be different from property's price for auction"""
         if price is None:
             price = property.price
         new_cash = player.sub_cash(price)
@@ -263,6 +378,7 @@ class Game:
     def transfer_cash(
         self, player_uid: int, payee_uid: int, amount: int
     ) -> tuple[int, int]:
+        # TODO remove this
         """Transfer amount to the payee_uid. Raise error if the player_uid
         does not have enough cash.
         Returns (new_cash of player_uid, new_cash of payee_uid)"""
@@ -271,6 +387,26 @@ class Game:
         new_cash_payer = self.sub_player_cash(player_uid, amount)
         new_cash_payee = self.add_player_cash(payee_uid, amount)
         return new_cash_payer, new_cash_payee
+
+    def mortgage_property(self, property_id: int) -> int:
+        """Mortgage the property. Return the mortgage price"""
+
+        property_ = self._get_property_from_id(property_id)
+        mortgaged_value = property_.mortgage()
+        return mortgaged_value
+
+    def unmortgage_property(self, property_id: int) -> int:
+        """Unmortgage the property. Return the unmortgage price"""
+
+        property_ = self._get_property_from_id(property_id)
+        unmortgaged_value = property_.unmortgage()
+        return unmortgaged_value
+
+    def _get_property_from_id(self, property_id: int) -> space.Property:
+        for map_space in self.game_map.map_list:
+            if isinstance(map_space, space.Property) and map_space.id == property_id:
+                return map_space
+        raise ValueError("Invalid property id: {0}".format(property_id))
 
     def get_property(
         self, position: Optional[int] = None, player_uid: Optional[int] = None
@@ -285,7 +421,6 @@ class Game:
 
         if not isinstance(property_, space.Property):
             raise ValueError(f"Space is not a Property: {type(property_)}")
-        assert isinstance(property_, space.Property)
         return property_
 
     def get_player_house_and_hotel_counts(self, player_uid: int) -> tuple[int, int]:
@@ -299,7 +434,24 @@ class Game:
                 hotel_count += property_.no_of_hotels
         return house_count, hotel_count
 
-    def get_pay_rent_info(self, player_uid: int, dice_count: int) -> tuple[int, int]:
+    def get_pay_rent_info(self) -> tuple[int, int]:
+        """Returns the payee id and the rent amount to pay rent to using
+        the current position and last dice rolls"""
+        property_ = self.current_property
+        if property_.owner_uid is None or property_.owner_uid == self.current_player_id:
+            raise ValueError("Player does not need to pay rent")
+        if isinstance(property_, space.UtilitySpace):
+            if self.last_dice_rolls is None:
+                raise ValueError("Last dice rolls is None")
+            rent = property_.compute_rent(dice_count=sum(self.last_dice_rolls))
+        else:
+            rent = property_.compute_rent()
+        return property_.owner_uid, rent
+
+    def get_pay_rent_info_old(
+        self, player_uid: int, dice_count: int
+    ) -> tuple[int, int]:
+        # TODO remove this
         """Returns the uid and the rent amount  to pay rent to using
         the position of the arg player_uid"""
         property_ = self.get_property(player_uid=player_uid)
@@ -311,14 +463,47 @@ class Game:
             rent = property_.compute_rent()
         return property_.owner_uid, rent
 
-    def get_player_cash(self, player_uid: int) -> int:
+    def get_player_cash(self, player_uid: Optional[int] = None) -> int:
+        if player_uid is None:
+            player_uid = self.current_player_uid
         return self.players[player_uid].cash
 
-    def get_player_jail_card_ids(self, player_uid: int) -> list[int]:
+    def get_player_jail_card_ids(self, player_uid: Optional[int] = None) -> list[int]:
+        if player_uid is None:
+            player_uid = self.current_player_uid
         return self.players[player_uid].get_jail_card_ids()
 
-    def get_player_jail_turns(self, player_uid: int) -> Optional[int]:
+    def get_player_jail_turns(self, player_uid: Optional[int] = None) -> Optional[int]:
+        if player_uid is None:
+            player_uid = self.current_player_uid
         return self.players[player_uid].jail_turns
+
+    def get_player_property_status(
+        self, player_uid: Optional[int] = None
+    ) -> list[dict[str, Any]]:
+        """Returns a list of player's properties and their possibilities of building/removing houses."""
+
+        if player_uid is None:
+            player_uid = self.current_player_uid
+
+        property_status: list[dict[str, Any]] = []
+        for property_ in self.players[player_uid].properties:
+            new_status = {
+                "property_id": property_.id,
+                "allow_mortgage": property_.allow_mortgage(),
+                "allow_unmortgage": property_.allow_unmortgage(),
+            }
+            if isinstance(property_, space.PropertySpace):
+                new_status.update(
+                    {
+                        "allow_add_house": property_.allow_add_house(),
+                        "allow_add_hotel": property_.allow_add_hotel(),
+                        "allow_sell_house": property_.allow_remove_house(),
+                        "allow_sell_hotel": property_.allow_remove_hotel(),
+                    }
+                )
+            property_status.append(new_status)
+        return property_status
 
     # NOTE be careful no test
     def print_map(self) -> None:  # pragma: no cover
@@ -335,3 +520,12 @@ class Game:
     def print_player_info(self) -> None:  # pragma: no cover
         for player in self.players:
             print(f"Player {player.name} - {player.position} - {player.cash}")
+
+    def check_in_jail(self, player_id: Optional[int] = None) -> bool:
+        if player_id is None:
+            player_id = self.current_player_uid
+        return self.players[player_id].jail_turns is not None
+
+    def get_all_states(self):
+        # TODO: return game states for view
+        ...

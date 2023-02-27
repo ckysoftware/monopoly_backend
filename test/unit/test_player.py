@@ -21,6 +21,7 @@ def player_comp(prop_space_simple: space.PropertySpace):
 def prop_space_simple():
     property_set = space.PropertySet(id=0)
     property_space = space.PropertySpace(
+        id=1,
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],

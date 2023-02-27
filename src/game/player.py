@@ -20,7 +20,8 @@ class Player:
     jail_cards: list[card.ChanceCard] = field(default_factory=list)
     jail_turns: int | None = None
 
-    def __eq__(self, other: Player):
+    def __eq__(self, other: object):
+        assert isinstance(other, Player)
         return self.uid == other.uid
 
     def add_property(self, property_: space.Property) -> None:
@@ -41,8 +42,11 @@ class Player:
 
     def offset_position(self, offset: int) -> int:
         # offset position after passing Go
-        self.position -= offset
-        return self.position
+        if self.position < offset:
+            return self.position
+        else:
+            self.position -= offset
+            return self.position
 
     def add_cash(self, amount: int) -> int:
         self.cash += amount

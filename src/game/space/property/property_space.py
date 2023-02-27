@@ -36,6 +36,20 @@ class PropertySpace(Property):
         else:
             return self.rent[0]
 
+    # TODO test this
+    def allow_mortgage(self) -> bool:
+        set_no_of_houses, set_no_of_hotels = self.property_set.count_houses_and_hotels()
+        if (
+            self.mortgaged
+            or self.owner_uid is None
+            or self.no_of_houses != 0
+            or self.no_of_hotels != 0
+            or set_no_of_houses != 0
+            or set_no_of_hotels != 0
+        ):
+            return False
+        return True
+
     def mortgage(self) -> int:
         """Return the amount of cash to receive"""
         no_of_houses, no_of_hotels = self.property_set.count_houses_and_hotels()
@@ -48,6 +62,17 @@ class PropertySpace(Property):
         self.mortgaged = True
         return self.mortgage_value
 
+    # TODO add test for all allow checks
+    def allow_add_house(self) -> bool:
+        if (
+            self.mortgaged
+            or self.no_of_houses == self.HOUSE_LIMIT
+            or not self.property_set.monopoly
+            or not self.property_set.check_evenly_add_house_or_hotel(self.no_of_houses)
+        ):
+            return False
+        return True
+
     def add_house(self) -> None:
         if self.mortgaged:
             raise ValueError("Property is mortgaged")
@@ -58,6 +83,17 @@ class PropertySpace(Property):
         if not self.property_set.check_evenly_add_house_or_hotel(self.no_of_houses):
             raise ValueError("Houses are not evenly distributed in the property set")
         self.no_of_houses += 1
+
+    def allow_add_hotel(self) -> bool:
+        if (
+            self.mortgaged
+            or self.no_of_hotels == self.HOTEL_LIMIT
+            or self.no_of_houses != self.HOUSE_LIMIT
+            or not self.property_set.monopoly
+            or not self.property_set.check_evenly_add_house_or_hotel(self.no_of_houses)
+        ):
+            return False
+        return True
 
     def add_hotel(self) -> None:
         if self.mortgaged:
@@ -73,12 +109,27 @@ class PropertySpace(Property):
         self.no_of_houses = 0
         self.no_of_hotels = 1
 
+    def allow_remove_house(self) -> bool:
+        if (
+            self.no_of_houses == 0
+            or not self.property_set.check_evenly_remove_house_or_hotel(
+                self.no_of_houses
+            )
+        ):
+            return False
+        return True
+
     def remove_house(self) -> None:
         if self.no_of_houses == 0:
             raise ValueError("No houses to remove")
-        if not self.property_set.check_evenly_remove_house(self.no_of_houses):
+        if not self.property_set.check_evenly_remove_house_or_hotel(self.no_of_houses):
             raise ValueError("Houses are not evenly distributed in the property set")
         self.no_of_houses -= 1
+
+    def allow_remove_hotel(self) -> bool:
+        if self.no_of_hotels == 0:
+            return False
+        return True
 
     def remove_hotel(self) -> None:
         # No need to check evenly remove hotel because it must be true

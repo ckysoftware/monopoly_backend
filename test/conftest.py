@@ -46,6 +46,7 @@ def player_simple() -> Player:
 def game_map_simple() -> GameMap:
     property_set = space.PropertySet(id=0)
     property_space_1 = space.PropertySpace(
+        id=1,
         name="Property 1",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
@@ -57,6 +58,7 @@ def game_map_simple() -> GameMap:
         owner_uid=1,
     )
     property_space_2 = space.PropertySpace(
+        id=2,
         name="Property 2",
         price=60,
         rent=[2, 10, 30, 90, 160, 250],
